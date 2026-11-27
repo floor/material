@@ -80,7 +80,7 @@ function resolveColourReference<T extends SpecReference | ComposeReference>(refe
   };
 }
 
-function compareColour(probe: { part: string; style: string }, rows: [CaseResult, CaseResult], id: string) {
+function compareColour(probe: { part: string; style: string; backgroundUnder?: string }, rows: [CaseResult, CaseResult], id: string) {
   const [left, right] = rows;
   const palettes = left.themes?.palettes;
   if (!palettes || JSON.stringify(palettes) !== JSON.stringify(right.themes?.palettes)) {
@@ -92,6 +92,11 @@ function compareColour(probe: { part: string; style: string }, rows: [CaseResult
       if (probe.style === "outlineColor" && style?.outlineStyle === "none") return "rgba(0, 0, 0, 0)";
       const value = style?.[probe.style];
       if (!value) throw new Error(`${id}: missing ${probe.style} measurement in ${theme}`);
+      if (probe.backgroundUnder && parseColour(value).opacity === 0) {
+        const underlying = row.themes?.[theme][probe.backgroundUnder]?.style.backgroundColor;
+        if (!underlying) throw new Error(`${id}: missing underlying background in ${theme}`);
+        return underlying;
+      }
       return value;
     };
     return { light: read("light"), dark: read("dark"), seed: read("seed") };

@@ -54,6 +54,7 @@ export function elevationRole(value: string): string | null {
   const geometry = value.replace(/(?:rgba?\([^)]*\)|color\(srgb[^)]*\))\s*/g, "");
   if (geometry === "none" || geometry === "0dp") return "Level0";
   if (geometry === "0px 1px 2px 0px, 0px 1px 3px 1px") return "Level1";
+  if (geometry === "0px 1px 2px 0px, 0px 2px 6px 2px") return "Level2";
   return /^Level ?[0-5]$/.test(value) ? value.replace(" ", "") : null;
 }
 

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "material": "3.16.8",
-  "commit": "56492ec5e46614b710820ea841db7b1ee961b014",
+  "commit": "fb71cad2bdd6d462c62a615b37fe722ce84fc26e",
   "measured": "2026-11-27",
   "references": {
     "spec": {
@@ -7261,6 +7261,43 @@
       "name": "Menu",
       "properties": [
         {
+          "id": "menu/active-container-radius/segmented/active",
+          "property": "Active submenu corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "active",
+          "density": 0,
+          "spec": {
+            "value": "CornerLarge",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.active.container.shape",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "16dp"
+            }
+          },
+          "compose": {
+            "value": "24.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ActiveContainerShape",
+            "line": 24,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L24"
+          },
+          "material": {
+            "value": "24px",
+            "engines": null,
+            "resolved": {
+              "radius": "24px"
+            }
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "match"
+          },
+          "note": "The measured value could not be assigned a unique role.",
+          "issue": null
+        },
+        {
           "id": "menu/container-colour/baseline",
           "property": "Container tone",
           "aspect": "colour",
@@ -7270,8 +7307,8 @@
           "spec": {
             "value": "SurfaceContainer",
             "url": "https://m3.material.io/components/menus/specs",
-            "section": "Tokens & specs · Menu (baseline) · Menu container color",
-            "read": "2026-11-26",
+            "section": "Tokens & specs · md.comp.menu.container.color",
+            "read": "2026-11-27",
             "resolved": {
               "light": "#F3EDF7",
               "dark": "#211F26",
@@ -7316,8 +7353,8 @@
           "spec": {
             "value": "SurfaceContainerLow",
             "url": "https://m3.material.io/components/menus/specs",
-            "section": "Tokens & specs · Menus - Color - Standard · Menu standard container color",
-            "read": "2026-11-26",
+            "section": "Tokens & specs · md.comp.menus.standard.container.color",
+            "read": "2026-11-27",
             "resolved": {
               "light": "#F7F2FA",
               "dark": "#1D1B20",
@@ -7353,6 +7390,282 @@
           "issue": null
         },
         {
+          "id": "menu/container-colour/standard/rest",
+          "property": "Item container colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "SurfaceContainerLow",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.container.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
+          },
+          "compose": {
+            "value": "SurfaceContainerLow",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemContainerColor",
+            "line": 43,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L43",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
+          },
+          "material": {
+            "value": "SurfaceContainerLow",
+            "engines": null,
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-colour/standard/selected-disabled",
+          "property": "Item container colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "TertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.container.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "compose": {
+            "value": "TertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledContainerColor",
+            "line": 102,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L102",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "material": {
+            "value": "TertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-colour/standard/selected-rest",
+          "property": "Item container colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "TertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.container.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "compose": {
+            "value": "TertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedContainerColor",
+            "line": 99,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L99",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "material": {
+            "value": "TertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-colour/vibrant",
+          "property": "Container colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "TertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.container.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "compose": {
+            "value": "TertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ContainerColor",
+            "line": 34,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L34",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "material": {
+            "value": "TertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-colour/vibrant/rest",
+          "property": "Item container colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "TertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "compose": {
+            "value": "TertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemColor",
+            "line": 43,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L43",
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "material": {
+            "value": "TertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#FFD8E4",
+              "dark": "#633B48",
+              "seed": "#C1E8FB"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-colour/vibrant/selected-rest",
+          "property": "Item container colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "Tertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.container.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "compose": {
+            "value": "Tertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedContainerColor",
+            "line": 117,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L117",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "material": {
+            "value": "Tertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
           "id": "menu/container-corner/baseline",
           "property": "Container corner radius",
           "aspect": "shape",
@@ -7362,8 +7675,8 @@
           "spec": {
             "value": "CornerExtraSmall",
             "url": "https://m3.material.io/components/menus/specs",
-            "section": "Tokens & specs · Menu (baseline) · Menu container shape",
-            "read": "2026-11-26",
+            "section": "Tokens & specs · md.comp.menu.container.shape",
+            "read": "2026-11-27",
             "resolved": {
               "radius": "4dp"
             }
@@ -7402,8 +7715,8 @@
           "spec": {
             "value": "CornerLarge",
             "url": "https://m3.material.io/components/menus/specs",
-            "section": "Tokens & specs · Menus - Common · Menu container shape",
-            "read": "2026-11-26",
+            "section": "Tokens & specs · md.comp.menus.container.shape",
+            "read": "2026-11-27",
             "resolved": {
               "radius": "16dp"
             }
@@ -7433,6 +7746,3149 @@
           "issue": null
         },
         {
+          "id": "menu/container-elevation/baseline/rest",
+          "property": "Container elevation",
+          "aspect": "elevation",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "Level2",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.container.elevation",
+            "read": "2026-11-27",
+            "resolved": {
+              "elevation": "3dp"
+            }
+          },
+          "compose": {
+            "value": "Level2",
+            "file": "MenuTokens.kt",
+            "symbol": "ContainerElevation",
+            "line": 25,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L25",
+            "resolved": {
+              "elevation": "3.0dp"
+            }
+          },
+          "material": {
+            "value": "Level2",
+            "engines": null,
+            "resolved": {
+              "elevation": "3dp",
+              "shadow": "rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(0, 0, 0, 0.15) 0px 2px 6px 2px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-elevation/segmented/rest",
+          "property": "Group surface elevation",
+          "aspect": "elevation",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "Level2",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.container.elevation",
+            "read": "2026-11-27",
+            "resolved": {
+              "elevation": "3dp"
+            }
+          },
+          "compose": {
+            "value": "Level2",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ContainerElevation",
+            "line": 27,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L27",
+            "resolved": {
+              "elevation": "3.0dp"
+            }
+          },
+          "material": {
+            "value": "Level2",
+            "engines": null,
+            "resolved": {
+              "elevation": "3dp",
+              "shadow": "rgba(0, 0, 0, 0.3) 0px 1px 2px 0px, rgba(0, 0, 0, 0.15) 0px 2px 6px 2px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-max-width/baseline/rest",
+          "property": "Container maximum width",
+          "aspect": "size",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "280dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Baseline menu padding and size measurements · Container maximum width",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "280px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-min-width/baseline/rest",
+          "property": "Container minimum width",
+          "aspect": "size",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "112dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Baseline menu padding and size measurements · Container minimum width",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "112px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/container-opacity/standard/selected-disabled",
+          "property": "Item container opacity",
+          "aspect": "other",
+          "variant": "standard",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.container.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledContainerOpacity",
+            "line": 105,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L105"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/divider-height/baseline/rest",
+          "property": "Divider height",
+          "aspect": "size",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "1dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.divider.height",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "1px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/focus-ring-colour/baseline/focus",
+          "property": "Focus indicator colour",
+          "aspect": "colour",
+          "variant": "baseline",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "Secondary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.focus.indicator.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
+          },
+          "compose": {
+            "value": "Secondary",
+            "file": "MenuTokens.kt",
+            "symbol": "FocusIndicatorColor",
+            "line": 31,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L31",
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
+          },
+          "material": {
+            "value": "Secondary",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/focus-ring-colour/segmented/focus",
+          "property": "Item focus indicator colour",
+          "aspect": "colour",
+          "variant": "segmented",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "Secondary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.focus.indicator.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
+          },
+          "compose": {
+            "value": "Secondary",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemFocusIndicatorColor",
+            "line": 120,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L120",
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
+          },
+          "material": {
+            "value": "Secondary",
+            "engines": null,
+            "resolved": {
+              "light": "#625B71",
+              "dark": "#CCC2DC",
+              "seed": "#4D6357"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/group-container-colour/segmented/rest",
+          "property": "Standard group surface colour",
+          "aspect": "colour",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "SurfaceContainerLow",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Standard colors · Container surface in the grouped configuration",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
+          },
+          "compose": {
+            "value": "SurfaceContainerLow",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "GroupContainerColor",
+            "line": 33,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L33",
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
+          },
+          "material": {
+            "value": "SurfaceContainerLow",
+            "engines": null,
+            "resolved": {
+              "light": "#F7F2FA",
+              "dark": "#1D1B20",
+              "seed": "#EFF5EF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/group-inner-corner/segmented/rest",
+          "property": "Group inner corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "CornerSmall",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.group.shape",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "8dp"
+            }
+          },
+          "compose": {
+            "value": "CornerSmall",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "GroupShape",
+            "line": 39,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L39",
+            "resolved": {
+              "radius": "8.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "8px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/group-padding/segmented/rest",
+          "property": "Group padding",
+          "aspect": "spacing",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "2dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.group.padding",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "4.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "GroupPadding",
+            "line": 36,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L36"
+          },
+          "material": {
+            "value": "4px",
+            "engines": null
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/inactive-container-radius/segmented/inactive",
+          "property": "Inactive opener menu corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "inactive",
+          "density": 0,
+          "spec": {
+            "value": "CornerSmall",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.inactive.container.shape",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "8dp"
+            }
+          },
+          "compose": {
+            "value": "CornerSmall",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "InactiveContainerShape",
+            "line": 102,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L102",
+            "resolved": {
+              "radius": "8.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "8px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-between-space/segmented/rest",
+          "property": "Leading icon to label spacing",
+          "aspect": "spacing",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "12dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.between-space",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "12.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemBetweenSpace",
+            "line": 108,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L108"
+          },
+          "material": {
+            "value": "12px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-bottom-space/segmented/rest",
+          "property": "Item bottom padding",
+          "aspect": "spacing",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "8dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.bottom-space",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "8.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemBottomSpace",
+            "line": 111,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L111"
+          },
+          "material": {
+            "value": "8px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-corner-radius/segmented/rest",
+          "property": "Middle item corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "CornerExtraSmall",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.shape",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "4dp"
+            }
+          },
+          "compose": {
+            "value": "CornerExtraSmall",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemShape",
+            "line": 141,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L141",
+            "resolved": {
+              "radius": "4.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerExtraSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "4px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-corner-radius/segmented/selected-rest",
+          "property": "Selected item corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "CornerMedium",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.selected.shape",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "12dp"
+            }
+          },
+          "compose": {
+            "value": "CornerMedium",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemSelectedShape",
+            "line": 138,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L138",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-first-inner-corner/segmented/rest",
+          "property": "First item inner corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "CornerExtraSmall",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.first-child.inner-corner.corner-size",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "4dp"
+            }
+          },
+          "compose": {
+            "value": "CornerExtraSmall",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemFirstChildInnerCornerCornerSize",
+            "line": 114,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L114",
+            "resolved": {
+              "radius": "4.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerExtraSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "4px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-first-outer-corner/segmented/rest",
+          "property": "First item outer corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "CornerMedium",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.first-child.shape",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "12dp"
+            }
+          },
+          "compose": {
+            "value": "CornerMedium",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemFirstChildShape",
+            "line": 117,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L117",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-gap/segmented/rest",
+          "property": "Gap between items within a group",
+          "aspect": "spacing",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "2dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.gap",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "2.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "SegmentedGap",
+            "line": 159,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L159"
+          },
+          "material": {
+            "value": "2px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-height/baseline/rest",
+          "property": "One-line item height",
+          "aspect": "size",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "48dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.list-item.container.height",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-height/segmented/rest",
+          "property": "One-line item height",
+          "aspect": "size",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "44dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.height",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "44.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "Item",
+            "line": 105,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L105"
+          },
+          "material": {
+            "value": "44px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-icon-gap/baseline/rest",
+          "property": "Padding between icon and label",
+          "aspect": "spacing",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "12dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Baseline menu padding and size measurements · Padding between icon and label",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "12px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-last-inner-corner/segmented/rest",
+          "property": "Last item inner corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "CornerExtraSmall",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.last-child.inner-corner.corner-size",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "4dp"
+            }
+          },
+          "compose": {
+            "value": "CornerExtraSmall",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemLastChildInnerCornerCornerSize",
+            "line": 126,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L126",
+            "resolved": {
+              "radius": "4.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerExtraSmall",
+            "engines": null,
+            "resolved": {
+              "radius": "4px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-last-outer-corner/segmented/rest",
+          "property": "Last item outer corner radius",
+          "aspect": "shape",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "CornerMedium",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.last-child.shape",
+            "read": "2026-11-27",
+            "resolved": {
+              "radius": "12dp"
+            }
+          },
+          "compose": {
+            "value": "CornerMedium",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemLastChildShape",
+            "line": 129,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L129",
+            "resolved": {
+              "radius": "12.0dp all corners"
+            }
+          },
+          "material": {
+            "value": "CornerMedium",
+            "engines": null,
+            "resolved": {
+              "radius": "12px"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-leading-space/segmented/rest",
+          "property": "Item start padding",
+          "aspect": "spacing",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "16dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.leading-space",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "16.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemLeadingSpace",
+            "line": 135,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L135"
+          },
+          "material": {
+            "value": "16px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-padding-left/baseline/rest",
+          "property": "Item left padding with icon",
+          "aspect": "spacing",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "12dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Baseline menu padding and size measurements · Item left padding with icon",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "12px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-padding-right/baseline/rest",
+          "property": "Item right padding with icon",
+          "aspect": "spacing",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "12dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Baseline menu padding and size measurements · Item right padding with icon",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "40px",
+            "engines": null
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-top-space/segmented/rest",
+          "property": "Item top padding",
+          "aspect": "spacing",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "8dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.top-space",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "8.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemTopSpace",
+            "line": 147,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L147"
+          },
+          "material": {
+            "value": "8px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/item-trailing-space/segmented/rest",
+          "property": "Item end padding",
+          "aspect": "spacing",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "16dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.trailing-space",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "16.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemTrailingSpace",
+            "line": 153,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L153"
+          },
+          "material": {
+            "value": "16px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-colour/baseline/selected-rest",
+          "property": "Selected label colour",
+          "aspect": "colour",
+          "variant": "baseline",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnSecondaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.list-item.selected.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
+          },
+          "compose": {
+            "value": "OnSecondaryContainer",
+            "file": "MenuTokens.kt",
+            "symbol": "ListItemSelectedLabelTextColor",
+            "line": 37,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L37",
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
+          },
+          "material": {
+            "value": "OnSecondaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/disabled",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledLabelTextColor",
+            "line": 46,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L46",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/focus",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.focused.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemFocusedLabelTextColor",
+            "line": 66,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L66",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/hover",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "hover",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.hovered.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemHoveredLabelTextColor",
+            "line": 75,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L75",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/pressed",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.pressed.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemPressedLabelTextColor",
+            "line": 90,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L90",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/rest",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemLabelTextColor",
+            "line": 84,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L84",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/selected-disabled",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledLabelTextColor",
+            "line": 106,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L106",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/selected-focus",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedFocusedLabelTextColor",
+            "line": 121,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L121",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/selected-hover",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedHoveredLabelTextColor",
+            "line": 136,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L136",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/selected-pressed",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedPressedLabelTextColor",
+            "line": 157,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L157",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/standard/selected-rest",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedLabelTextColor",
+            "line": 151,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L151",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/disabled",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledLabelTextColor",
+            "line": 46,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L46",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/focus",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemFocusedLabelTextColor",
+            "line": 66,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L66",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/hover",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemHoveredLabelTextColor",
+            "line": 81,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L81",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/pressed",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemPressedLabelTextColor",
+            "line": 102,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L102",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/rest",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemLabelTextColor",
+            "line": 96,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L96",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/selected-focus",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.focused.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "compose": {
+            "value": "OnTertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedFocusedLabelTextColor",
+            "line": 125,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L125",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "material": {
+            "value": "OnTertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/selected-hover",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.hovered.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "compose": {
+            "value": "OnTertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedHoveredLabelTextColor",
+            "line": 128,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L128",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "material": {
+            "value": "OnTertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/selected-pressed",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.pressed.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "compose": {
+            "value": "OnTertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedPressedLabelTextColor",
+            "line": 137,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L137",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "material": {
+            "value": "OnTertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-colour/vibrant/selected-rest",
+          "property": "Label colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.label-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "compose": {
+            "value": "OnTertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedLabelTextColor",
+            "line": 131,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L131",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "material": {
+            "value": "OnTertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-opacity/standard/disabled",
+          "property": "Label opacity",
+          "aspect": "other",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.label-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledLabelTextOpacity",
+            "line": 49,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L49"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-opacity/standard/selected-disabled",
+          "property": "Label opacity",
+          "aspect": "other",
+          "variant": "standard",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.label-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledLabelTextOpacity",
+            "line": 109,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L109"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-opacity/vibrant/disabled",
+          "property": "Label opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.label-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledLabelTextOpacity",
+            "line": 49,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L49"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-text-opacity/vibrant/selected-disabled",
+          "property": "Label opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.label-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledLabelTextOpacity",
+            "line": 120,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L120"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/label-typography/segmented/rest",
+          "property": "Label typography",
+          "aspect": "typography",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "LabelLarge",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.label-text.font",
+            "read": "2026-11-27",
+            "resolved": {
+              "size": "14pt",
+              "weight": "500",
+              "lineHeight": "20pt",
+              "tracking": "0.1pt"
+            }
+          },
+          "compose": {
+            "value": "BodyLarge",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemLabelTextFont",
+            "line": 123,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L123",
+            "resolved": {
+              "size": "16sp",
+              "weight": "400",
+              "lineHeight": "24.0sp",
+              "tracking": "0.5sp"
+            }
+          },
+          "material": {
+            "value": "BodyLarge",
+            "engines": null,
+            "resolved": {
+              "size": "16px",
+              "weight": "400",
+              "lineHeight": "24px",
+              "tracking": "0.5px"
+            }
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/baseline/rest",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnSurfaceVariant",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.list-item.with-leading-icon.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "compose": {
+            "value": "OnSecondaryContainer",
+            "file": "MenuTokens.kt",
+            "symbol": "MenuListItemLeadingIconColor",
+            "line": 43,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L43",
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
+          },
+          "material": {
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "drift"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/baseline/selected-rest",
+          "property": "Selected leading icon colour",
+          "aspect": "colour",
+          "variant": "baseline",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnSecondaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.list-item.selected.with-leading-icon.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
+          },
+          "compose": {
+            "value": "OnSecondaryContainer",
+            "file": "MenuTokens.kt",
+            "symbol": "ListItemSelectedLeadingTrailingIconColor",
+            "line": 40,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L40",
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
+          },
+          "material": {
+            "value": "OnSecondaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/disabled",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledLeadingIconColor",
+            "line": 50,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L50",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/focus",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "OnSurfaceVariant",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.focused.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "compose": {
+            "value": "OnSurfaceVariant",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemFocusedLeadingIconColor",
+            "line": 69,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L69",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "material": {
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/hover",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "hover",
+          "density": 0,
+          "spec": {
+            "value": "OnSurfaceVariant",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.hovered.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "compose": {
+            "value": "OnSurfaceVariant",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemHoveredLeadingIconColor",
+            "line": 78,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L78",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "material": {
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/pressed",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnSurfaceVariant",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.pressed.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "compose": {
+            "value": "OnSurfaceVariant",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemPressedLeadingIconColor",
+            "line": 93,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L93",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "material": {
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/rest",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnSurfaceVariant",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "compose": {
+            "value": "OnSurfaceVariant",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemLeadingIconColor",
+            "line": 87,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L87",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "material": {
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/selected-disabled",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledLeadingIconColor",
+            "line": 110,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L110",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/selected-focus",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedFocusedLeadingIconColor",
+            "line": 124,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L124",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/selected-hover",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedHoveredLeadingIconColor",
+            "line": 139,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L139",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/selected-pressed",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedPressedLeadingIconColor",
+            "line": 160,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L160",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/standard/selected-rest",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedLeadingIconColor",
+            "line": 154,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L154",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/vibrant/disabled",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledLeadingIconColor",
+            "line": 50,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L50",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/vibrant/focus",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "Tertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "compose": {
+            "value": "Tertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemFocusedLeadingIconColor",
+            "line": 69,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L69",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "drift"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/vibrant/hover",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "hover",
+          "density": 0,
+          "spec": {
+            "value": "Tertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "compose": {
+            "value": "Tertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemHoveredLeadingIconColor",
+            "line": 84,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L84",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "drift"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/vibrant/pressed",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "pressed",
+          "density": 0,
+          "spec": {
+            "value": "Tertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "compose": {
+            "value": "Tertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemPressedLeadingIconColor",
+            "line": 105,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L105",
+            "resolved": {
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "drift"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/vibrant/rest",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemLeadingIconColor",
+            "line": 99,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L99",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-colour/vibrant/selected-rest",
+          "property": "Leading icon colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.leading-icon.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "compose": {
+            "value": "OnTertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedLeadingIconColor",
+            "line": 134,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L134",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "material": {
+            "value": "OnTertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-opacity/standard/disabled",
+          "property": "Leading icon opacity",
+          "aspect": "other",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.leading-icon.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledLeadingIconOpacity",
+            "line": 53,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L53"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-opacity/standard/selected-disabled",
+          "property": "Leading icon opacity",
+          "aspect": "other",
+          "variant": "standard",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.leading-icon.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledLeadingIconOpacity",
+            "line": 113,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L113"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-opacity/vibrant/disabled",
+          "property": "Leading icon opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.leading-icon.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledLeadingIconOpacity",
+            "line": 53,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L53"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-opacity/vibrant/selected-disabled",
+          "property": "Leading icon opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.leading-icon.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledLeadingIconOpacity",
+            "line": 121,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L121"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-size/baseline/rest",
+          "property": "Leading icon width",
+          "aspect": "size",
+          "variant": "baseline",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "24dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menu.list-item.with-leading-icon.leading-icon.size",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "24px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/leading-icon-size/segmented/rest",
+          "property": "Leading icon width",
+          "aspect": "size",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "20dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.leading-icon.size",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "20.0dp",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemLeadingIconSize",
+            "line": 132,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L132"
+          },
+          "material": {
+            "value": "20px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
           "id": "menu/selected-colour/baseline",
           "property": "Selected item tone",
           "aspect": "colour",
@@ -7442,8 +10898,8 @@
           "spec": {
             "value": "SecondaryContainer",
             "url": "https://m3.material.io/components/menus/specs",
-            "section": "Tokens & specs · Menu (baseline) · Menu list item selected container color",
-            "read": "2026-11-26",
+            "section": "Tokens & specs · md.comp.menu.list-item.selected.container.color",
+            "read": "2026-11-27",
             "resolved": {
               "light": "#E8DEF8",
               "dark": "#4A4458",
@@ -7471,6 +10927,1440 @@
             "compose": "no-value"
           },
           "note": "The baseline Compose menu item has no selected state.",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/standard/disabled",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledSupportingTextColor",
+            "line": 54,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L54",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/standard/rest",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnSurfaceVariant",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "compose": {
+            "value": "OnSurfaceVariant",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSupportingTextColor",
+            "line": 181,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L181",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "material": {
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/standard/selected-focus",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedFocusedSupportingTextColor",
+            "line": 127,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L127",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/standard/selected-hover",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedHoveredSupportingTextColor",
+            "line": 142,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L142",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/standard/selected-pressed",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedPressedSupportingTextColor",
+            "line": 163,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L163",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/standard/selected-rest",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedSupportingTextColor",
+            "line": 172,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L172",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/vibrant/disabled",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledSupportingTextColor",
+            "line": 54,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L54",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/vibrant/focus",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemFocusedSupportingTextColor",
+            "line": 72,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L72",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/vibrant/hover",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemHoveredSupportingTextColor",
+            "line": 87,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L87",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/vibrant/pressed",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemPressedSupportingTextColor",
+            "line": 108,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L108",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/vibrant/rest",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSupportingTextColor",
+            "line": 149,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L149",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-colour/vibrant/selected-rest",
+          "property": "Supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "compose": {
+            "value": "OnTertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedSupportingTextColor",
+            "line": 140,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L140",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "material": {
+            "value": "OnTertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-opacity/standard/disabled",
+          "property": "Supporting text opacity",
+          "aspect": "other",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.supporting-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledSupportingTextOpacity",
+            "line": 57,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L57"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-opacity/vibrant/disabled",
+          "property": "Supporting text opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.supporting-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledSupportingTextOpacity",
+            "line": 57,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L57"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-text-opacity/vibrant/selected-disabled",
+          "property": "Supporting text opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.supporting-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledSupportingTextOpacity",
+            "line": 122,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L122"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/supporting-typography/segmented/rest",
+          "property": "Supporting text typography",
+          "aspect": "typography",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "BodySmall",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.supporting-text.font",
+            "read": "2026-11-27",
+            "resolved": {
+              "size": "12pt",
+              "weight": "400",
+              "lineHeight": "16pt",
+              "tracking": "0.4pt"
+            }
+          },
+          "compose": {
+            "value": "BodyMedium",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemSupportingTextFont",
+            "line": 144,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L144",
+            "resolved": {
+              "size": "14sp",
+              "weight": "400",
+              "lineHeight": "20.0sp",
+              "tracking": "0.2sp"
+            }
+          },
+          "material": {
+            "value": "BodyMedium",
+            "engines": null,
+            "resolved": {
+              "size": "14px",
+              "weight": "400",
+              "lineHeight": "20px",
+              "tracking": "0.25px"
+            }
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/standard/disabled",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnSurface",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "compose": {
+            "value": "OnSurface",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledTrailingSupportingTextColor",
+            "line": 62,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L62",
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "material": {
+            "value": "OnSurface",
+            "engines": null,
+            "resolved": {
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/standard/rest",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnSurfaceVariant",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "compose": {
+            "value": "OnSurfaceVariant",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemTrailingSupportingTextColor",
+            "line": 187,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L187",
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "material": {
+            "value": "OnSurfaceVariant",
+            "engines": null,
+            "resolved": {
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/standard/selected-disabled",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledTrailingSupportingTextColor",
+            "line": 118,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L118",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/standard/selected-focus",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedFocusedTrailingSupportingTextColor",
+            "line": 133,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L133",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/standard/selected-hover",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedHoveredTrailingSupportingTextColor",
+            "line": 148,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L148",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/standard/selected-pressed",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedPressedTrailingSupportingTextColor",
+            "line": 169,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L169",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/standard/selected-rest",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "standard",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemSelectedTrailingSupportingTextColor",
+            "line": 178,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L178",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/vibrant/disabled",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledTrailingSupportingTextColor",
+            "line": 62,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L62",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/vibrant/focus",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "focus",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemFocusedTrailingSupportingTextColor",
+            "line": 78,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L78",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/vibrant/hover",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "hover",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemHoveredTrailingSupportingTextColor",
+            "line": 93,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L93",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/vibrant/pressed",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "pressed",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemPressedTrailingSupportingTextColor",
+            "line": 114,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L114",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/vibrant/rest",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiaryContainer",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "compose": {
+            "value": "OnTertiaryContainer",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemTrailingSupportingTextColor",
+            "line": 155,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L155",
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "material": {
+            "value": "OnTertiaryContainer",
+            "engines": null,
+            "resolved": {
+              "light": "#31111D",
+              "dark": "#FFD8E4",
+              "seed": "#244C5B"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-colour/vibrant/selected-rest",
+          "property": "Trailing supporting text colour",
+          "aspect": "colour",
+          "variant": "vibrant",
+          "state": "selected-rest",
+          "density": 0,
+          "spec": {
+            "value": "OnTertiary",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.trailing-supporting-text.color",
+            "read": "2026-11-27",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "compose": {
+            "value": "OnTertiary",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedTrailingSupportingTextColor",
+            "line": 146,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L146",
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "material": {
+            "value": "OnTertiary",
+            "engines": null,
+            "resolved": {
+              "light": "#FFFFFF",
+              "dark": "#492532",
+              "seed": "#FFFFFF"
+            }
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-opacity/standard/disabled",
+          "property": "Trailing supporting text opacity",
+          "aspect": "other",
+          "variant": "standard",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.trailing-supporting-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "StandardMenuTokens.kt",
+            "symbol": "ItemDisabledTrailingSupportingTextOpacity",
+            "line": 65,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StandardMenuTokens.kt#L65"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-opacity/vibrant/disabled",
+          "property": "Trailing supporting text opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.trailing-supporting-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemDisabledTrailingSupportingTextOpacity",
+            "line": 65,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L65"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-supporting-text-opacity/vibrant/selected-disabled",
+          "property": "Trailing supporting text opacity",
+          "aspect": "other",
+          "variant": "vibrant",
+          "state": "selected-disabled",
+          "density": 0,
+          "spec": {
+            "value": "0.38",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.trailing-supporting-text.opacity",
+            "read": "2026-11-27"
+          },
+          "compose": {
+            "value": "0.38",
+            "file": "VibrantMenuTokens.kt",
+            "symbol": "ItemSelectedDisabledTrailingSupportingTextOpacity",
+            "line": 124,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/VibrantMenuTokens.kt#L124"
+          },
+          "material": {
+            "value": "0.38",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "",
+          "issue": null
+        },
+        {
+          "id": "menu/trailing-typography/segmented/rest",
+          "property": "Shortcut typography",
+          "aspect": "typography",
+          "variant": "segmented",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "LabelLarge",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Tokens & specs · md.comp.menus.menu-item.trailing-supporting-text.font",
+            "read": "2026-11-27",
+            "resolved": {
+              "size": "14pt",
+              "weight": "500",
+              "lineHeight": "20pt",
+              "tracking": "0.1pt"
+            }
+          },
+          "compose": {
+            "value": "LabelSmall",
+            "file": "SegmentedMenuTokens.kt",
+            "symbol": "ItemTrailingSupportingTextFont",
+            "line": 156,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SegmentedMenuTokens.kt#L156",
+            "resolved": {
+              "size": "11sp",
+              "weight": "500",
+              "lineHeight": "16.0sp",
+              "tracking": "0.5sp"
+            }
+          },
+          "material": {
+            "value": "LabelSmall",
+            "engines": null,
+            "resolved": {
+              "size": "11px",
+              "weight": "500",
+              "lineHeight": "16px",
+              "tracking": "0.5px"
+            }
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "match"
+          },
+          "note": "",
           "issue": null
         }
       ]
