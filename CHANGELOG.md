@@ -28,6 +28,13 @@ Faster slider bubble exit, tooltip hide delay, and menu and list values matched 
 - **Slider value indicator.** The pill stays visible while it shrinks and drops in 200 ms after release. It takes 250 ms to appear.
 - **A plain tooltip stays up for 1.5 seconds after the pointer leaves its trigger.**
 
+### Size
+
+Release CI measured **924,649 B** packed (**+466 B** since 3.16.9), **5,271,995 B**
+unpacked and **1,304 files**. The root JavaScript bundle measured **136,598 B** gzip,
+and the every-component scenario measured **133,580 B** gzip.
+[Release CI run 46038719613](https://github.com/floor/material/actions/runs/46038719613/job/140641176204)
+
 ## [3.16.9] - 2026-11-27
 
 Slider value indicator, text field label and notch geometry, and coverage of the Compose tokens.

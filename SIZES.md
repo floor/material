@@ -9,7 +9,7 @@ loads on demand. `vs core` is the gzipped delta against the `core` kernel
 (`pipe`, `createBase`, `withElement`) that every component starts from. A
 scenario that carries another component's code fails the run, not this table.
 
-Measured at 6ebafa1f on 2026-11-27. Regenerate with
+Measured at 74dbceb1 on 2026-11-27. Regenerate with
 `bun run size --markdown > SIZES.md` on the release candidate.
 
 <!-- size-table -->
