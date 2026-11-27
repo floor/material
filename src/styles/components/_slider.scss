@@ -16,11 +16,11 @@
 //
 // The pill grows and moves away from the handle as in the Material slider demo.
 // Its position along the track is applied separately with the translate property.
-$bubble-duration: v.motion('duration-medium1');
-$bubble-enter: transform $bubble-duration v.motion('easing-emphasized'), m.spring(opacity, fast-effects), visibility 0s;
-// Keep the pill visible through the contraction, then hide it at the handle.
-$bubble-exit: transform $bubble-duration v.motion('easing-emphasized-accelerate'),
-  opacity 0s linear $bubble-duration, visibility 0s linear $bubble-duration;
+$bubble-enter: transform v.motion('duration-medium1') v.motion('easing-emphasized'), m.spring(opacity, fast-effects), visibility 0s;
+// Material's 200ms exit is faster than the entrance. Hide the pill when the contraction ends.
+$bubble-exit-duration: v.motion('duration-short4');
+$bubble-exit: transform $bubble-exit-duration v.motion('easing-emphasized-accelerate'),
+  opacity 0s linear $bubble-exit-duration, visibility 0s linear $bubble-exit-duration;
 
 $component: '#{base.$prefix}-slider';
 

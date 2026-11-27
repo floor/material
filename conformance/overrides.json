@@ -1970,6 +1970,22 @@
       "read": "2026-11-26"
     }
   },
+  "slider/value-indicator-hide-duration": {
+    "reason": "Material's general motion guidance suggests 200 ms with emphasized accelerate for exits. The slider spec leaves timing open. Compose's default thumb has no value label. Its custom-thumb sample shows and dismisses a Label without timed motion.",
+    "spec": {
+      "value": "200ms",
+      "url": "https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration",
+      "section": "Suggested easing and duration pairs",
+      "read": "2026-11-27"
+    },
+    "compose": {
+      "value": null,
+      "file": "Slider.kt",
+      "symbol": "Slider",
+      "line": 303,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Slider.kt#L295-L311"
+    }
+  },
   "snackbar/close-icon-inset-end/one-line-action-close/rest": {
     "reason": "The 24 dp close icon is centered in a 48 dp Compose allocation.",
     "spec": {

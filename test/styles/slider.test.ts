@@ -101,7 +101,7 @@ describe('slider motion', () => {
     expect(value(indicator, 'transform')).toBe('translate(var(--mtrl-slider-value-entry-offset, 0px, 5px)) scale(0)');
     expect(value(visible, 'transform')).toBe('translate(0, 0) scale(1)');
     const motion = /^transform 250ms cubic-bezier\(0\.3, 0, 0, 1\), opacity 175ms linear\(/;
-    expect(value(indicator, 'transition')).toBe('transform 250ms cubic-bezier(0.3, 0, 0.8, 0.15), opacity 0s linear 250ms, visibility 0s linear 250ms');
+    expect(value(indicator, 'transition')).toBe('transform 200ms cubic-bezier(0.3, 0, 0.8, 0.15), opacity 0s linear 200ms, visibility 0s linear 200ms');
     expect(value(visible, 'transition')).toMatch(motion);
     expect(value(`${root}--vertical ${indicator}`, 'transform-origin')).toBe('100% 50%');
   });
