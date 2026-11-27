@@ -79,7 +79,7 @@
     "components/carousel/config.js": "b826fe2dc88165534902ccfbf3eb810aee9556f2ff79d68bbccaf19777f9b513",
     "components/carousel/constants.js": "3e2ae7cee368f0eba1c49b3349721e70c6000c62e958d3bb23dcaa460b7e4629",
     "components/carousel/features/index.js": "b3f8c0c8feea0d399239cffa58fa071d801192e64b28175fddd0f480cb8531eb",
-    "components/carousel/features/scroll.js": "2f11f865c748a99276b84eca48d143783d9de83e14336da54b9fca38d73bac25",
+    "components/carousel/features/scroll.js": "58bd6f957364d1cbca72bf74eecb4faea79f459d6d8d25ac0085383fb6fbb343",
     "components/carousel/features/slides.js": "c628a146fbb9cf8a169b041a56bf6e1aca526e8a9ee1de6f01cf8811293ccf19",
     "components/carousel/index.js": "f8a00febd950f5dade0e77edcf1b1362a58afc354af2352ac11a5b2ba36fd007",
     "components/carousel/keylines.js": "d599f8358a6e4cb1de5703669164d4968a15f740afad8b26fc4b04d81c3b3df7",
