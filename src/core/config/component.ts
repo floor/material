@@ -93,6 +93,17 @@ export const createComponentConfig = <T extends BaseComponentConfig & object>(
   return config;
 };
 
+/**
+ * Copies a configuration without keys whose value is undefined.
+ *
+ * A spread options object passes those keys. The merge then copies undefined
+ * over a default, and a class built from the value is skipped or becomes
+ * `--undefined`.
+ */
+export const withoutUndefined = <T extends object>(config: T): Partial<T> =>
+  Object.fromEntries(
+    Object.entries(config).filter((entry) => entry[1] !== undefined),
+  ) as Partial<T>;
 
 /**
  * Processes class names for an element, handling arrays, nulls and conditional classes
