@@ -76,7 +76,7 @@ async function main() {
   }
   if (releaseTableRows.length) {
     console.error("The committed release size tables differ from this run's measurement.");
-    console.error("Replace them with this run's files from the package-sizes artifact (analysis/release-sizes) and commit those once; do not re-measure locally:");
+    console.error("Replace them with this run's files from the package-sizes artifact (release-sizes/) and commit those once; do not re-measure locally:");
     for (const diff of releaseTableRows) {
       console.error(`- ${diff.file} — ${diff.row}`);
       console.error(`    measured:  ${diff.measured}`);

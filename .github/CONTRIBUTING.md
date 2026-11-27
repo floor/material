@@ -287,8 +287,8 @@ Install the stable release with `npm install material`.
    local run is not byte-identical to CI in every row, so expect this. The
    failure lists each file and each row to replace. Commit the measured
    `SIZES.md`, `README.md` and `npm-readme.md` from the failing run's
-   `package-sizes` artifact (`analysis/release-sizes/`) once, exactly as they
-   are, and push again. Do not re-measure locally and do not edit a number by
+   `package-sizes` artifact (`release-sizes/`) once, exactly as they are, and
+   push again. Do not re-measure locally and do not edit a number by
    hand. Record the packed total and change since the previous release in the
    release report.
 2. Tag the merge commit `vx.y.z` and push the tag:
