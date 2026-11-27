@@ -591,6 +591,7 @@
     "menu-deferred:check": "bun run scripts/check-menu-deferred.ts && bun run scripts/check-menu-hidden-opener.ts && bun run scripts/check-menu-zoom.ts",
     "menu-container-space:check": "bun run scripts/check-menu-container-space.ts",
     "card-state-layers:check": "bun run scripts/check-card-state-layers.ts",
+    "text-field-chips:check": "bun run scripts/check-text-field-chips.ts",
     "menu-item-checked:check": "bun run scripts/check-menu-item-checked.ts",
     "fab-menu-ripple:check": "bun run scripts/check-fab-menu-ripple.ts",
     "fab-menu-position:check": "bun run scripts/check-fab-menu-position.ts",
