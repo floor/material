@@ -258,10 +258,22 @@ Install the stable release with `npm install material`.
    `README.md` and `npm-readme.md` where the release changes them. Merge it
    when CI passes.
 
-   Run `bun run changelog:assemble <version> <YYYY-MM-DD>`: it groups the
-   `.changes/` fragments into the new dated section after `[Unreleased]`,
-   moves the comparison links, and deletes the fragment files. Then add the
-   section's one-line summary and its `### Size` measurements by hand.
+   Write that one commit with `release:prepare`:
+
+   ```bash
+   bun run release:prepare --version x.y.z --dry-run   # the plan; writes nothing
+   bun run release:prepare --version x.y.z --trailer "Agent: …"
+   ```
+
+   It groups the `.changes/` fragments into the new dated section after
+   `[Unreleased]`, moves the comparison links and deletes the fragments (the
+   same assembler as `bun run changelog:assemble <version> <YYYY-MM-DD>`),
+   bumps `package.json`, records the version in `conformance/matrix.json`, and
+   fills `SIZES.md` and both README size tables from a local measurement
+   (`bun run size` and `bun run size:check`; `--skip-measure` reuses the
+   `analysis/` they leave). A real run refuses a tree whose index or worktree
+   is not clean, so nothing else rides in the commit. Then add the section's
+   one-line summary and its `### Size` measurements by hand.
 
    **Keep the install sections consistent with the version**, between
    `<!-- install -->` and `<!-- /install -->` in both files.
@@ -269,9 +281,13 @@ Install the stable release with `npm install material`.
    and `npm install material@next` for a 3.0.0 pre-release. A stable version
    must have no paragraph about the `next` tag in its install section.
 
-   The release PR's `package-sizes` CI artifact contains measured `SIZES.md`,
-   `README.md` and `npm-readme.md`. Use those outputs to refresh the published
-   tables. Record the packed total and change since the previous release in
+   The size tables are a pre-fill, not the gate. Release CI measures the same
+   tree and fails the pull request with `The committed release size tables
+   differ from this run's measurement` when a committed value differs. When
+   that happens, take the measured `SIZES.md`, `README.md` and `npm-readme.md`
+   from the run's `package-sizes` artifact (`analysis/release-sizes/`) into a
+   follow-up commit on the release branch and push again; do not edit a number
+   by hand. Record the packed total and change since the previous release in
    the release report.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
