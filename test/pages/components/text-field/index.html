@@ -1,118 +1,201 @@
 <!doctype html>
-<html lang="en" data-theme="baseline">
+<html lang="en" data-theme="baseline" data-theme-mode="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Text field — owner test page</title>
-<!--
-  The owner's test page for input chips inside a text field (design §6, review
-  round 1). It loads the built package from dist/, as test:pages serves the
-  repository root: ../../../../dist/ is the build.
-  It shows the fixed behaviour live and prints the measured values beside it.
--->
+<title>text-field</title>
 <link rel="stylesheet" href="../../../../dist/styles.css">
 <link rel="stylesheet" href="../../../../dist/styles/text-field-chips.css">
+<link rel="stylesheet" href="../../shared/harness.css">
 <style>
-  body { margin: 0; padding: 24px; font: 16px/1.5 system-ui; display: grid; gap: 24px; max-width: 960px; }
-  h1 { font-size: 20px; margin: 0; }
-  section { display: grid; gap: 12px; }
-  .stage { display: grid; gap: 16px; }
-  #wide { width: 520px; }
-  #narrow { width: 220px; }
-  pre { margin: 0; padding: 12px; background: color-mix(in srgb, currentColor 6%, transparent); border-radius: 8px; font-size: 13px; white-space: pre-wrap; }
-  .note { color: color-mix(in srgb, currentColor 70%, transparent); font-size: 14px; }
+  .tp-field { width: 520px; max-width: 100%; }
+  .tp-field--narrow { width: 220px; }
+  .tp-stage { display: grid; gap: 16px; }
 </style>
 </head>
 <body>
-<h1>Text field</h1>
-<p class="note">One page per component: each block names what to look for, the expected result, and a live measurement of the field below it.</p>
-
-<section>
-  <h2>Variants and sizes</h2>
-  <p class="note">A labelled field with input chips, filled and outlined, and a narrow one whose chips wrap onto rows 16px apart. <strong>Expected:</strong> the label keeps its line above the chips and the outlined notch stays open; the wrapped rows never overlap their 48dp targets.</p>
-  <div class="stage">
-    <div id="wide"></div>
-    <div id="narrow"></div>
-    <m-text-field id="element" chips label="To" name="to" type="email"></m-text-field>
-    <form id="form"><m-text-field id="submitted" chips label="Recipients" name="to" type="email"></m-text-field></form>
-  </div>
-  <h2>States</h2>
-  <p class="note">With a committed chip and an empty draft, blur, focus, typing and clearing, <code>setValue</code>, and the form's reset. <strong>Expected:</strong> the root never carries <code>--empty</code> while a chip is committed, so the label stays floated on every painted frame and the notch stays open.</p>
-  <h2>Interaction</h2>
-  <p class="note">Type a name and press Enter or a separator; Backspace twice at the start selects and removes the last chip; a second activation of a chip edits it. <strong>Expected:</strong> one chip per entry, the draft clears, and the status region says what was added or removed.</p>
-  <h2>Edge cases</h2>
-  <p class="note">An invalid email is kept as text; a pasted list splits while rejected or over-limit text stays; the first chip's two 48dp targets are measured with <code>elementFromPoint</code> at 100% and 200% zoom. <strong>Expected:</strong> no point resolves to the wrong action, and the action's own end belongs to the action.</p>
-  <pre id="values">measuring…</pre>
-</section>
-
 <script type="module">
+  import { initPage, section, scenario } from "../../shared/harness.js";
   import { createTextField } from "../../../../dist/index.js";
   import { textFieldChips } from "../../../../dist/components/text-field-chips/index.js";
   import { defineTextField } from "../../../../dist/elements/text-field.js";
   import "../../../../dist/elements/css/text-field-chips.js";
 
   defineTextField();
+  const main = await initPage({ name: "text-field" });
 
-  const wide = createTextField({ label: "To", name: "to", type: "email", variant: "outlined", chips: textFieldChips({ separators: [",", ";"], maxChips: 10 }) });
-  document.getElementById("wide").append(wide.element);
-  const narrow = createTextField({ label: "Wrapped", chips: textFieldChips({ items: ["alice@example.com", "bob@example.com", "a-long-recipient-address@example.com", "d@e.com"] }) });
-  document.getElementById("narrow").append(narrow.element);
-
-  const out = document.getElementById("values");
-
-  /** The 48dp target of an action, as the pseudo-element paints it. */
-  const target = (button) => {
-    const style = getComputedStyle(button, "::before");
-    const box = button.getBoundingClientRect();
-    const width = parseFloat(style.width) || 0;
-    const height = parseFloat(style.height) || 0;
-    return { left: box.right - width, right: box.right, top: box.top + (box.height - height) / 2, bottom: box.top + (box.height + height) / 2 };
+  const stage = (body) => {
+    const el = document.createElement("div");
+    el.className = "tp-stage";
+    body.append(el);
+    return el;
   };
-
-  const measure = () => {
-    const field = wide.element;
-    const label = field.querySelector(".mtrl-text-field__label").getBoundingClientRect();
-    const row = field.querySelector(".mtrl-text-field__chips").getBoundingClientRect();
-    const outline = field.querySelector(".mtrl-text-field__outline");
-    const chips = [...narrow.element.querySelectorAll(".mtrl-chip")];
-    const chip = chips[0];
-    const action = chip?.querySelector(".mtrl-chip__action");
-    const remove = chip?.querySelector(".mtrl-chip__remove");
-    const probe = (button, at) => {
-      const box = button.getBoundingClientRect();
-      const hit = document.elementFromPoint(at.left, at.top + box.height / 2);
-      return hit ? `${hit.className}` : "nothing";
+  const factoryField = (parent, config, className = "tp-field") => {
+    const { items = [], ...chips } = config;
+    const field = createTextField({ ...config, chips: textFieldChips({ items, ...chips }) });
+    field.element.classList.add(...className.split(" "));
+    parent.append(field.element);
+    return field;
+  };
+  const chipInfo = (field) => {
+    const root = field.element;
+    const chips = [...root.querySelectorAll(".mtrl-chip")];
+    const first = chips[0];
+    const remove = first?.querySelector(".mtrl-chip__remove");
+    const before = remove ? getComputedStyle(remove, "::before") : null;
+    return {
+      chips: chips.length,
+      values: field.getValues(),
+      rows: new Set(chips.map((chip) => Math.round(chip.getBoundingClientRect().top))).size,
+      firstWidth: first ? Math.round(first.getBoundingClientRect().width) : null,
+      removeTarget: before ? `${before.width} x ${before.height}` : null,
     };
-    const actionTarget = action ? target(action) : null;
-    const removeTarget = remove ? target(remove) : null;
-    const form = document.getElementById("form");
-    out.textContent = JSON.stringify({
-      values: wide.getValues(),
-      elementValues: document.getElementById("element").values ?? null,
-      emptyClass: field.classList.contains("mtrl-text-field--empty"),
-      labelFloated: label.top - field.getBoundingClientRect().top < 10,
-      labelAboveChips: label.top < row.top,
-      notchOpen: outline?.classList.contains("mtrl-text-field__outline--notched") ?? null,
-      submitted: [...new FormData(form).getAll("to")],
-      narrowRows: new Set(chips.map((item) => Math.round(item.getBoundingClientRect().top))).size,
-      firstChipTargets: actionTarget && removeTarget ? {
-        action: actionTarget,
-        remove: removeTarget,
-        atActionStart: probe(action, { left: actionTarget.left + 2, top: actionTarget.top + 2 }),
-        atChipMiddle: probe(remove, { left: actionTarget.left + actionTarget.right - 1, top: actionTarget.top + 2 }),
-      } : null,
-      devicePixelRatio: window.devicePixelRatio,
-    }, null, 2);
   };
+  const labelInfo = (field) => {
+    const element = field.element;
+    const label = element.querySelector(".mtrl-text-field__label");
+    const row = element.querySelector(".mtrl-text-field__chips");
+    const outline = element.querySelector(".mtrl-text-field__outline");
+    const box = element.getBoundingClientRect();
+    return {
+      empty: element.classList.contains("mtrl-text-field--empty"),
+      labelTop: label && row ? Math.round(label.getBoundingClientRect().top - row.getBoundingClientRect().top) : null,
+      notchOpen: outline ? outline.classList.contains("mtrl-text-field__outline--notched") : null,
+      width: Math.round(box.width),
+    };
+  };
+  const json = (value) => JSON.stringify(value);
+  const live = (field) => field.element.querySelector(".mtrl-text-field__chips-live");
 
-  wide.on("add", measure);
-  wide.on("remove", measure);
-  wide.on("input", measure);
-  document.getElementById("form").addEventListener("submit", (event) => event.preventDefault());
-  measure();
-  // Zoom changes the measured boxes: the page follows them.
-  window.addEventListener("resize", measure);
-  setInterval(measure, 500);
+  // ---------------------------------------------------------------- Variants
+  const variants = section(main, "Variants and sizes");
+  scenario(variants, {
+    title: "Filled and outlined fields with input chips",
+    lookFor: "the label stays on its own line above the chips and the outlined notch stays open.",
+    expected: "the chips row sits inside the field, the label above it, and both variants keep their 56dp container.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__variantFields = [
+        factoryField(box, { label: "To", name: "to", type: "email", variant: "filled", items: ["alice@example.com", "bob@example.com"] }),
+        factoryField(box, { label: "Copy to", name: "cc", type: "email", variant: "outlined", items: ["carol@example.com"] }),
+      ];
+    },
+    measure: () => json(window.__variantFields.map(labelInfo)),
+  });
+  scenario(variants, {
+    title: "A narrow field wraps its chips",
+    lookFor: "chips wrap onto new rows 16px apart and every chip keeps its 88dp minimum.",
+    expected: "no chip leaves the field, and no two chips share a target.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__narrowField = factoryField(box, { label: "Recipients", items: ["alice@example.com", "bob@example.com", "a-long-recipient-address@example.com", "d@e.com"] }, "tp-field tp-field--narrow");
+    },
+    measure: () => json(chipInfo(window.__narrowField)),
+  });
+
+  // ------------------------------------------------------------------ States
+  const states = section(main, "States");
+  scenario(states, {
+    title: "A committed chip keeps the field filled",
+    lookFor: "blur, focus, typing, clearing, setValue and the form's reset never paint the empty placeholder while a chip is committed.",
+    expected: "the root never carries --empty with a chip and an empty draft, so the label stays floated and the notch open on every frame.",
+    mount: (body) => {
+      const box = stage(body);
+      const form = document.createElement("form");
+      form.addEventListener("submit", (event) => event.preventDefault());
+      box.append(form);
+      const field = factoryField(form, { label: "To", name: "to", variant: "outlined", items: ["alice@example.com"] });
+      const reset = document.createElement("button");
+      reset.type = "reset";
+      reset.textContent = "Reset";
+      form.append(reset);
+      window.__stateField = field;
+    },
+    measure: () => json(labelInfo(window.__stateField)),
+  });
+
+  // ------------------------------------------------------------- Interaction
+  const interaction = section(main, "Interaction");
+  scenario(interaction, {
+    title: "Enter, a separator, Backspace and a second activation",
+    lookFor: "typing a name and pressing Enter or a separator makes one chip and clears the draft; Backspace at the start selects the last chip and a second Backspace removes it; a second activation edits the chip as text.",
+    expected: "one chip per entry, the draft empty after a commit, and the status region naming what was added or removed.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__interactionField = factoryField(box, { label: "Participants", separators: [",", ";"] });
+    },
+    measure: () => json({ ...chipInfo(window.__interactionField), live: live(window.__interactionField)?.textContent ?? "" }),
+  });
+
+  // ------------------------------------------------------------- Edge cases
+  const edges = section(main, "Edge cases");
+  scenario(edges, {
+    title: "An invalid address stays as text",
+    lookFor: "type an address without @ and press Enter.",
+    expected: "no chip is made, the text stays in the input, and the supporting text says why.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__emailField = factoryField(box, { label: "To", type: "email", supportingText: "Separate addresses with a comma" });
+    },
+    measure: () => {
+      const field = window.__emailField;
+      return json({ draft: field.getValue(), chips: field.getValues() });
+    },
+  });
+  scenario(edges, {
+    title: "Both 48dp targets own their edge, at the browser's zoom",
+    lookFor: "the chip's start belongs to its action and its end to the remove button; zoom the browser to 200% and the edges stay theirs.",
+    expected: "elementFromPoint at 0/40/44 resolves to the action, at 48 and at the chip's end to the remove button.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__hitField = factoryField(box, { label: "Hit targets", items: ["a"] }, "tp-field tp-field--narrow");
+    },
+    measure: () => {
+      const element = window.__hitField.element;
+      const chip = element.querySelector(".mtrl-chip");
+      if (!chip) return json({});
+      const box = chip.getBoundingClientRect();
+      const y = box.top + box.height / 2;
+      const at = (offset) => {
+        const hits = document.elementsFromPoint(box.left + offset, y);
+        const inside = hits.find((hit) => chip.contains(hit)) ?? null;
+        if (!inside) return "nothing";
+        return inside.closest(".mtrl-chip__remove") ? "remove" : inside.closest(".mtrl-chip__action") ? "action" : inside.className;
+      };
+      return json({ width: Math.round(box.width), zoom: window.devicePixelRatio, at0: at(0), at40: at(40), at44: at(44), at48: at(48), atEnd: at(Math.round(box.width) - 2) });
+    },
+  });
+  scenario(edges, {
+    title: "The element matches the factory",
+    lookFor: "the same field as <m-text-field chips> beside the factory's.",
+    expected: "the element's shadow root adopts the chip sheets while chips is on: an 88px short chip, a 48dp remove target, the same values.",
+    mount: (body) => {
+      const box = stage(body);
+      const element = document.createElement("m-text-field");
+      element.className = "tp-field tp-field--narrow";
+      element.setAttribute("label", "Element");
+      element.setAttribute("chips", "");
+      element.innerHTML = ["a", "b"].map((value) => `<m-chip value="${value}">${value}</m-chip>`).join("");
+      box.append(element);
+      window.__elementField = element;
+    },
+    measure: () => {
+      const element = window.__elementField;
+      const root = element.shadowRoot;
+      const chip = root?.querySelector(".mtrl-chip");
+      const remove = chip?.querySelector(".mtrl-chip__remove");
+      const before = remove ? getComputedStyle(remove, "::before") : null;
+      const sheetCounters = (root?.adoptedStyleSheets ?? []).map((sheet) => [...sheet.cssRules].map((rule) => rule.cssText).join("\n"));
+      return json({
+        adopted: root?.adoptedStyleSheets.length ?? 0,
+        chipSheets: sheetCounters.filter((text) => text.includes(".mtrl-text-field__chips")).length,
+        chips: root?.querySelectorAll(".mtrl-chip").length ?? 0,
+        firstWidth: chip ? Math.round(chip.getBoundingClientRect().width) : null,
+        removeTarget: before ? `${before.width} x ${before.height}` : null,
+        values: element.getValues(),
+      });
+    },
+  });
 </script>
 </body>
 </html>

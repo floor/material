@@ -29,6 +29,7 @@ modules.
 - `components/drawer/` — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu (5x slow motion).
 - `components/progress/` — buffer colour candidates; value scrubbing.
 - `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.
+- `components/text-field/` — input chips: the filled and outlined fields, wrapping at 220px, the empty state across reset, entry and removal, an invalid address, the 48dp targets at the browser's zoom, and the element's shadow sheets beside the factory's.
 
 ## Harness
 
