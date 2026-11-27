@@ -30,6 +30,7 @@ modules.
 - `components/progress/` — buffer colour candidates; value scrubbing.
 - `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.
 - `components/list/` — 12 px between the slots, 20 px segmented icons, the segmented trailing icon in on-surface, and a selected icon that turns on-surface while hovered, focused, or pressed.
+- `components/tooltip/` — the plain label stays to 1,400 ms after the pointer leaves and is gone after 1,500 ms plus its exit; Escape closes it at once.
 
 ## Harness
 
