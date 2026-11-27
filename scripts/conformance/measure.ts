@@ -331,7 +331,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     pages.push(page);
   }
 
-  const measureOn = async (page: Page, cases: Case[], scheme?: "light" | "dark", densityOverride?: number): Promise<CaseResult[]> => {
+  const measureOn = async (page: Page, cases: Case[], scheme?: "light" | "dark", densityOverride?: number, themeLabel?: string): Promise<CaseResult[]> => {
     const rows: CaseResult[] = [];
     const defaultViewport = page.viewportSize()!;
     for (const testCase of cases) {
@@ -388,10 +388,29 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       // settling, so the read is of the state the case names.
       const verified = testCase.parts.find((part) => part.name === "verifiedState");
       if (verified) {
-        await page.waitForFunction((selector) => !!document.querySelector(selector), verified.selector, { timeout: 5000 }).catch(() => {
-          // A selector that never matches is read as it stands; the fixture's
-          // own verifiedState assertion reports it.
-        });
+        // The same resolver and scope the read uses: the part's document flag,
+        // and `>>>` crossing into a shadow root.
+        const landed = await page.waitForFunction(
+          ({ selector, documentScope }) => {
+            const mount = document.querySelector("#mount");
+            if (!mount) return false;
+            if (selector === ":root") return true;
+            let scope: ParentNode = documentScope ? document : mount;
+            let found: Element | null = null;
+            for (const step of selector.split(">>>").map((entry) => entry.trim())) {
+              found = scope.querySelector(step);
+              if (!found) return false;
+              scope = found.shadowRoot ?? found;
+            }
+            return found !== null;
+          },
+          { selector: verified.selector, documentScope: verified.document ?? false },
+          { timeout: 5000, polling: 100 },
+        ).catch(() => null);
+        if (!landed) {
+          const theme = themeLabel ?? testCase.scheme ?? "light";
+          throw new Error(`${testCase.id} (${theme}): the verified state never landed: no element matches ${verified.selector}`);
+        }
       }
       // Settle running animations, including a colour transition that starts on
       // a later frame, then the scrollers and the measured parts. Indefinite
@@ -532,7 +551,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           for (const [property, value] of Object.entries(overrides)) document.documentElement.style.setProperty(property, value);
         }, shapeOverrides);
       }
-      const rows = await measureOn(page, cases, theme === "dark" ? "dark" : "light", theme === "compact" ? -2 : undefined);
+      const rows = await measureOn(page, cases, theme === "dark" ? "dark" : "light", theme === "compact" ? -2 : undefined, theme);
       const typography = theme === "compact" ? await page.evaluate(roles => {
         const style = getComputedStyle(document.documentElement);
         return roles.map(role => {
