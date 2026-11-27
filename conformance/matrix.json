@@ -16863,7 +16863,7 @@
             "value": "28dp / 28dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp / 0dp",
@@ -16880,7 +16880,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 28dp insets govern because Compose renders a bare full-width divider. Material reports start and end separately so the standard sheet's border remains visible; the divider gives that 1px back from its margin so the inset reads 28dp from the container edge.",
           "issue": null
         },
         {
@@ -16894,7 +16894,7 @@
             "value": "28dp / 28dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp / 0dp",
@@ -16904,14 +16904,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
           },
           "material": {
-            "value": "28px / 29px",
+            "value": "28px / 28px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders a bare divider at full width. Material reports start and end separately so the standard border remains visible. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 28dp insets govern because Compose renders a bare full-width divider. Material reports start and end separately so the standard sheet's border remains visible; the divider gives that 1px back from its margin so the inset reads 28dp from the container edge.",
           "issue": null
         },
         {
@@ -16925,7 +16925,7 @@
             "value": "16dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp",
@@ -16935,14 +16935,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
           },
           "material": {
-            "value": "8px",
+            "value": "16px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 16dp governs because Compose renders caller-supplied content and a bare divider adds no surrounding vertical gap. The drawer's divider takes 16dp above and below.",
           "issue": null
         },
         {
@@ -16956,7 +16956,7 @@
             "value": "16dp",
             "url": "https://m3.material.io/components/navigation-drawer/specs",
             "section": "Measurements",
-            "read": "2026-11-26"
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp",
@@ -16966,14 +16966,14 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Divider.kt#L49"
           },
           "material": {
-            "value": "8px",
+            "value": "16px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "Compose renders caller-supplied content. A bare divider adds no surrounding vertical gap. The reference choice is pending.",
+          "note": "Reference conflict resolved under rule 2: the spec's 16dp governs because Compose renders caller-supplied content and a bare divider adds no surrounding vertical gap. The drawer's divider takes 16dp above and below.",
           "issue": null
         },
         {
