@@ -144,7 +144,7 @@ export const bindings: FixtureBinding[] = [
   fixture("carousel", "Carousel", [
     ["mixed-item-widths/uncontained/rest", "Mixed item widths", "size", "uncontained/mixed", different("first", "second", "width")],
     ["mixed-aspect-ratios/uncontained/rest", "Mixed item aspect ratios", "size", "uncontained/mixed", different("first", "second", "aspectRatio")],
-    ["item-state/all/disabled", "Disabled item state", "other", "uncontained/disabled-item", present("disabled")],
+    ["item-state/all/disabled", "Disabled item state", "other", "uncontained/base/light", present("disabled")],
     ["inline-padding/multi-browse/rest", "Inline start padding", "spacing", "multi-browse/base/light", inset("first", "root", "left")],
     ["item-gap/multi-browse/rest", "Inter-item gap", "spacing", "multi-browse/base/light", gap("first", "second", "right")],
     ["block-padding/uncontained/rest", "Block start padding", "spacing", "uncontained/base/light", inset("first", "root", "top")],
