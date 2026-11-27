@@ -1,3 +1,4 @@
+import { recordCatalogueInputs, type CatalogueInputGraph } from "./catalogue-input-graph";
 // Writes dist/svelte: one Svelte 5 component per element and per declaration
 // child, from the registry in src/elements/index.ts, plus the entry point and
 // the types. Svelte components must be .svelte files the app compiles, so the
@@ -78,10 +79,26 @@ export const componentSource = component;
 /** The source `emitSvelte` writes for one declaration child. */
 export const declarationSource = declarationComponent;
 
-export async function emitSvelte(outdir: string): Promise<void> {
+export async function emitSvelte(outdir: string, graph?: CatalogueInputGraph): Promise<void> {
   const dir = `${outdir}/svelte`;
   await mkdir(dir, { recursive: true });
   const exports: string[] = [];
+
+  if (graph) {
+    const entries = [...elementModules, ...declarationModules];
+    for (const { name, module } of entries) {
+      for (const extension of [".svelte", ".svelte.d.ts"]) {
+        recordCatalogueInputs(graph.members, `dist/svelte/${pascal(name)}${extension}`, [`src/elements/${module}.ts`]);
+      }
+    }
+    const registryInputs = [
+      ...graph.members.get("dist/elements/index.js") ?? [],
+      ...entries.map(({ module }) => `src/elements/${module}.ts`),
+    ];
+    for (const output of ["index.js", "index.d.ts"]) {
+      recordCatalogueInputs(graph.members, `dist/svelte/${output}`, registryInputs);
+    }
+  }
 
   for (const { name, module, styles } of elementModules) {
     const P = pascal(name);
