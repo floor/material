@@ -17304,25 +17304,25 @@
           "spec": {
             "value": "Full rail width",
             "url": "https://m3.material.io/components/navigation-rail/specs",
-            "section": "Measurements",
-            "read": "2026-11-26"
+            "section": "States",
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "Content-sized target",
             "file": "NavigationItem.kt",
             "symbol": "NavigationItem",
-            "line": 466,
-            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt#L466"
+            "line": 441,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt#L441-L458"
           },
           "material": {
-            "value": "252px",
+            "value": "280px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "drift"
           },
-          "note": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width. The reference choice is pending.",
+          "note": "The site specifies a full-width target. Compose has no default item width, so the site sets the hit width. The indicator keeps its visual inset.",
           "issue": null
         },
         {
@@ -17335,8 +17335,8 @@
           "spec": {
             "value": "0dp",
             "url": "https://m3.material.io/components/navigation-rail/specs",
-            "section": "Measurements",
-            "read": "2026-11-26"
+            "section": "States",
+            "read": "2026-11-27"
           },
           "compose": {
             "value": "0dp",
@@ -17346,12 +17346,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/WideNavigationRail.kt#L357"
           },
           "material": {
-            "value": "14px",
+            "value": "0px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The website shows a full-width target. Compose applies no default horizontal padding to the modal dialog body.",
           "issue": null
