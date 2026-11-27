@@ -26,10 +26,7 @@
     panel.append(slider.element);
   }
 </script>
-<section id="indicator-motion" aria-labelledby="indicator-motion-heading" style="max-width: 360px; margin-top: 24px;">
-  <h2>Interaction</h2>
-  <h3 id="indicator-motion-heading">Value indicator entrance and exit</h3>
-  <p>Press either handle or tap its track after the pill has hidden. The whole pill should grow from scale 0 to 1, rise 5 px, and stay horizontally centred within 0.5 px. On release, watch it shrink back toward the handle.</p>
+<div id="indicator-motion">
   <dl>
     <dt>Scale on entry</dt><dd id="indicator-scale">—</dd>
     <dt>Rise on entry</dt><dd id="indicator-rise">—</dd>
@@ -69,7 +66,7 @@
     motionFrame = requestAnimationFrame(measure);
   });
 </script>
-</section>
+</div>
 <script type="module">
 import { initPage, section, scenario } from "../../shared/harness.js";
 import { createSlider } from "../../../../dist/index.js";
@@ -249,6 +246,24 @@ scenario(states, {
 });
 
 const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Value indicator entrance and exit",
+  lookFor: "press either handle, or the track after the pill has hidden: the whole pill grows from scale 0 to 1, rises 5 px, and stays horizontally centred within 0.5 px",
+  expected: "on release the pill shrinks back toward the handle",
+  measure: () => {
+    const text = (id) => document.getElementById(id)?.textContent ?? "—";
+    return `scale ${text("indicator-scale")} · rise ${text("indicator-rise")} · alignment ${text("indicator-alignment")}`;
+  },
+  mount: (body) => {
+    // The Sound script has already filled #sound-panel, and the readout is
+    // already listening. Moving them here puts that demo in this section
+    // instead of ahead of Variants & sizes.
+    const panel = document.getElementById("sound-panel");
+    const readout = document.getElementById("indicator-motion");
+    if (panel) body.append(panel);
+    if (readout) body.append(readout);
+  },
+});
 scenario(interaction, {
   title: "Keyboard, drag, and a press anywhere",
   lookFor: "the arrows step a tick; the drag follows the pointer; a press on the track narrows the handle",
