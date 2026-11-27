@@ -331,7 +331,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     pages.push(page);
   }
 
-  const measureOn = async (page: Page, cases: Case[], scheme?: "light" | "dark", densityOverride?: number): Promise<CaseResult[]> => {
+  const measureOn = async (page: Page, cases: Case[], scheme?: "light" | "dark", densityOverride?: number, themeLabel?: string): Promise<CaseResult[]> => {
     const rows: CaseResult[] = [];
     const defaultViewport = page.viewportSize()!;
     for (const testCase of cases) {
@@ -378,6 +378,39 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         await applyState(page, testCase.parts[0]!.selector, state, testCase.focusTarget);
       } catch {
         // A part that cannot take the state is read at rest.
+      }
+      // A keyboard state lands after its key: a menu's ArrowDown opens the menu
+      // and moves focus to its first item a frame or more later, and a read
+      // taken at the first quiet frame sees an unfocused item -- in WebKit on a
+      // cold page that was an `outline-style: none` ring in the seed theme,
+      // which resolved to transparent (#00000000). The case's own state
+      // selector is the contract that the state landed; wait for it before
+      // settling, so the read is of the state the case names.
+      const verified = testCase.parts.find((part) => part.name === "verifiedState");
+      if (verified) {
+        // The same resolver and scope the read uses: the part's document flag,
+        // and `>>>` crossing into a shadow root.
+        const landed = await page.waitForFunction(
+          ({ selector, documentScope }) => {
+            const mount = document.querySelector("#mount");
+            if (!mount) return false;
+            if (selector === ":root") return true;
+            let scope: ParentNode = documentScope ? document : mount;
+            let found: Element | null = null;
+            for (const step of selector.split(">>>").map((entry) => entry.trim())) {
+              found = scope.querySelector(step);
+              if (!found) return false;
+              scope = found.shadowRoot ?? found;
+            }
+            return found !== null;
+          },
+          { selector: verified.selector, documentScope: verified.document ?? false },
+          { timeout: 5000, polling: 100 },
+        ).catch(() => null);
+        if (!landed) {
+          const theme = themeLabel ?? testCase.scheme ?? "light";
+          throw new Error(`${testCase.id} (${theme}): the verified state never landed: no element matches ${verified.selector}`);
+        }
       }
       // Settle running animations, including a colour transition that starts on
       // a later frame, then the scrollers and the measured parts. Indefinite
@@ -476,6 +509,14 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         await settle(page);
       }
       const parts = await readParts(false);
+      // The state can also go away between the wait and this read: a finite
+      // animation that carries the marker can complete during the settle.
+      // The read is the state the case names only if the marker is still
+      // there, so a vanished one throws with the same diagnostics.
+      if (verified && !parts[verified.name]) {
+        const theme = themeLabel ?? testCase.scheme ?? "light";
+        throw new Error(`${testCase.id} (${theme}): the verified state vanished before the read: no element matches ${verified.selector}`);
+      }
       await releaseState(page, state);
       rows.push({
         id: testCase.id,
@@ -518,7 +559,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
           for (const [property, value] of Object.entries(overrides)) document.documentElement.style.setProperty(property, value);
         }, shapeOverrides);
       }
-      const rows = await measureOn(page, cases, theme === "dark" ? "dark" : "light", theme === "compact" ? -2 : undefined);
+      const rows = await measureOn(page, cases, theme === "dark" ? "dark" : "light", theme === "compact" ? -2 : undefined, theme);
       const typography = theme === "compact" ? await page.evaluate(roles => {
         const style = getComputedStyle(document.documentElement);
         return roles.map(role => {
