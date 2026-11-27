@@ -70,8 +70,9 @@ export interface RadiosConfig {
    */
   required?: boolean;
   
-  /** 
-   * Whether to enable ripple effect
+  /**
+   * Whether a press ripple is enabled. The state layer and the keyboard
+   * focus ring are painted either way.
    * @default true
    */
   ripple?: boolean;
