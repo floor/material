@@ -200,7 +200,10 @@ const toggleSection = () => {
 // The two motions start a frame or two apart, so their fractions at one wall
 // time differ while the curves agree: each transition is recorded against its
 // own local time, and the readout compares one motion's fraction with the
-// other's at the same local time (interpolated between frames).
+// other's at the same local time. Interpolation stays inside both recorded
+// spans. A time before the first sample, after the last, or on a track that
+// has no span covering it is not a comparison: extrapolating backwards from
+// the first two samples invented a delta.
 const tracks = { menu: [], drawer: [] };
 let trackStart = null;
 const record = (track, startTime, localTime, value) => {
@@ -215,14 +218,16 @@ const record = (track, startTime, localTime, value) => {
 };
 const atLocal = (track, localTime) => {
   const list = tracks[track];
+  if (!list.length || localTime < list[0].t || localTime > list[list.length - 1].t) return null;
+  // One sample covers only that instant. It has no span to interpolate.
+  if (list.length === 1) return localTime === list[0].t ? list[0].value : null;
   for (let i = 1; i < list.length; i++) {
-    if (list[i].t >= localTime) {
-      const a = list[i - 1];
-      const b = list[i];
-      const span = b.t - a.t;
-      const ratio = span > 0 ? (localTime - a.t) / span : 0;
-      return a.value + (b.value - a.value) * ratio;
-    }
+    const a = list[i - 1];
+    const b = list[i];
+    if (localTime < a.t || localTime > b.t) continue;
+    const span = b.t - a.t;
+    const ratio = span > 0 ? (localTime - a.t) / span : 0;
+    return a.value + (b.value - a.value) * ratio;
   }
   return null;
 };
@@ -259,9 +264,11 @@ const fractions = () => {
   }
   const skew = timing.menu?.started && timing.drawer?.started ? Math.abs(timing.menu.start - timing.drawer.start) : null;
   // Both curves at one local time: what "the same motion" means here, where the
-  // two transitions do not start on the same frame.
+  // two transitions do not start on the same frame. Until both tracks contain
+  // that time the readout is a dash, not a number from outside the samples.
   let equalLocal = null;
-  if (moving(menuScale) && moving(drawer) && timing.menu?.started && timing.drawer?.started) {
+  const comparing = moving(menuScale) && moving(drawer) && timing.menu?.started && timing.drawer?.started;
+  if (comparing) {
     const local = Math.min(timing.menu.local, timing.drawer.local);
     const menuAt = atLocal("menu", local);
     const drawerAt = atLocal("drawer", local);
@@ -269,7 +276,7 @@ const fractions = () => {
   }
   const parts = [`menu scaleY ${show(menuScale)}`, `drawer visible height ${drawer.toFixed(3)}`];
   if (skew !== null) parts.push(`starts ${skew.toFixed(0)} ms apart`);
-  if (equalLocal !== null) parts.push(`at equal local time Δ ${equalLocal.toFixed(3)}`);
+  if (comparing) parts.push(`at equal local time Δ ${equalLocal === null ? "–" : equalLocal.toFixed(3)}`);
   return parts.join(" · ");
 };
 
