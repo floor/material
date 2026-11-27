@@ -8,10 +8,11 @@
 // cross into the shadow root shows as a difference.
 //
 //   bun run build && bun run scripts/check-elements.ts
+//   bun run scripts/check-elements.ts b --webkit
 
 import { checkCheckableValues } from "./check-checkable-values";
 import assert from "node:assert/strict";
-import { type Page } from "playwright";
+import { webkit, type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
@@ -109,7 +110,8 @@ const server = Bun.serve({
 type Win = Window & Record<string, unknown>;
 /** Icon markup for the icon-only elements, quoted with ' in attributes. */
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
-const browser = await launchChromium({ headless: true });
+const webkitBrowser = process.argv.includes("--webkit") ? await webkit.launch({ headless: true }) : null;
+const browser = webkitBrowser ? await webkitBrowser.newContext() : await launchChromium({ headless: true });
 let checks = 0;
 const check = (name: string): void => {
   checks++;
@@ -178,11 +180,12 @@ try {
   // no argument, every part runs -- what a local `bun run elements:check` does.
   // The bodies keep the indentation they had, so the diff of a part boundary is
   // the boundary itself.
-  const parts = process.argv.slice(2);
+  const parts = process.argv.slice(2).filter((part) => part !== "--webkit");
   const selected = (part: string): boolean => parts.length === 0 || parts.includes(part);
 
   if (selected("a")) await checkDeclarativeUpgrade(browser.browser()!);
-  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
+  const defaultViewport = { width: 900, height: 700 };
+  const page = await browser.browser()!.newPage({ viewport: defaultViewport });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
@@ -8735,6 +8738,8 @@ try {
 
   // Part b starts here: from the menu in the top layer to the end.
   if (selected("b")) {
+  // WebKit's Alt+Tab includes buttons in sequential focus navigation.
+  const tabKey = webkitBrowser ? "Alt+Tab" : "Tab";
 
   // ---------------------------------------------------------------- menu in the top layer
   // `layer: "top"` renders the menu next to its opener and shows it as a
@@ -8968,7 +8973,13 @@ try {
       await page.mouse.click(outside.x, outside.y, { delay: 70 });
       await wait(450);
       await settled({ closes: 4, connected: false });
-      assert.deepEqual(await state(), { open: false, closes: 4, connected: false, focus: "tl-outside" }, `${where}: blur and click`);
+      const { open, closes, connected } = await state();
+      const focusLeft = await page.evaluate(() => {
+        const { menu, root } = (window as unknown as TopWin).__tl;
+        const active = root.activeElement;
+        return active !== root.querySelector("#tl-opener") && !menu.element.contains(active);
+      });
+      assert.deepEqual({ open, closes, connected, focusLeft }, { open: false, closes: 4, connected: false, focusLeft: true }, `${where}: blur and click`);
 
       // Taken out of the top layer by something else
       await openMenu();
@@ -9095,6 +9106,7 @@ try {
   }
 
   // ---------------------------------------------------------------- FAB menu
+  await page.setViewportSize(defaultViewport);
   await fresh(
     page,
     `<div class="stage" style="padding-top:260px"><button id="fm-before">Before</button>
@@ -9108,6 +9120,8 @@ try {
        <m-fab-menu-item value="sheet">Sheet</m-fab-menu-item>
      </m-fab-menu></div><div class="stage" id="fmstage"></div>`
   );
+  // The previous menu cases scroll the document to exercise top-layer positioning.
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
   {
     type Fm = HTMLElement & { show: () => void; hide: () => void };
     const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
@@ -9142,10 +9156,12 @@ try {
       };
     });
     assert.deepEqual(opened, { open: true, visible: "visible", items: 3, colour: true });
-    assert.equal(await focused(), "fab:Compose", "focus stays on the close button");
     assert.equal(await page.getByRole("menuitem", { name: "Reply" }).count(), 1);
-    check("FAB menu: the FAB opens a menu of menuitems; open reflects; focus stays on the close button");
+    check("FAB menu: a click on the FAB opens a menu of menuitems and reflects open");
 
+    // A pointer click does not focus a button in WebKit. Start the keyboard
+    // sequence on the FAB, then check where focus goes as each key is handled.
+    await button.focus();
     await page.keyboard.press("ArrowDown");
     assert.equal(await focused(), "Reply");
     await page.keyboard.press("ArrowUp");
@@ -9155,9 +9171,10 @@ try {
     assert.equal(await page.evaluate(() => document.getElementById("fm")!.hasAttribute("open")), false);
     await page.keyboard.press("Enter");
     await wait(100);
-    await page.keyboard.press("Tab");
+    assert.equal(await focused(), "fab:Compose", "opening with Enter keeps focus on the close button");
+    await page.keyboard.press(tabKey);
     assert.equal(await focused(), "Reply", "Tab goes into the open list");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tabKey);
     assert.equal(await focused(), "fab:Compose", "Tab out closes it on the FAB");
     check("FAB menu: arrows and Tab into the list, wrapping; Escape and Tab out close it on the FAB");
 
@@ -9200,15 +9217,21 @@ try {
       if (!surface) return null;
       const s = surface.getBoundingClientRect();
       const f = fab.getBoundingClientRect();
+      const above = s.bottom <= f.top;
       return {
         open: fm.hasAttribute("open"),
         visible: getComputedStyle(surface).visibility,
         styled: getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)",
-        gap: Math.round(f.top - s.bottom),
+        gap: Math.round(above ? f.top - s.bottom : s.top - f.bottom),
+        spaceToEdge: above ? s.top : window.innerHeight - s.bottom,
+        side: above ? "above" : "below",
         expanded: fab.getAttribute("aria-expanded"),
       };
     });
-    assert.deepEqual(menu, { open: true, visible: "visible", styled: true, gap: 4, expanded: "true" });
+    assert(menu, "menu presentation creates a surface in the FAB's shadow root");
+    const { spaceToEdge, side, ...appearance } = menu;
+    assert.deepEqual(appearance, { open: true, visible: "visible", styled: true, gap: 4, expanded: "true" });
+    assert(spaceToEdge >= 0, `the menu fits ${side} the FAB with ${spaceToEdge}px to the viewport edge`);
     const picked = await page.evaluate(async () => {
       const fm = document.getElementById("fm2") as Fm;
       const seen: unknown[] = [];
@@ -9222,7 +9245,7 @@ try {
       return { seen, open: fm.hasAttribute("open") };
     });
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
-    check("FAB menu: presentation=menu loads the baseline menu into its shadow root, 4px above the FAB");
+    check("FAB menu: presentation=menu loads the baseline menu into its shadow root, fits the viewport, and keeps a 4px gap");
 
     // `open` by attribute or property is applied in the attribute
     // callback and dispatches nothing; show() and hide() dispatch one event
@@ -9502,7 +9525,7 @@ try {
         return (active?.textContent ?? "").trim();
       });
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tabKey);
     await page.evaluate(() => {
       const host = document.getElementById("rtl-chips") as HTMLElement;
       (host.shadowRoot?.querySelector('[tabindex="0"]') as HTMLElement | null)?.focus();
@@ -9525,7 +9548,7 @@ try {
   {
     await page.evaluate(() => new Promise((r) => setTimeout(r, 100)));
     await page.focus("#m-before");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tabKey);
     assert.equal(await page.evaluate(() => document.activeElement?.id), "m-after");
     const hidden = await page.evaluate(() => {
       const surface = document.querySelector("m-menu")?.shadowRoot?.querySelector(".mtrl-menu") as HTMLElement;
@@ -9833,9 +9856,8 @@ try {
       try {
         await page.focus("#mb");
         await page.keyboard.press("Enter");
-        // The menu is placed and shown 20ms after the key; its focus timer is held.
-        // (Not `wait(100)`: that is a 100ms timer in the page, and would be held too.)
-        await wait(60);
+        // Wait for placement while the initial focus timer is still held.
+        await page.locator("#mm .mtrl-menu--visible").waitFor({ state: "visible", timeout: 5000 });
         assert.equal((await menuState()).open, true, "the menu opened with Enter");
         for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
         before = await focused();
@@ -10583,18 +10605,20 @@ try {
       __pop: { root: ShadowRoot; events: string[] };
     };
     const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
-    const client = await page.context().newCDPSession(page);
+    const client = webkitBrowser ? null : await page.context().newCDPSession(page);
 
-    /** The description Chrome computes, and whether Playwright's own matches the text. */
-    const description = async (selector: string, name: string, text: string): Promise<{ chrome: unknown; playwright: boolean }> => {
-      const locator = page.locator(selector);
-      const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
-        nodes: Array<{ role?: { value: string }; name?: { value: string }; description?: { value: string } }>;
-      };
-      const button = nodes.find((n) => n.role?.value === "button" && n.name?.value === name);
+    /** Verify the description with Playwright in both engines and with Chromium's native tree. */
+    const checkDescription = async (selector: string, name: string, text: string): Promise<void> => {
+      if (client) {
+        const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
+          nodes: Array<{ role?: { value: string }; name?: { value: string }; description?: { value: string } }>;
+        };
+        const button = nodes.find((n) => n.role?.value === "button" && n.name?.value === name);
+        assert.equal(button?.description?.value, text, "the tooltip description in Chromium's accessibility tree");
+      }
       // What `expect(locator).toHaveAccessibleDescription()` runs; `playwright`
       // has the matcher without the test runner's expect
-      const matcher = locator as unknown as {
+      const matcher = page.locator(selector) as unknown as {
         _expect: (name: string, options: object) => Promise<{ matches: boolean }>;
       };
       const { matches } = await matcher._expect("to.have.accessible.description", {
@@ -10602,7 +10626,7 @@ try {
         isNot: false,
         timeout: 1000,
       });
-      return { chrome: button?.description?.value, playwright: matches };
+      assert(matches, `the tooltip description matches "${text}" in Playwright`);
     };
 
     // ------------------------------------------------ tooltip
@@ -10719,9 +10743,8 @@ try {
     );
     check("tooltip top layer in a shadow root: shown on focus, hidden on leave, blur and Escape, out of the top layer after");
 
-    const described = await description("#pt-save", "Save", "Save the file");
-    assert.deepEqual(described, { chrome: "Save the file", playwright: true }, "the target is described by the tooltip text");
-    check("tooltip: the target's accessible description is the text, in Chrome and in Playwright");
+    await checkDescription("#pt-save", "Save", "Save the file");
+    check("tooltip: the target's accessible description is the tooltip text");
 
     // Attributes: text in place, for in place, variant recreates
     const tipChanges = await page.evaluate(async () => {
@@ -10753,7 +10776,7 @@ try {
       property: "pt-save",
       save: "pt-tip",
     });
-    assert.deepEqual(await description("#pt-save", "Save", "Save to disk"), { chrome: "Save to disk", playwright: true });
+    await checkDescription("#pt-save", "Save", "Save to disk");
     check("tooltip: text and for change in place, variant recreates, the target property wins, the description follows");
 
     // ------------------------------------------------ snackbar
@@ -10829,13 +10852,13 @@ try {
     assert.deepEqual(await snackState(), { open: false, home: true, events: ["open", "close:api"] });
     check("snackbar top layer in a shadow root: shown in its element's root at the unlayered place, styled as the factory in light DOM");
 
-    // Over a modal dialog: Save inside it shows the snackbar, which opens
-    // inside the dialog, above it, and takes the action
+    // Activate Save by keyboard so it is the focus restoration target when
+    // the snackbar opens inside the modal and takes the action.
     await page.evaluate(() => {
       (window as unknown as PopWin).__pop.events.length = 0;
       (document.getElementById("ps-modal") as HTMLDialogElement).showModal();
     });
-    await page.locator("#ps-save").click();
+    await page.locator("#ps-save").press("Enter");
     await wait(500);
     const overModal = await page.evaluate(() => {
       const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
@@ -11018,7 +11041,7 @@ try {
           closeInner: () => inner.close(),
         })[fn]();
       }, fn);
-    /** Where the surface is, whether it is on top at its action, and whether Chrome exposes its live region */
+    /** Where the surface is, whether it is on top at its action, and whether its live region is exposed */
     const where = async (): Promise<{ open: boolean; place: string; above: boolean; live: boolean; events: string[] }> => {
       const state = await page.evaluate(() => {
         const { root, events } = (window as unknown as PopWin).__pop;
@@ -11036,11 +11059,13 @@ try {
         }
         return { open: surface.matches(":popover-open"), place, above: !!hit && action.contains(hit), events: [...events] };
       });
+      // A closed one's node may linger in the tree.
+      if (!state.open) return { ...state, live: false };
+      if (!client) return { ...state, live: await page.getByRole("status").count() > 0 };
       const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
         nodes: Array<{ role?: { value: string }; ignored?: boolean }>;
       };
-      // Asked only while it shows: a closed one's node may linger in the tree
-      return { ...state, live: state.open && nodes.some((n) => n.role?.value === "status" && !n.ignored) };
+      return { ...state, live: nodes.some((n) => n.role?.value === "status" && !n.ignored) };
     };
 
     // 1. The modal it opened in closes: it goes home, still open and on top,
@@ -11245,7 +11270,7 @@ try {
       });
     };
     const openIt = async (): Promise<void> => {
-      await page.locator("#wrap").getByRole("button", { name: "Open", exact: true }).click();
+      await page.locator("#wrap").getByRole("button", { name: "Open", exact: true }).press("Enter");
       await wait(700);
     };
     /** The inner <dialog>, whether it is open and modal, and the host's reflected state. */
@@ -11315,7 +11340,7 @@ try {
 
       const stops: Array<{ inside: boolean; label: string }> = [];
       for (let i = 0; i < 6; i++) {
-        await page.keyboard.press(i % 3 === 2 ? "Shift+Tab" : "Tab");
+        await page.keyboard.press(i % 3 === 2 ? `Shift+${tabKey}` : tabKey);
         stops.push(await focus());
       }
       assert.ok(
@@ -11520,7 +11545,7 @@ try {
       });
       const reached: string[] = [];
       for (let i = 0; i < 4; i++) {
-        await page.keyboard.press("Tab");
+        await page.keyboard.press(tabKey);
         reached.push(await page.evaluate(() => {
           let active = document.activeElement;
           while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
@@ -12685,7 +12710,8 @@ try {
   // asserts its own page errors above and fails its row on them.
   if (selected("a")) check("no page errors");
 } finally {
-  await browser.close();
+  if (webkitBrowser) await webkitBrowser.close();
+  else await browser.close();
   server.stop(true);
 }
 

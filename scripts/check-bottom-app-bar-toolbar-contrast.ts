@@ -132,5 +132,6 @@ export async function checkBottomAppBarToolbarContrast(page: Page, check: (name:
   } finally {
     await page.emulateMedia({ forcedColors: "none" });
     await page.mouse.up();
+    await page.evaluate(() => document.getElementById("bab-contrast")?.remove());
   }
 }
