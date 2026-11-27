@@ -779,10 +779,11 @@ jobs:
       - name: Rendered fixture and per-asset comparison
         timeout-minutes: 10
         env:
-          GIT_CONFIG_COUNT: 1
+          GIT_CONFIG_COUNT: "1"
           GIT_CONFIG_KEY_0: safe.directory
-          GIT_CONFIG_VALUE_0: ${{ github.workspace }}
-        run: bun run comparators:check
+        run: |
+          export GIT_CONFIG_VALUE_0="$GITHUB_WORKSPACE"
+          bun run comparators:check
       - name: Comparator evidence (including failed setup)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
