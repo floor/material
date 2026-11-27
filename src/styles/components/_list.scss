@@ -173,11 +173,12 @@ $component: "#{base.$prefix}-list";
   &:not(&--segmented) &__leading--image,
   &:not(&--segmented) &__leading--video { border-radius: 0; }
   // Segmented. The child combinators keep a list nested in a row out of it.
-  // Expressive icon size, 20dp. A segmented list has no size of its own
+  // Expressive icon size, 20dp, on this list's own items only. A standard
+  // list nested inside stays at 24dp. A segmented list has no size of its own
   // (md.comp.list.list-item.leading-icon.expressive.size and
   // trailing-icon.expressive.size). Specs read 2026-11-27.
-  &--segmented &__leading--icon,
-  &--segmented &__trailing--icon { width: 20px; height: 20px; }
+  &--segmented > &__content > &__item > &__leading--icon,
+  &--segmented > &__content > &__item > &__trailing--icon { width: 20px; height: 20px; }
   &--segmented > &__content {
     gap: var(--#{base.$prefix}-list-segmented-gap, 2px);
     // Unselected trailing icon is on-surface. Leading stays on-surface-variant.

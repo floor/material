@@ -76,7 +76,20 @@ const mount = () => {
   segmented.element.id = "segmented";
   dense.element.id = "dense";
   dense.element.style.setProperty("--mtrl-density", "-2");
-  document.body.append(standard.element, segmented.element, dense.element);
+  const nested = createList({
+    ariaLabel: "Nested standard",
+    items: [row("nested", {})],
+  });
+  const outer = createList({
+    ariaLabel: "Outer segmented",
+    variant: "segmented",
+    items: [row("outer", {})],
+  });
+  nested.element.id = "nested";
+  outer.element.id = "outer";
+  const host = outer.element.querySelector("[data-id='outer']");
+  if (host) host.append(nested.element);
+  document.body.append(standard.element, segmented.element, dense.element, outer.element);
 };
 
 const snapshot = (page: Page) => page.evaluate(() => {
@@ -126,6 +139,10 @@ const snapshot = (page: Page) => page.evaluate(() => {
     trailingSegmented: widthOf(seg.querySelector(".mtrl-list__trailing") as Element),
     leadingSegmentedRole: paint(seg, "leading"),
     trailingSegmentedRole: paint(seg, "trailing"),
+    leadingNested: widthOf(item("nested", "nested").querySelector(".mtrl-list__leading > *") as Element),
+    trailingNested: widthOf(item("nested", "nested").querySelector(".mtrl-list__trailing") as Element),
+    leadingOuter: widthOf(item("outer", "outer").querySelector(".mtrl-list__leading > *") as Element),
+    trailingOuter: widthOf(item("outer", "outer").querySelector(".mtrl-list__trailing") as Element),
     selectedLeading: paint(selected, "leading"),
     selectedTrailing: paint(selected, "trailing"),
   };
@@ -147,6 +164,10 @@ const run = async (page: Page, engine: string) => {
   assert.equal(rest.selectedTrailing, "OnSecondaryContainer", `${engine}: selected rest trailing stays OnSecondaryContainer`);
   assert.equal(rest.leadingStandard, 24, `${engine}: a standard icon stays 24`);
   assert.equal(rest.leadingSegmentedRole, "OnSurfaceVariant", `${engine}: a segmented leading icon stays OnSurfaceVariant`);
+  assert.equal(rest.leadingNested, 24, `${engine}: a standard list nested in a segmented list keeps a 24px leading icon`);
+  assert.equal(rest.trailingNested, 24, `${engine}: a standard list nested in a segmented list keeps a 24px trailing icon`);
+  assert.equal(rest.leadingOuter, 20, `${engine}: the segmented row's own leading icon stays 20`);
+  assert.equal(rest.trailingOuter, 20, `${engine}: the segmented row's own trailing icon stays 20`);
   assert.deepEqual(
     {
       gapTwo: rest.gapTwo, gapThree: rest.gapThree, gapBox: rest.gapBox, gapSwitch: rest.gapSwitch, gapDense: rest.gapDense,
