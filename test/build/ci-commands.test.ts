@@ -107,7 +107,7 @@ describe("CI (.github/workflows/ci.yml)", () => {
 
   // Browser groups and comparators can skip on a docs-only or tooling-only diff.
   // The main tree proof gates the three entry points to full CI.
-  const fullCi = "${{ !cancelled() && (needs.main-proof.result != 'success' || needs.main-proof.outputs.covered != 'true') }}";
+  const fullCi = "${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.covered != 'true') }}";
   test("uses only the declared job filters and fails on check errors", () => {
     const pathFilter = "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')";
     const loose: string[] = [];
@@ -181,12 +181,14 @@ describe("CI (.github/workflows/ci.yml)", () => {
   });
 
   test("skips full CI only after a successful main tree proof", () => {
-    const { "main-proof": proof, static: staticJob, tests, build, package: pack } = workflow.jobs;
-    expect(proof.if).toBe("github.event_name == 'push' && github.ref == 'refs/heads/main'");
-    expect(proof.outputs?.covered).toBe("${{ steps.proof.outputs.covered }}");
-    expect(proof.steps.some(step => step.run === "bun scripts/main-ci-proof.ts check")).toBe(true);
+    const { changes, static: staticJob, tests, build, package: pack } = workflow.jobs;
+    expect(changes.if).toBeUndefined();
+    expect(changes.outputs?.covered).toBe("${{ steps.proof.outcome == 'success' && steps.proof.outputs.covered == 'true' }}");
+    const proof = changes.steps.find(step => step.run === "bun scripts/main-ci-proof.ts check");
+    expect(proof?.if).toBe("github.event_name == 'push' && github.ref == 'refs/heads/main'");
+    expect(proof?.["continue-on-error"]).toBe(true);
     for (const root of [staticJob, tests, build]) {
-      expect(root.needs).toBe("main-proof");
+      expect(root.needs).toBe("changes");
       expect(root.if).toBe(fullCi);
     }
     const size = pack.steps.findIndex(step => step.run === "bun run size:report");
@@ -195,7 +197,7 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(record).toBeGreaterThan(size);
     expect(pack.steps[record].if).toBe("github.event_name == 'pull_request'");
     const gate = workflow.jobs["ci-ok"].steps.map(step => step.run ?? "").join("\n");
-    expect(gate).toContain("needs.main-proof.result }}:${{ needs.main-proof.outputs.covered }}' != success:true");
+    expect(gate).toContain("needs.changes.result }}:${{ needs.changes.outputs.covered }}' != success:true");
     expect(gate).toContain("needs.package.result }}' != success:success:success:success");
   });
 

@@ -154,6 +154,9 @@ async function checkPush(): Promise<void> {
       }
     },
     async sizeBase(before) {
+      if (await command(["git", "rev-parse", "--is-shallow-repository"]) === "true") {
+        await command(["git", "fetch", "--quiet", "--unshallow", "--tags", "origin"]);
+      }
       const tag = await command(["git", "describe", "--tags", "--match", "v*", "--abbrev=0", before]);
       const commit = await command(["git", "rev-parse", `${tag}^{commit}`]);
       return { tag, commit };
