@@ -35,7 +35,11 @@ const bundle = await Bun.build({
       build.onResolve({ filter: /^drawer-divider-entry\.ts$/ }, () => ({ path: "drawer-divider-entry.ts", namespace: "drawer-divider" }));
       build.onLoad({ filter: /.*/, namespace: "drawer-divider" }, () => ({
         contents: `import createDrawer from ${JSON.stringify(resolve(repoRoot, "src/components/drawer/index.ts"))};
-window.createDrawer = createDrawer;`,
+import { defineDrawer } from ${JSON.stringify(resolve(repoRoot, "src/elements/drawer.ts"))};
+import { registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/styles.ts"))};
+window.createDrawer = createDrawer;
+window.defineDrawer = defineDrawer;
+window.registerStyles = registerStyles;`,
         loader: "ts",
       }));
     },
@@ -49,6 +53,23 @@ const mount = () => {
     createDrawer: (config: object) => { element: HTMLElement };
   }).createDrawer;
   document.body.style.cssText = "margin:0";
+  // A live element host: its direction changes after it is mounted, so the
+  // sheet's border must follow the direction rather than the mount.
+  (window as unknown as { registerStyles: (css: Record<string, string>) => void }).registerStyles({
+    drawer: (window as unknown as { DRAWER_CSS: string }).DRAWER_CSS,
+  });
+  (window as unknown as { defineDrawer: () => string }).defineDrawer();
+  const elementWrapper = document.createElement("div");
+  elementWrapper.id = "element-wrapper";
+  elementWrapper.setAttribute("dir", "ltr");
+  elementWrapper.style.cssText = "position:relative;height:400px";
+  elementWrapper.innerHTML = `
+    <m-drawer open value="one">
+      <m-drawer-item value="one">One</m-drawer-item>
+      <m-drawer-item type="divider"></m-drawer-item>
+      <m-drawer-item value="two">Two</m-drawer-item>
+    </m-drawer>`;
+  document.body.append(elementWrapper);
   // The sheet's border is on the logical end edge in both positions, so the
   // divider's end margin is read in LTR and RTL alike.
   for (const direction of ["ltr", "rtl"] as const) {
@@ -111,7 +132,7 @@ const run = async (page: Page, engine: string) => {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setContent(`<!doctype html><html lang="en" data-theme="baseline" data-theme-mode="light"><head><meta charset="utf-8"></head><body></body></html>`);
   await page.addStyleTag({ content: css });
-  await page.addScriptTag({ content: js });
+  await page.addScriptTag({ content: `${js}\nwindow.DRAWER_CSS = ${JSON.stringify(css)};` });
   await page.evaluate(mount);
   const geometry = await snapshot(page);
   for (const [id, reading] of Object.entries(geometry)) {
@@ -121,8 +142,40 @@ const run = async (page: Page, engine: string) => {
     assert.equal(reading.insetStart, 28, `${engine}: navigation-drawer/divider-side-inset/${variant}/rest (${id}) — the start inset`);
     assert.equal(reading.insetEnd, 28, `${engine}: navigation-drawer/divider-side-inset/${variant}/rest (${id}) — the end inset`);
   }
+  // A live element host, toggled after its mount: the sheet's border must
+  // follow the direction, not the side it was mounted under.
+  const elementGeometry = () => page.evaluate(() => {
+    const host = document.querySelector("m-drawer") as HTMLElement | null;
+    const root = host?.shadowRoot as ShadowRoot | null;
+    if (!root) return null;
+    const box = (selector: string) => (root.querySelector(selector) as HTMLElement).getBoundingClientRect();
+    const sheet = box(".mtrl-drawer__sheet");
+    const divider = box(".mtrl-drawer__divider");
+    const before = box('.mtrl-drawer__item[data-id="one"]');
+    const after = box('.mtrl-drawer__item[data-id="two"]');
+    const round = (value: number) => Math.round(value * 100) / 100;
+    return {
+      gapBefore: round(divider.y - (before.y + before.height)),
+      gapAfter: round(after.y - (divider.y + divider.height)),
+      insetStart: round(divider.x - sheet.x),
+      insetEnd: round(sheet.x + sheet.width - (divider.x + divider.width)),
+    };
+  });
+  const toggle = (direction: string) => page.evaluate((value) => {
+    (document.getElementById("element-wrapper") as HTMLElement).setAttribute("dir", value);
+  }, direction);
+  for (const direction of ["ltr", "rtl", "ltr"]) {
+    await toggle(direction);
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+    const reading = await elementGeometry();
+    assert.ok(reading, `${engine}: the element host has no shadow root`);
+    assert.equal(reading.gapBefore, 16, `${engine}: element host (${direction}) — the space above the divider`);
+    assert.equal(reading.gapAfter, 16, `${engine}: element host (${direction}) — the space below the divider`);
+    assert.equal(reading.insetStart, 28, `${engine}: element host (${direction}) — the start inset`);
+    assert.equal(reading.insetEnd, 28, `${engine}: element host (${direction}) — the end inset`);
+  }
   assert.deepEqual(errors, [], `${engine}: ${errors.join("\n")}`);
-  console.log(`${engine}: divider 16 above and below, inset 28/28 in the standard and modal drawers`);
+  console.log(`${engine}: divider 16 above and below, inset 28/28 in the standard and modal drawers, and a live element host keeps it through a direction toggle`);
 };
 
 const pageOptions = { viewport: { width: 800, height: 700 }, reducedMotion: "no-preference" as const };
