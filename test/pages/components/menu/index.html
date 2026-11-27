@@ -79,7 +79,7 @@
   scenario(states, {
     title: "A selected baseline item and a submenu item",
     lookFor: "the selected item's check and the submenu arrow at the item's end.",
-    expected: "the item keeps 12dp end padding; the label reserves 30dp for the 18dp check and 36dp for the 24dp arrow, each plus the 12dp between elements.",
+    expected: "the item keeps 12dp end padding; the content reserves 30dp for the 18dp check and 36dp for the 24dp arrow, each with the 12dp between elements.",
     mount: (body) => {
       const menu = menuOf(body, {
         variant: "baseline",
@@ -144,7 +144,7 @@
   scenario(edges, {
     title: "A shortcut beside the check or the arrow",
     lookFor: "a selected item and a submenu item, each with a shortcut at the end.",
-    expected: "the shortcut ends before the check (10dp clear) or the arrow (12dp clear), and the label keeps main's width: 101px with a shortcut and supporting line at 240px.",
+    expected: "the shortcut ends 12dp before the check or the arrow, and the label keeps the spec's width beside a supporting line at 240px: 150dp with the check, 144dp with the arrow.",
     mount: (body) => {
       window.__shortcut = menuOf(body, {
         variant: "baseline",

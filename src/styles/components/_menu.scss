@@ -364,9 +364,10 @@ $component: "#{$prefix}-menu";
     // its own padding.
     &:not(&--vertical) {
         .#{$component}__item--selected:not(.#{$component}__item--submenu) .#{$component}__item-content {
-            // 18dp check + 10dp between it and the content, as main's 40dp
-            // end padding held: 12dp item padding + 28dp here.
-            padding-inline-end: 28px;
+            // The 18dp check and the 12dp between elements the baseline
+            // measurements give ("Padding between elements within a list
+            // item 12dp").
+            padding-inline-end: 30px;
         }
 
         .#{$component}__item--submenu .#{$component}__item-content {

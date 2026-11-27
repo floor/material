@@ -176,9 +176,11 @@ const run = async (name: Engine, launcher: typeof chromium | typeof webkit): Pro
 
     // Baseline: every item's end padding is 12dp, the content row reserves the
     // mark's room once, and a shortcut stays clear of the check or the arrow --
-    // in both directions. Main's sizes are the reference: at 240px with an
-    // icon and a supporting line, the label is 152px beside the check and
-    // 144px beside the arrow, and the shortcut clears them by 10 and 12px.
+    // in both directions. The spec's gaps are the reference (m3.material.io/
+    // components/menus/specs, "Baseline menu padding and size measurements":
+    // padding between elements 12dp): at 240px with an icon and a supporting
+    // line, the label is 150px beside the 18dp check and 144px beside the
+    // 24dp arrow, and a shortcut clears them by 12px in LTR (24px in RTL).
     const geometryOf = (menuName: "baseline" | "extra") => page.evaluate((menuName) => {
       const lab = window as unknown as Lab;
       const menu = (lab[menuName]!.element);
@@ -229,13 +231,12 @@ const run = async (name: Engine, launcher: typeof chromium | typeof webkit): Pro
           assert.equal(row!.boxToEnd, expected, `${direction} ${key}: label box ends ${row!.boxToEnd} from the item end, expected ${expected}`);
         }
         assert.equal(plain!.contentPadding, "0px", `plain content reserves ${plain!.contentPadding}`);
-        assert.equal(selected!.contentPadding, "28px", `selected content reserves ${selected!.contentPadding} (18dp check + 10dp)`);
+        assert.equal(selected!.contentPadding, "30px", `selected content reserves ${selected!.contentPadding} (18dp check + 12dp)`);
         assert.equal(submenu!.contentPadding, "36px", `submenu content reserves ${submenu!.contentPadding} (24dp arrow + 12dp)`);
-        // Main's label sizes at 240px: no double reservation. (Main's RTL
-        // submenu label is 4px narrower: its RTL start padding was 16dp where
-        // the spec, and this fix, use 12dp on both sides.)
-        assert.equal(selected!.labelWidth, 152, `selected label is ${selected!.labelWidth}px, main's 152px`);
-        assert.equal(submenu!.labelWidth, 144, `submenu label is ${submenu!.labelWidth}px, main's 144px`);
+        // The spec's sizes at 240px (main reserved the check's gap at 10dp,
+        // 2px short of the 12dp between elements): no double reservation.
+        assert.equal(selected!.labelWidth, 150, `selected label is ${selected!.labelWidth}px, the spec's 150px`);
+        assert.equal(submenu!.labelWidth, 144, `submenu label is ${submenu!.labelWidth}px, the spec's 144px`);
         passed.push(`${name} baseline geometry ${direction}`);
       } catch (error) {
         failures.push(`${name} baseline geometry ${direction}: ${error instanceof Error ? error.message : String(error)}`);
@@ -248,11 +249,11 @@ const run = async (name: Engine, launcher: typeof chromium | typeof webkit): Pro
       const extra = await geometryOf("extra");
       const [extraSelected, extraSubmenu] = extra.rows;
       try {
-        assert.equal(extraSelected!.contentPadding, "28px", `${direction} selected+shortcut reserves ${extraSelected!.contentPadding}`);
+        assert.equal(extraSelected!.contentPadding, "30px", `${direction} selected+shortcut reserves ${extraSelected!.contentPadding}`);
         assert.equal(extraSubmenu!.contentPadding, "36px", `${direction} submenu+shortcut reserves ${extraSubmenu!.contentPadding}`);
-        // Main's clearances: 10 and 12 in LTR, 22 and 24 in RTL (the check
+        // The spec's 12dp gap: 12 and 12 in LTR, 24 and 24 in RTL (the check
         // mirrors to the inline start and the shortcut's start margin grows).
-        const expected = direction === "ltr" ? [10, 12] : [22, 24];
+        const expected = direction === "ltr" ? [12, 12] : [24, 24];
         assert.equal(extraSelected!.shortcutClearance, expected[0], `${direction} selected+shortcut clearance is ${extraSelected!.shortcutClearance}, main's ${expected[0]}`);
         assert.equal(extraSubmenu!.shortcutClearance, expected[1], `${direction} submenu+shortcut clearance is ${extraSubmenu!.shortcutClearance}, main's ${expected[1]}`);
         passed.push(`${name} shortcut clearance ${direction}`);
