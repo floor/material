@@ -166,11 +166,12 @@ export interface TextFieldConfig {
   suffixText?: string;
 
   /**
-   * Input chips inside the field (m3.material.io chips): `true` for the
-   * defaults, or a config for separators, a maximum, validation and the
-   * initial committed chips. Opt-in: without it the field is unchanged.
+   * Input chips inside the field (m3.material.io chips), enabled by the value
+   * `textFieldChips()` returns from `material/components/text-field/chips`:
+   * the function carries the chip code, so a field created without it is
+   * unchanged and its bundle does not grow.
    */
-  chips?: boolean | TextFieldChipsConfig;
+  chips?: TextFieldChipsConfig | TextFieldChipsEnhancer;
 
   /** Additional CSS classes */
   class?: string;
@@ -181,6 +182,9 @@ export interface TextFieldConfig {
   /** Component name */
   componentName?: string;
 }
+
+/** Enables chips on a field; `textFieldChips()` builds one (opt-in module). */
+export type TextFieldChipsEnhancer = <C extends import("../../core/compose/component").ElementComponent>(component: C, config: object) => C & { chips?: import("./features/chips").ChipsFeature };
 
 /** One item of a text field's initial chips: the text, or a full chip config. */
 export type TextFieldChipItem = string | ChipConfig;

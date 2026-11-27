@@ -79,9 +79,16 @@ const textOf = (chip: ChipComponent): string => chip.getValue() ?? chip.getLabel
  * Adds input chips to a text field. Without `chips` it returns the component
  * untouched: the default text field does not carry the feature's weight.
  */
-export const withChips =
-  <T extends { chips?: boolean | TextFieldChipsConfig } & object>(config: T) =>
-  <C extends ElementComponent>(component: C): C & { chips?: ChipsFeature } => {
+/**
+ * Installs the chips feature on a text field. This module is the opt-in path:
+ * the field itself never references it, so a field without chips carries no
+ * chip code. `textFieldChips()` in `../chips` is the value `chips` takes.
+ */
+export const installChips = <C extends ElementComponent>(
+  component: C,
+  config: { chips?: boolean | TextFieldChipsConfig } & object,
+  expose: (feature: ChipsFeature) => void,
+): C & { chips?: ChipsFeature } => {
     const options = optionsOf(config.chips);
     if (!options) return component;
     const host = component as C & ChipsComponent;
@@ -574,33 +581,38 @@ export const withChips =
     }
 
     // The name attribute moves the chips' form rows, never the draft input.
-    const attributes = component as C & {
-      setAttribute?: (attribute: string, value: string) => unknown;
-      removeAttribute?: (attribute: string) => unknown;
-    };
-    const setAttribute = attributes.setAttribute;
-    if (setAttribute) {
-      attributes.setAttribute = (attribute: string, value: string) => {
-        if (attribute === "name") {
-          fieldName = value;
-          input.removeAttribute("name");
-          syncForm();
-          return component;
-        }
-        return setAttribute.call(attributes, attribute, value);
-      };
-    }
-    const removeAttribute = attributes.removeAttribute;
-    if (removeAttribute) {
-      attributes.removeAttribute = (attribute: string) => {
-        if (attribute === "name") {
+    // The field's own setters write it onto the input, whichever copy of the
+    // component runs them, so the input's attribute is what is watched.
+    let movingName = false;
+    const observer = new MutationObserver(() => {
+      if (movingName) return;
+      const next = input.getAttribute("name");
+      if (next === null || next === "") {
+        if (fieldName !== null) {
           fieldName = null;
           syncForm();
-          return component;
         }
-        return removeAttribute.call(attributes, attribute);
-      };
-    }
+        return;
+      }
+      fieldName = next;
+      movingName = true;
+      input.removeAttribute("name");
+      queueMicrotask(() => {
+        movingName = false;
+      });
+      syncForm();
+    });
+    observer.observe(input, { attributes: true, attributeFilter: ["name"] });
+    // The disabled state reaches the field as a class, set by whichever copy of
+    // the component runs it: the rows and the chips follow the class.
+    const classObserver = new MutationObserver(() => {
+      for (const chip of chips) {
+        if (isDisabled()) chip.disable();
+        else chip.enable();
+      }
+      syncForm();
+    });
+    classObserver.observe(component.element, { attributes: true, attributeFilter: ["class"] });
 
     // The form's own reset restores the chips the field started with. The
     // field is built before it is connected, so the form is not known at
@@ -626,6 +638,8 @@ export const withChips =
       const destroy = host.lifecycle.destroy;
       host.lifecycle.destroy = () => {
         resetForm?.removeEventListener("reset", onReset);
+        observer.disconnect();
+        classObserver.disconnect();
         target.removeEventListener("keydown", onInputKeydown);
         target.removeEventListener("paste", onPaste);
         target.removeEventListener("input", onInput);
@@ -682,6 +696,8 @@ export const withChips =
       removeChip,
       sync,
     };
+
+    expose(feature);
 
     // Creation-time listeners, as onTrailingClick is for `trailing`.
     const chipsConfig = typeof config.chips === "object" ? config.chips : null;

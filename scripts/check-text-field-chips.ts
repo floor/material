@@ -22,11 +22,17 @@ const factoryBundle = await Bun.build({ entrypoints: [resolve("src/index.ts")], 
 assert(factoryBundle.success, String(factoryBundle.logs));
 const factories = await factoryBundle.outputs[0]!.text();
 
+// The chips enhancer is the opt-in entry: the field itself carries no chip code.
+const enhancerBundle = await Bun.build({ entrypoints: [resolve("src/components/text-field-chips/index.ts")], target: "browser", format: "esm", minify: false });
+assert(enhancerBundle.success, String(enhancerBundle.logs));
+const enhancer = await enhancerBundle.outputs[0]!.text();
+
 const elementBundle = await Bun.build({ entrypoints: [resolve("src/elements/index.ts")], target: "browser", format: "esm", minify: false });
 assert(elementBundle.success, String(elementBundle.logs));
 const elements = await elementBundle.outputs[0]!.text();
 
 const css = await Bun.file("dist/styles.css").text();
+const chipsCss = await Bun.file("dist/styles/text-field-chips.css").text();
 
 const server = Bun.serve({
   hostname: "127.0.0.1",
@@ -36,17 +42,21 @@ const server = Bun.serve({
     if (path === "/factories.js") return new Response(factories, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/elements.js") return new Response(elements, { headers: { "Content-Type": "text/javascript" } });
     if (path === "/styles.css") return new Response(css, { headers: { "Content-Type": "text/css" } });
+    if (path === "/text-field-chips.css") return new Response(chipsCss, { headers: { "Content-Type": "text/css" } });
+    if (path === "/chips.js") return new Response(enhancer, { headers: { "Content-Type": "text/javascript" } });
     return new Response(
-      `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css">
+      `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/text-field-chips.css">
 <style>body{margin:0;padding:24px;font:16px system-ui}#host{width:400px}</style></head>
 <body><button id="before" type="button">Before</button><button id="outside" type="button">Outside</button>
 <form id="form"><main id="host"></main></form>
 <script type="module">
 import * as api from "/factories.js";
 import * as elements from "/elements.js";
+import { textFieldChips } from "/chips.js";
 elements.defineAll();
 window.api = api;
 window.elements = elements;
+window.textFieldChips = textFieldChips;
 document.getElementById("form").addEventListener("submit", (event) => event.preventDefault());
 window.ready = true;
 </script></body></html>`,
@@ -73,10 +83,15 @@ const open = async (browser: Browser): Promise<Page> => {
 /** A fresh factory field, in the host, with the config given. */
 const mountFactory = (page: Page, config: Record<string, unknown>): Promise<void> =>
   page.evaluate((config) => {
-    const api = (window as unknown as { api: { createTextField: (c: Record<string, unknown>) => { element: HTMLElement } } }).api;
+    const window_ = window as unknown as {
+      api: { createTextField: (c: Record<string, unknown>) => { element: HTMLElement } };
+      textFieldChips: (options: Record<string, unknown>) => unknown;
+    };
     const host = document.getElementById("host")!;
     host.replaceChildren();
-    const field = api.createTextField(config);
+    // `chips` in the spec is the options; the enhancer carries them.
+    const { chips, ...rest } = config as { chips?: Record<string, unknown> | true };
+    const field = window_.api.createTextField(chips ? { ...rest, chips: window_.textFieldChips(chips === true ? {} : chips) } : rest);
     field.element.id = "field";
     host.append(field.element);
     (window as unknown as { field: unknown }).field = field;
@@ -254,6 +269,7 @@ section("editing a chip shows one chip and the textbox in the snapshot", async (
   await action.click();
   await action.click();
   const tree = await snapshot(page);
+  console.log("DEBUG edit:", JSON.stringify(await page.evaluate(() => ({ sheets: [...document.styleSheets].map((sheet) => sheet.href), rules: [...document.styleSheets].flatMap((sheet) => { try { return [...sheet.cssRules].map((rule) => (rule as CSSStyleRule).selectorText ?? "").filter((text) => text.includes("chip[hidden]")); } catch { return []; } }), parent: document.querySelector("#field .mtrl-chip")!.parentElement!.className }))));
   assert.match(tree, /textbox "To"/);
   assert.equal((tree.match(/checkbox /g) ?? []).length, 1, tree);
 });
@@ -325,9 +341,10 @@ section("paste splits on separators and keeps rejected and excess text", async (
     const api = (window as unknown as { api: { createTextField: (c: Record<string, unknown>) => { element: HTMLElement } } }).api;
     const host = document.getElementById("host")!;
     host.replaceChildren();
+    const build = (window as unknown as { textFieldChips: (o: Record<string, unknown>) => unknown }).textFieldChips;
     const field = api.createTextField({
       label: "To",
-      chips: { maxChips: 2, validate: (text: string) => (text.includes("@") ? true : "Invalid email") },
+      chips: build({ maxChips: 2, validate: (text: string) => (text.includes("@") ? true : "Invalid email") }),
     });
     field.element.id = "field";
     host.append(field.element);

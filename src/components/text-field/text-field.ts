@@ -22,8 +22,8 @@ import {
   withField,
   withCounter,
   withRequired,
-  withChips,
 } from "./features";
+import type { TextFieldChipsEnhancer } from "./types";
 import { TextFieldConfig, TextFieldComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 
@@ -89,7 +89,9 @@ const createTextField = (config: TextFieldConfig = {}): TextFieldComponent => {
       withDisabled(baseConfig), // Add disabled state management
       // Chips before placement (it lays the row out), in one link: the pipe's
       // typed overloads end at twenty steps and this field has twenty-one.
-      (comp) => withPlacement()(withChips(baseConfig)(comp)),
+      // `chips` holds the enhancer from textFieldChips(): the function is the
+      // code, so this module references no chip module.
+      (comp) => withPlacement()(typeof baseConfig.chips === "function" ? (baseConfig.chips as TextFieldChipsEnhancer)(comp, baseConfig) : comp),
       (comp) => withAPI(getApiConfig(comp))(comp) // Add public API
     )(baseConfig) as TextFieldComponent;
 

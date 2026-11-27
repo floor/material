@@ -26,6 +26,7 @@
  */
 
 import createTextField from "../components/text-field";
+import { textFieldChips } from "../components/text-field/chips";
 import { checkTrailingLabel } from "../components/text-field/api";
 import type { TextFieldComponent, TextFieldChipItem, TextFieldChipsConfig, TextFieldConfig, TextFieldTrailingPayload } from "../components/text-field/types";
 import { defineElement, type AttributeValue, type DefineOptions, type ElementInstance, type ElementSpec } from "./define";
@@ -158,7 +159,7 @@ const textFieldSpec = {
     "aria-label": { type: "string", config: "ariaLabel", update: inputAttribute("aria-label") },
     // Input chips: the attribute turns them on; separators and max-chips are
     // read by config(host) below, which recreates the field when they change.
-    chips: { type: "boolean", config: "chips" },
+    chips: { type: "boolean", update: () => {} },
     separators: { type: "string", update: () => {} },
     "max-chips": { type: "number", update: () => {} },
   },
@@ -218,7 +219,7 @@ const textFieldSpec = {
   },
   config: (host) => {
     const chips = chipsConfigOf(host);
-    return chips ? { chips } : {};
+    return chips ? { chips: textFieldChips(chips) } : {};
   },
   // The declared `<m-chip>` children are the starting chips; a change recreates.
   observeChildren: true,

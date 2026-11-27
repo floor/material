@@ -30,5 +30,4 @@ export type {
 export type { PlacementComponent } from "./placement";
 export type { FieldComponent } from "./field";
 export type { CounterComponent } from "./counter";
-export { withChips } from "./chips";
 export type { ChipsFeature } from "./chips";
