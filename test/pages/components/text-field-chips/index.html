@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text field chips — owner test page</title>
+<!--
+  The owner's test page for input chips inside a text field (design §6, review
+  round 1). It loads the built package from dist/, as test:pages serves the
+  repository root: ../../../../dist/ is the build.
+  It shows the fixed behaviour live and prints the measured values beside it.
+-->
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../../../dist/styles/text-field-chips.css">
+<style>
+  body { margin: 0; padding: 24px; font: 16px/1.5 system-ui; display: grid; gap: 24px; max-width: 960px; }
+  h1 { font-size: 20px; margin: 0; }
+  section { display: grid; gap: 12px; }
+  .stage { display: grid; gap: 16px; }
+  #wide { width: 520px; }
+  #narrow { width: 220px; }
+  pre { margin: 0; padding: 12px; background: color-mix(in srgb, currentColor 6%, transparent); border-radius: 8px; font-size: 13px; white-space: pre-wrap; }
+  .note { color: color-mix(in srgb, currentColor 70%, transparent); font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>Input chips inside a text field</h1>
+<p class="note">Type a name and press Enter or a comma; Backspace twice at the start of the field selects and removes the last chip; a second activation of a chip edits it. The values below are measured from the live field.</p>
+
+<section>
+  <div class="stage">
+    <div id="wide"></div>
+    <div id="narrow"></div>
+    <m-text-field id="element" chips label="To" name="to" type="email"></m-text-field>
+    <form id="form"><m-text-field id="submitted" chips label="Recipients" name="to" type="email"></m-text-field></form>
+  </div>
+  <pre id="values">measuring…</pre>
+</section>
+
+<script type="module">
+  import { createTextField } from "../../../../dist/index.js";
+  import { textFieldChips } from "../../../../dist/components/text-field-chips/index.js";
+  import { defineTextField } from "../../../../dist/elements/text-field.js";
+
+  defineTextField();
+
+  const wide = createTextField({ label: "To", name: "to", type: "email", variant: "outlined", chips: textFieldChips({ separators: [",", ";"], maxChips: 10 }) });
+  document.getElementById("wide").append(wide.element);
+  const narrow = createTextField({ label: "Wrapped", chips: textFieldChips({ items: ["alice@example.com", "bob@example.com", "a-long-recipient-address@example.com", "d@e.com"] }) });
+  document.getElementById("narrow").append(narrow.element);
+
+  const out = document.getElementById("values");
+
+  /** The 48dp target of an action, as the pseudo-element paints it. */
+  const target = (button) => {
+    const style = getComputedStyle(button, "::before");
+    const box = button.getBoundingClientRect();
+    const width = parseFloat(style.width) || 0;
+    const height = parseFloat(style.height) || 0;
+    return { left: box.right - width, right: box.right, top: box.top + (box.height - height) / 2, bottom: box.top + (box.height + height) / 2 };
+  };
+
+  const measure = () => {
+    const field = wide.element;
+    const label = field.querySelector(".mtrl-text-field__label").getBoundingClientRect();
+    const row = field.querySelector(".mtrl-text-field__chips").getBoundingClientRect();
+    const outline = field.querySelector(".mtrl-text-field__outline");
+    const chips = [...narrow.element.querySelectorAll(".mtrl-chip")];
+    const chip = chips[0];
+    const action = chip?.querySelector(".mtrl-chip__action");
+    const remove = chip?.querySelector(".mtrl-chip__remove");
+    const probe = (button, at) => {
+      const box = button.getBoundingClientRect();
+      const hit = document.elementFromPoint(at.left, at.top + box.height / 2);
+      return hit ? `${hit.className}` : "nothing";
+    };
+    const actionTarget = action ? target(action) : null;
+    const removeTarget = remove ? target(remove) : null;
+    const form = document.getElementById("form");
+    out.textContent = JSON.stringify({
+      values: wide.getValues(),
+      elementValues: document.getElementById("element").values ?? null,
+      emptyClass: field.classList.contains("mtrl-text-field--empty"),
+      labelFloated: label.top - field.getBoundingClientRect().top < 10,
+      labelAboveChips: label.top < row.top,
+      notchOpen: outline?.classList.contains("mtrl-text-field__outline--notched") ?? null,
+      submitted: [...new FormData(form).getAll("to")],
+      narrowRows: new Set(chips.map((item) => Math.round(item.getBoundingClientRect().top))).size,
+      firstChipTargets: actionTarget && removeTarget ? {
+        action: actionTarget,
+        remove: removeTarget,
+        atActionStart: probe(action, { left: actionTarget.left + 2, top: actionTarget.top + 2 }),
+        atChipMiddle: probe(remove, { left: actionTarget.left + actionTarget.right - 1, top: actionTarget.top + 2 }),
+      } : null,
+      devicePixelRatio: window.devicePixelRatio,
+    }, null, 2);
+  };
+
+  wide.on("add", measure);
+  wide.on("remove", measure);
+  wide.on("input", measure);
+  document.getElementById("form").addEventListener("submit", (event) => event.preventDefault());
+  measure();
+  // Zoom changes the measured boxes: the page follows them.
+  window.addEventListener("resize", measure);
+  setInterval(measure, 500);
+</script>
+</body>
+</html>
