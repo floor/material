@@ -1,6 +1,7 @@
 // src/components/text-field/types.ts
 import type { EventCallback } from "../../core/state/emitter";
 import type { TextFieldTrailingPayload } from "./features/trailing-icon";
+import type { ChipConfig, ChipComponent } from "../chips/types";
 
 export type { TextFieldTrailingPayload };
 
@@ -164,6 +165,13 @@ export interface TextFieldConfig {
   /** Suffix text to display after the input */
   suffixText?: string;
 
+  /**
+   * Input chips inside the field (m3.material.io chips): `true` for the
+   * defaults, or a config for separators, a maximum, validation and the
+   * initial committed chips. Opt-in: without it the field is unchanged.
+   */
+  chips?: boolean | TextFieldChipsConfig;
+
   /** Additional CSS classes */
   class?: string;
 
@@ -172,6 +180,60 @@ export interface TextFieldConfig {
 
   /** Component name */
   componentName?: string;
+}
+
+/** One item of a text field's initial chips: the text, or a full chip config. */
+export type TextFieldChipItem = string | ChipConfig;
+
+/**
+ * Configuration for opt-in input chips inside a text field
+ * (`TextFieldConfig.chips`). Chips commit on Enter and on a separator key, and
+ * are removed from their own remove button, Backspace or Delete.
+ */
+export interface TextFieldChipsConfig {
+  /** The committed chips the field starts with. */
+  items?: readonly TextFieldChipItem[];
+
+  /**
+   * Keys that commit the draft text, as `KeyboardEvent.key` values
+   * (`","`, `"Tab"`). Enter always commits a non-empty draft outside IME
+   * composition.
+   * @default [","]
+   */
+  separators?: readonly string[];
+
+  /** The most chips the field may hold; further text stays in the input. */
+  maxChips?: number;
+
+  /** Whether the same text may be committed twice. @default false */
+  allowDuplicates?: boolean;
+
+  /** Whether a second activation of a selected chip edits it as text. @default true */
+  editable?: boolean;
+
+  /**
+   * Judges a candidate text before it becomes a chip: `true` accepts, `false`
+   * rejects (the text stays in the input), a string rejects with that message.
+   */
+  validate?: (text: string, currentValues: string[]) => boolean | string;
+
+  /** `add` listener registered at creation. */
+  onAdd?: TextFieldEvents["add"];
+
+  /** `remove` listener registered at creation. */
+  onRemove?: TextFieldEvents["remove"];
+}
+
+/** Payload of the `add` and `remove` events. */
+export interface TextFieldChipEventPayload {
+  /** The committed chip values after the change. */
+  values: string[];
+  /** The chip instance that was added or removed. */
+  chip: ChipComponent;
+  /** The chip's text. */
+  chipValue: string;
+  /** The chip's place in the field. */
+  index: number;
 }
 
 /** Payload emitted by native input/change and autofill detection. */
@@ -194,6 +256,10 @@ export interface TextFieldEvents {
   change: (payload: TextFieldValuePayload) => void;
   focus: (payload: TextFieldFocusPayload) => void;
   blur: (payload: TextFieldFocusPayload) => void;
+  /** Draft text became a committed chip */
+  add: (payload: TextFieldChipEventPayload) => void;
+  /** A committed chip was removed */
+  remove: (payload: TextFieldChipEventPayload) => void;
 }
 
 /**
@@ -308,6 +374,21 @@ export interface TextFieldComponent {
 
   /** Gets the current density setting */
   getDensity: () => string;
+
+  /** Gets the committed chip values (`[]` when chips are not enabled) */
+  getValues: () => string[];
+
+  /** Replaces the committed chips; silent unless `triggerEvent` */
+  setValues: (values: readonly TextFieldChipItem[], triggerEvent?: boolean) => TextFieldComponent;
+
+  /** Gets the live chip instances */
+  getChips: () => ChipComponent[];
+
+  /** Adds a chip, subject to `maxChips`, `allowDuplicates` and `validate` */
+  addChip: (chip: TextFieldChipItem, triggerEvent?: boolean) => ChipComponent | null;
+
+  /** Removes a chip by instance, index or text */
+  removeChip: (chip: ChipComponent | number | string, triggerEvent?: boolean) => TextFieldComponent;
 
   /** Subscribes to input state events; keyboard events use input.addEventListener. */
   on: <K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]) => TextFieldComponent;

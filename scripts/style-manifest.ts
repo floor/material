@@ -21,7 +21,7 @@ export const componentStyles: Record<
     sharedLeaves?: string[];
   }
 > = {
-  "text-field": { source: "components/text-field", dependencies: [] },
+  "text-field": { source: "components/text-field", dependencies: ["chips"] },
   badge: { source: "components/badge", dependencies: [] },
   "bottom-app-bar": { source: "components/bottom-app-bar", dependencies: [] },
   "bottom-app-bar-toolbar": {
