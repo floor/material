@@ -203,6 +203,7 @@ describe("catalogue identity gate", () => {
         "dist/components/chips/index.js": "other component",
         "dist/elements/define.js": "shared element helper",
         "dist/styles.css": "full stylesheet",
+        "dist/styles/listbox.css": "initial listbox sheet",
       };
       const base = pack(root, "base", before);
       const after = {
@@ -223,12 +224,14 @@ describe("catalogue identity gate", () => {
         "dist/components/text-field/features/chips.js": "new implementation",
         "dist/elements/define.js": "shared drift",
         "dist/styles.css": "full sheet drift",
+        "dist/styles/listbox.css": "unrelated listbox drift",
       }), base, { cwd, revision });
       expect(escaped.code).toBe(1);
       expect(escaped.out).toContain("changed member dist/components/chips/index.js");
       expect(escaped.out).toContain("added member dist/components/text-field/features/chips.js");
       expect(escaped.out).toContain("changed member dist/elements/define.js");
       expect(escaped.out).toContain("changed member dist/styles.css");
+      expect(escaped.out).toContain("changed member dist/styles/listbox.css");
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
