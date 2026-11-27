@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" data-theme="baseline" data-theme-mode="light">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text field label geometry</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<style>
+  body {
+    margin: 0;
+    padding: clamp(16px, 4vw, 32px);
+    background: var(--mtrl-sys-color-surface);
+    color: var(--mtrl-sys-color-on-surface);
+    font-family: var(--mtrl-ref-typeface-plain, sans-serif);
+  }
+  main { max-width: 800px; margin-inline: auto; }
+  h1, h2, h3, p { margin: 0; }
+  h1 { font-size: 26px; line-height: 32px; }
+  p { margin-block: 8px 24px; max-width: 55ch; }
+  #directions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+  section {
+    display: grid;
+    align-content: start;
+    gap: 20px;
+    padding: 16px;
+    border: 1px solid var(--mtrl-sys-color-outline-variant);
+    border-radius: 12px;
+  }
+  h2 { font-size: 18px; }
+  h3 { font-size: 14px; font-weight: 500; }
+  .sample { display: grid; gap: 8px; }
+  .sample .mtrl-text-field { width: 100%; }
+  output {
+    color: var(--mtrl-sys-color-on-surface-variant);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+<main>
+  <h1>Text field label geometry</h1>
+  <p>Focus an empty field to float its label. While floated, the filled label starts 8 px from the top, and the outlined notch leaves 4 px on each side.</p>
+  <div id="directions">
+    <section id="ltr" aria-labelledby="ltr-heading">
+      <h2 id="ltr-heading">Left to right</h2>
+    </section>
+    <section id="rtl" aria-labelledby="rtl-heading">
+      <h2 id="rtl-heading">Right to left</h2>
+    </section>
+  </div>
+</main>
+<script type="module">
+  import { createTextField } from "../../../../dist/index.js";
+
+  const samples = [
+    { variant: "filled", label: "Email address", value: "ada@example.com" },
+    { variant: "filled", label: "Email address" },
+    { variant: "outlined", label: "Backup email for account recovery", value: "ada@example.com", fractional: true },
+    { variant: "outlined", label: "Email address" },
+  ];
+  const measurements = [];
+  const px = value => `${value.toFixed(2)} px`;
+  let frame;
+  const schedule = () => { frame ??= requestAnimationFrame(update); };
+  const observer = new ResizeObserver(schedule);
+
+  function update() {
+    frame = undefined;
+    const readings = measurements.map(({ field, label, notch, fractional }) => {
+      const box = label.getBoundingClientRect();
+      if (!notch) return `Label top ${px(box.top - field.field.getBoundingClientRect().top)}`;
+      if (!notch.parentElement.classList.contains("mtrl-text-field__outline--notched")) return "Notch closed";
+      const gap = notch.getBoundingClientRect();
+      const width = fractional ? ` · Label width ${getComputedStyle(label).width.replace("px", " px")}` : "";
+      return `Notch left ${px(box.left - gap.left)} · Right ${px(gap.right - box.right)}${width}`;
+    });
+    for (const [index, { output }] of measurements.entries()) {
+      if (output.textContent !== readings[index]) output.textContent = readings[index];
+    }
+    if (measurements.some(({ label }) => label.getAnimations().some(animation => animation.pending || animation.playState === "running"))) schedule();
+  }
+
+  for (const direction of ["ltr", "rtl"]) {
+    const panel = document.getElementById(direction);
+    for (const { variant, label: text, value, fractional } of samples) {
+      const sample = document.createElement("div");
+      sample.className = "sample";
+      sample.dir = direction;
+      const title = document.createElement("h3");
+      title.textContent = `${variant === "filled" ? "Filled" : "Outlined"} · ${value ? "populated" : "empty"}`;
+      const field = createTextField({ variant, label: text, value });
+      const label = field.element.querySelector(".mtrl-text-field__label");
+      const notch = field.element.querySelector(".mtrl-text-field__outline-notch");
+      const output = document.createElement("output");
+      output.dir = "ltr";
+      output.htmlFor.add(field.input.id);
+      output.setAttribute("aria-live", "off");
+
+      // Use a known fractional layout width, regardless of which font loads.
+      if (fractional) label.style.width = "min(232.625px, calc(100% - 32.375px))";
+      sample.append(title, field.element, output);
+      panel.append(sample);
+      measurements.push({ field, label, notch, output, fractional });
+      observer.observe(label);
+      observer.observe(notch ?? field.field);
+      for (const event of ["input", "focusin", "focusout", "transitionrun", "transitionend", "transitioncancel"]) {
+        field.element.addEventListener(event, schedule);
+      }
+    }
+  }
+  schedule();
+</script>
+</html>
