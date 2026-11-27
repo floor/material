@@ -31,12 +31,16 @@ const HUMAN = {
   carousel: "Carousel",
   "bottom-sheet": "Bottom sheet",
   progress: "Progress",
+  radios: "Radio buttons",
+  select: "Select",
+  "extended-fab": "Extended FAB",
   slider: "Slider",
+  tooltip: "Tooltip",
 };
 
 /** The component pages, grouped the way the rail groups them. */
 const GROUPS = [
-  { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu"] },
+  { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu", "radios", "select", "extended-fab", "tooltip"] },
   { label: "Surfaces", icon: "layers", pages: ["bottom-sheet", "drawer"] },
   { label: "Media", icon: "image", pages: ["carousel"] },
   { label: "Status", icon: "stacked_line_chart", pages: ["progress"] },

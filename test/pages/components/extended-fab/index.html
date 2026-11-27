@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>extended-fab</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createExtendedFab } from "../../../../dist/components/extended-fab/index.js";
+import { setComponentDefaults } from "../../../../dist/core/config/global.js";
+await initPage({ name: "extended-fab" });
+const main = document.getElementById("tp-main");
+
+const marks = (element) => {
+  const names = [...element.classList].filter((name) =>
+    name === "mtrl-extended-fab--primary-container"
+    || name === "mtrl-extended-fab--tertiary"
+    || name === "mtrl-extended-fab--fixed"
+    || name === "mtrl-extended-fab--fluid");
+  const label = element.getAttribute("aria-label");
+  return `${names.join(" ")}${label ? ` · aria-label "${label}"` : ""}`;
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Omitted options",
+  lookFor: "the default colour and width",
+  expected: "an omitted variant is primary-container and an omitted width is fixed",
+  measure: () => {
+    const button = document.getElementById("fab-omitted");
+    return button ? marks(button) : "no button";
+  },
+  mount: (body) => {
+    const fab = createExtendedFab({ text: "Create", placement: "none" });
+    fab.element.id = "fab-omitted";
+    body.append(fab.element);
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Explicit options",
+  lookFor: "a tertiary fluid button",
+  expected: "an explicit variant and width replace the defaults",
+  measure: () => {
+    const button = document.getElementById("fab-explicit");
+    return button ? marks(button) : "no button";
+  },
+  mount: (body) => {
+    const fab = createExtendedFab({ text: "Create", variant: "tertiary", width: "fluid", placement: "none" });
+    fab.element.id = "fab-explicit";
+    body.append(fab.element);
+  },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Press",
+  lookFor: "the ripple on press",
+  expected: "the default ripple is on",
+  measure: () => {
+    const button = document.getElementById("fab-press");
+    if (!button) return "no button";
+    return button.querySelector(".mtrl-ripple") ? "press ripple mounted" : "no press ripple";
+  },
+  mount: (body) => {
+    const fab = createExtendedFab({ text: "Create", placement: "none" });
+    fab.element.id = "fab-press";
+    body.append(fab.element);
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "Undefined options",
+  lookFor: "a spread that leaves variant and width undefined, beside the omitted button and a global default",
+  expected: "undefined matches omitted; a defined global variant wins, and an undefined global width stays fixed",
+  measure: () => {
+    const omitted = document.getElementById("fab-edge-omitted");
+    const blank = document.getElementById("fab-edge-undefined");
+    const global = document.getElementById("fab-edge-global");
+    if (!omitted || !blank || !global) return "no buttons";
+    const same = marks(omitted) === marks(blank);
+    return `omitted ${marks(omitted)} · undefined ${same ? "matches omitted" : marks(blank)} · global ${marks(global)}`;
+  },
+  mount: (body) => {
+    const omitted = createExtendedFab({ text: "Omitted", placement: "none" });
+    const blank = createExtendedFab({ text: "Undefined", placement: "none", variant: undefined, width: undefined });
+    setComponentDefaults("extended-fab", { variant: "tertiary", width: undefined, ariaLabel: "Create item" });
+    const global = createExtendedFab({
+      text: "Global",
+      placement: "none",
+      variant: undefined,
+      width: undefined,
+      ariaLabel: undefined,
+    });
+    omitted.element.id = "fab-edge-omitted";
+    blank.element.id = "fab-edge-undefined";
+    global.element.id = "fab-edge-global";
+    body.append(omitted.element, blank.element, global.element);
+  },
+});
+</script>
+</body>
+</html>
