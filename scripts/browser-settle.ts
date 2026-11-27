@@ -12,10 +12,11 @@
  *    document, or the element's subtree) has finished. A transition that
  *    starts on a later frame — a child that inherits a colour which is itself
  *    transitioning, and has its own colour transition — is not in the first
- *    snapshot, so the step reads `getAnimations()` again after each set, for
- *    the target subtree, its open shadow roots, and the document when there
- *    is no target, until none are running. The whole step shares one cap of
- *    2 s;
+ *    snapshot, so after each set the step waits one frame and reads
+ *    `getAnimations()` once, for the target subtree, its open shadow roots,
+ *    and the document when there is no target, until none are running. An
+ *    empty first read is confirmed on the next frame. The whole step shares
+ *    one cap of 2 s;
  * 2. every scroller has stopped — a `scrollTo({behavior: "smooth"})` or a fling
  *    is no Web Animations animation, so the document's scroller and every
  *    scroll container in the target's subtree, open shadow roots included, are
@@ -140,21 +141,9 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
           resolve("done");
         });
       });
-      for (;;) {
-        if (left() <= 0) return "timeout" as const;
-        const current = running();
-        if (current.length === 0) {
-          // Nothing this frame. A transition that begins on the next one is
-          // still unseen, so one frame decides whether the step is done.
-          const remaining = left();
-          if (remaining <= 0) return "timeout" as const;
-          if ((await nextFrame(remaining)) === "timeout") return "timeout" as const;
-          if (left() <= 0) return "timeout" as const;
-          if (running().length === 0) return "finished" as const;
-          continue;
-        }
+      const awaitBatch = async (current: Animation[]): Promise<"done" | "timeout"> => {
         const remaining = left();
-        if (remaining <= 0) return "timeout" as const;
+        if (remaining <= 0) return "timeout";
         let timer: ReturnType<typeof setTimeout> | undefined;
         const outcome = await Promise.race([
           Promise.all(current.map((animation) => animation.finished.catch(() => undefined))).then(() => "done" as const),
@@ -163,7 +152,31 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
           }),
         ]);
         clearTimeout(timer);
-        if (outcome === "timeout") return "timeout" as const;
+        return outcome;
+      };
+      let pending = running();
+      for (;;) {
+        if (left() <= 0) return "timeout" as const;
+        if (pending.length === 0) {
+          // Nothing yet. A transition that begins on the next frame is still
+          // unseen, so one more read confirms the step is done.
+          const remaining = left();
+          if (remaining <= 0) return "timeout" as const;
+          if ((await nextFrame(remaining)) === "timeout") return "timeout" as const;
+          if (left() <= 0) return "timeout" as const;
+          pending = running();
+          if (pending.length === 0) return "finished" as const;
+          continue;
+        }
+        if ((await awaitBatch(pending)) === "timeout") return "timeout" as const;
+        // The batch has finished. One frame, then one scan: a child transition
+        // that starts then is included, and an empty scan is the confirmation.
+        const remaining = left();
+        if (remaining <= 0) return "timeout" as const;
+        if ((await nextFrame(remaining)) === "timeout") return "timeout" as const;
+        if (left() <= 0) return "timeout" as const;
+        pending = running();
+        if (pending.length === 0) return "finished" as const;
       }
     },
     { target: target ?? null, cap: animationCapMs },
