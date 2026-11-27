@@ -1192,56 +1192,101 @@
   },
   "list": {
     "ExpandedListTokens.kt": {
-      "notApplicable": {
-        "CollapsedItemTrailingIconContainerColor": "The list does not expose expandable or collapsible rows or their disclosure control.",
-        "CollapsedItemTrailingIconIconColor": "The list does not expose expandable or collapsible rows or their disclosure control.",
-        "ContainerShape": "The list does not expose expandable or collapsible rows or their disclosure control.",
-        "ExpandedItemContainerColor": "The list does not expose expandable or collapsible rows or their disclosure control.",
-        "ExpandedItemSegmentedContainerColor": "The list does not expose expandable or collapsible rows or their disclosure control.",
-        "ExpandedItemTrailingIconContainerColor": "The list does not expose expandable or collapsible rows or their disclosure control.",
-        "ExpandedItemTrailingIconIconColor": "The list does not expose expandable or collapsible rows or their disclosure control.",
-        "TrailingIconShape": "The list does not expose expandable or collapsible rows or their disclosure control."
+      "unmeasured": [
+        "CollapsedItemTrailingIconContainerColor",
+        "CollapsedItemTrailingIconIconColor",
+        "ContainerShape",
+        "ExpandedItemContainerColor",
+        "ExpandedItemSegmentedContainerColor",
+        "ExpandedItemTrailingIconContainerColor",
+        "ExpandedItemTrailingIconIconColor",
+        "TrailingIconShape"
+      ],
+      "unmeasuredNotes": {
+        "CollapsedItemTrailingIconContainerColor": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control.",
+        "CollapsedItemTrailingIconIconColor": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control.",
+        "ContainerShape": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control.",
+        "ExpandedItemContainerColor": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control.",
+        "ExpandedItemSegmentedContainerColor": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control.",
+        "ExpandedItemTrailingIconContainerColor": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control.",
+        "ExpandedItemTrailingIconIconColor": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control.",
+        "TrailingIconShape": "not implemented: the list does not expose expandable or collapsible rows or their disclosure control."
       }
     },
     "ListTokens.kt": {
+      "unmeasured": [
+        "ItemDraggedContainerElevation",
+        "ItemDraggedContainerExpressiveShape",
+        "ItemDraggedLabelTextColor",
+        "ItemDraggedLeadingIconIconColor",
+        "ItemDraggedTrailingIconIconColor",
+        "ItemSelectedDraggedContainerExpressiveShape",
+        "ItemSelectedDraggedLabelTextColor",
+        "ItemSelectedDraggedLeadingIconColor",
+        "ItemSelectedDraggedTrailingIconColor"
+      ],
+      "unmeasuredNotes": {
+        "ItemDraggedContainerElevation": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemDraggedContainerExpressiveShape": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemDraggedLabelTextColor": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemDraggedLeadingIconIconColor": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemDraggedTrailingIconIconColor": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemSelectedDraggedContainerExpressiveShape": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemSelectedDraggedLabelTextColor": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemSelectedDraggedLeadingIconColor": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
+        "ItemSelectedDraggedTrailingIconColor": "not implemented: the list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering."
+      },
       "notApplicable": {
         "ItemDisabledStateLayerOpacity": "Disabled list items do not paint an interaction state layer.",
-        "ItemDraggedContainerElevation": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemDraggedContainerExpressiveShape": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemDraggedLabelTextColor": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemDraggedLeadingIconIconColor": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemDraggedTrailingIconIconColor": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemSelectedDisabledStateLayerOpacity": "Disabled list items do not paint an interaction state layer.",
-        "ItemSelectedDraggedContainerExpressiveShape": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemSelectedDraggedLabelTextColor": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemSelectedDraggedLeadingIconColor": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering.",
-        "ItemSelectedDraggedTrailingIconColor": "The list exposes selection and slot controls but no built-in dragged state or drag-and-drop reordering."
+        "ItemSelectedDisabledStateLayerOpacity": "Disabled list items do not paint an interaction state layer."
       }
     },
     "ReorderListTokens.kt": {
-      "notApplicable": {
-        "ItemContainerColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemDropZoneColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemLabelTextColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemLeadingIconColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemOverlineColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemShape": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemSupportingTextColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemTrailingIconColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone.",
-        "ItemTrailingSupportingTextColor": "The list does not provide drag-to-reorder, including the drag affordance and drop zone."
+      "unmeasured": [
+        "ItemContainerColor",
+        "ItemDropZoneColor",
+        "ItemLabelTextColor",
+        "ItemLeadingIconColor",
+        "ItemOverlineColor",
+        "ItemShape",
+        "ItemSupportingTextColor",
+        "ItemTrailingIconColor",
+        "ItemTrailingSupportingTextColor"
+      ],
+      "unmeasuredNotes": {
+        "ItemContainerColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemDropZoneColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemLabelTextColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemLeadingIconColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemOverlineColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemShape": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemSupportingTextColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemTrailingIconColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone.",
+        "ItemTrailingSupportingTextColor": "not implemented: the list does not provide drag-to-reorder, including the drag affordance and drop zone."
       }
     },
     "RevealListTokens.kt": {
-      "notApplicable": {
-        "ItemActionButtonIconIconColor": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemActionIconButtonContainerColor": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemButtonIconIconColor": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemContainerColor": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemContainerShape": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemIconButtonActionContainerShape": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemIconButtonContainerColor": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemIconButtonContainerShape": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
-        "ItemSegmentedContainerShape": "The list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions."
+      "unmeasured": [
+        "ItemActionButtonIconIconColor",
+        "ItemActionIconButtonContainerColor",
+        "ItemButtonIconIconColor",
+        "ItemContainerColor",
+        "ItemContainerShape",
+        "ItemIconButtonActionContainerShape",
+        "ItemIconButtonContainerColor",
+        "ItemIconButtonContainerShape",
+        "ItemSegmentedContainerShape"
+      ],
+      "unmeasuredNotes": {
+        "ItemActionButtonIconIconColor": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemActionIconButtonContainerColor": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemButtonIconIconColor": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemContainerColor": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemContainerShape": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemIconButtonActionContainerShape": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemIconButtonContainerColor": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemIconButtonContainerShape": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions.",
+        "ItemSegmentedContainerShape": "not implemented: the list accepts caller-owned controls in its slots and does not implement swipe-to-reveal actions."
       }
     }
   },

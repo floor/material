@@ -7215,7 +7215,7 @@
             "spec": "drift",
             "compose": "no-value"
           },
-          "note": "",
+          "note": "Reference conflict resolved with no change under rule 1. The measured OutlineVariant matches the pinned Compose DividerTokens.Color and the website baseline colour diagram.",
           "issue": null
         },
         {
