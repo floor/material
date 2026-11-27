@@ -4,6 +4,7 @@ import type { Page } from "playwright";
 import type createSwitch from "../src/components/switch";
 import type createCheckbox from "../src/components/checkbox";
 import type createRadios from "../src/components/radios";
+import { settle } from "./browser-settle";
 
 type ControlsWindow = Window & {
   inputs: { createSwitch: typeof createSwitch; createCheckbox: typeof createCheckbox; createRadios: typeof createRadios };
@@ -11,7 +12,6 @@ type ControlsWindow = Window & {
 };
 type Box = { left: number; right: number; top: number; width: number; height: number };
 
-const settle = (page: Page) => page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
 const box = (page: Page, selector: string): Promise<Box> =>
   page.locator(selector).evaluate((el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, width: r.width, height: r.height }; });
 const style = (page: Page, selector: string, property: string, pseudo?: string): Promise<string> =>

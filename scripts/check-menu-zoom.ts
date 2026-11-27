@@ -26,6 +26,7 @@ import * as sass from "sass";
 import { chromium, webkit, type Browser, type Page } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "./build-styles";
+import { settle } from "./browser-settle";
 
 const entry = resolve("scripts/menu-zoom-entry.ts");
 const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
@@ -65,8 +66,7 @@ const mountMenu = async (page: Page) => {
     host.append(spacer, button.element);
     w.probeMenu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "One" }, { text: "Two" }] });
   });
-  await page.waitForTimeout(250);
-  return page.evaluate(async () => {
+  await settle(page);return page.evaluate(async () => {
     const w = window as unknown as { probeMenu: { element: HTMLElement; open: () => void } };
     const opener = document.querySelector<HTMLElement>("#opener")!.getBoundingClientRect();
     w.probeMenu.open();
@@ -86,8 +86,7 @@ const mountSelect = async (page: Page) => {
     host.append(field.element);
     w.probeSelect = field;
   });
-  await page.waitForTimeout(250);
-  return page.evaluate(async () => {
+  await settle(page);return page.evaluate(async () => {
     const w = window as unknown as { probeSelect: { element: HTMLElement; open: () => void } };
     const field = document.querySelector<HTMLElement>("#field")!.getBoundingClientRect();
     w.probeSelect.open();
@@ -154,8 +153,7 @@ const run = async (browser: Browser, engine: string) => {
     host.append(spacer, button.element);
     w.probeMenu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "One" }, { text: "Two" }] });
   });
-  await page.waitForTimeout(250);
-  const fractional = await page.evaluate(async () => {
+  await settle(page);const fractional = await page.evaluate(async () => {
     const w = window as unknown as { probeMenu: { element: HTMLElement; open: () => void } };
     const opener = document.querySelector<HTMLElement>("#opener")!.getBoundingClientRect();
     w.probeMenu.open();
@@ -188,8 +186,7 @@ const run = async (browser: Browser, engine: string) => {
     host.append(spacer, wrapper);
     w.probeMenu = w.mtrl.createMenu({ opener: button.element, items: [{ text: "One" }, { text: "Two" }] });
   });
-  await page.waitForTimeout(250);
-  const transformed = await page.evaluate(async () => {
+  await settle(page);const transformed = await page.evaluate(async () => {
     const w = window as unknown as { probeMenu: { element: HTMLElement; open: () => void } };
     const opener = document.querySelector<HTMLElement>("#opener")!;
     w.probeMenu.open();

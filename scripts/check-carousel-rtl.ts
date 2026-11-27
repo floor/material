@@ -14,6 +14,7 @@
 // one) is what runs.
 import assert from "node:assert/strict";
 import type { Browser } from "playwright";
+import { settle } from "./browser-settle";
 
 const WIDTH = 600;
 
@@ -197,7 +198,7 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
       await page.mouse.down();
       for (let step = 1; step <= 6; step++) await page.mouse.move(x + (dx * step) / 6, y, { steps: 1 });
       await page.mouse.up();
-      await page.waitForTimeout(700);
+      await settle(page);
       return await page.evaluate(() => (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft);
     } finally {
       await context.close();
@@ -236,13 +237,13 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
       () => (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft,
     );
     await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
-    await flipPage.waitForTimeout(700);
+    await settle(flipPage);
     const ltrAtOne = await readScroll();
     assert.ok(ltrAtOne > 100, `before the flip, LTR goTo(1) advances (got ${ltrAtOne})`);
     await flipPage.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
-    await flipPage.waitForTimeout(100);
+    await flipPage.waitForTimeout(100); // stays: pointer pacing inside a drag
     await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
-    await flipPage.waitForTimeout(700);
+    await settle(flipPage);
     const rtlAtOne = await readScroll();
     assert.ok(
       Math.abs(rtlAtOne + ltrAtOne) < 1,
@@ -257,10 +258,10 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
       host.append(carousel.element);
       (window as unknown as { __goTo(index: number): void }).__goTo = (i: number) => carousel.goTo(i);
     });
-    await flipPage.waitForTimeout(200);
+    await flipPage.waitForTimeout(200); // stays: pointer pacing inside a drag
     await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
-    await flipPage.waitForTimeout(700);
-    const unsnapped = await readScroll();
+    // goTo scrolls the strip itself; the reading settles when the scroll stops.
+    const unsnapped = (await settle(flipPage, { read: readScroll })) ?? (await readScroll());
     assert.ok(
       unsnapped <= -100,
       `after the flip, snap:false goTo(1) still moves negative (got ${unsnapped})`,
@@ -291,12 +292,12 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
         const scroller = carousel.element.querySelector(".mtrl-carousel__scroller") as HTMLElement;
         return scroller.getBoundingClientRect().toJSON();
       });
-      await page.waitForTimeout(400);
+      await settle(page);
       const origin = direction === "ltr" ? 120 : -120;
       await page.evaluate((v) => {
         (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft = v;
       }, origin);
-      await page.waitForTimeout(300);
+      await settle(page);
       const x = box.x + box.width / 2, y = box.y + box.height / 2;
       await page.mouse.move(x, y);
       await page.mouse.down();
@@ -305,7 +306,7 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
         () => (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft,
       );
       await page.mouse.up();
-      await page.waitForTimeout(700);
+      await settle(page);
       return whileHeld;
     } finally {
       await context.close();
@@ -342,7 +343,7 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
         carousel.element.style.cssText = "width:600px;height:400px";
         host.append(carousel.element);
       }, config);
-      await page.waitForTimeout(400);
+      await settle(page);
       return await itemX(page);
     } finally {
       await context.close();
@@ -362,9 +363,9 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
         carousel.element.style.cssText = "width:600px;height:400px";
         host.append(carousel.element);
       }, config);
-      await page.waitForTimeout(400);
+      await settle(page);
       await page.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
-      await page.waitForTimeout(300);
+      await settle(page);
       return await itemX(page);
     } finally {
       await context.close();

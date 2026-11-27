@@ -9,6 +9,7 @@ import { gzipSync } from "node:zlib";
 import { SLIDER_INLINE_GZIP } from "./budgets";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
 import { checkSliderNames } from "./fixtures/slider-names";
+import { settle } from "./browser-settle";
 
 declare global {
   interface Window {
@@ -92,7 +93,7 @@ try {
     const theme = width === 96 ? "ocean" : "baseline", mode = width === 96 ? "dark" : "light";
     for (const target of [page, ...(old ? [old] : [])]) {
       await target.evaluate(({ config, width, theme, mode }) => window.mount(JSON.parse(config), width, theme, mode), { config: JSON.stringify({ ...scenario, size, label: "Volume" }), width, theme, mode });
-      await target.waitForTimeout(35);
+      await settle(target);
     }
     assert.equal(await page.locator("canvas").count(), 0);
     const handles = page.getByRole("slider");
@@ -126,7 +127,7 @@ try {
   }
   // Real API, keyboard, pointer, resizing and lifecycle checks.
   await page.evaluate(() => window.mount({ value: 20, step: 10, label: "Volume" }, 320, "baseline", "light"));
-  await page.waitForTimeout(30);
+  await settle(page);
   const handle = page.getByRole("slider");
   await handle.focus(); await page.keyboard.press("ArrowRight");
   assert.equal(await handle.getAttribute("aria-valuenow"), "30");
@@ -138,7 +139,7 @@ try {
   await page.evaluate(() => { const s = window.slider; s.setColor("secondary"); s.setSize("XL"); s.showTicks(true); s.setStep(5); });
   assert(await page.locator(".mtrl-slider__ticks").first().isVisible());
   await page.evaluate(() => { (document.querySelector("#host") as HTMLElement).style.width = "96px"; });
-  await page.waitForTimeout(50);
+  await settle(page);
   const resized = await handle.boundingBox(); assert(resized);
   assert(Math.abs(resized.x + resized.width / 2 - (24 + 48)) < 1, "Handle lost alignment after resize");
   await page.evaluate(() => { const s = window.slider; s.disable(); });
@@ -155,7 +156,7 @@ try {
       window.mount(JSON.parse(config), 320, "baseline", "light");
       (document.querySelector("#host") as HTMLElement).style.height = height ? `${height}px` : "";
     }, { config: JSON.stringify(config), height });
-    await page.waitForTimeout(40);
+    await settle(page);
     return page.evaluate(() => {
       const trackElement = document.querySelector<HTMLElement>(".mtrl-slider__track")!;
       const track = trackElement.getBoundingClientRect();
@@ -303,7 +304,7 @@ try {
   await moving.goto(`http://127.0.0.1:${server.port}/?motion`);
   await moving.waitForFunction(() => window.ready);
   await moving.evaluate(() => window.mount({ value: 50, label: "Volume" }, 320, "baseline", "light"));
-  await moving.waitForTimeout(60);
+  await moving.waitForTimeout(60); // stays: the first render and the spring are under test
   assert(!(await moving.locator(".mtrl-slider--settling").count()), "the first render settles");
   const track = (await moving.locator(".mtrl-slider__container").boundingBox())!;
   await moving.evaluate(() => {
@@ -319,7 +320,7 @@ try {
     requestAnimationFrame(frame);
   });
   await moving.mouse.click(track.x + track.width * 0.8, track.y + track.height / 2);
-  await moving.waitForTimeout(1000);
+  await moving.waitForTimeout(1000); // stays: the first render and the spring are under test
   const samples = await moving.evaluate(() => (window as unknown as { samples: [number, number][] }).samples);
   const from = samples[0]![1], to = samples[samples.length - 1]![1];
   const began = samples.find(([, x]) => Math.abs(x - from) > 0.5)![0];
@@ -437,7 +438,7 @@ try {
             dir,
             mode,
           });
-          await page.waitForTimeout(35);
+          await settle(page);
           const preview = (size === "XS" || size === "L") && dir === "ltr"
             ? `${artifacts}/end-${size.toLowerCase()}-${mode}-${end}.png`
             : undefined;
@@ -499,7 +500,7 @@ try {
     elementPage.on("pageerror", error => elementErrors.push(error.message));
     await elementPage.goto(`http://127.0.0.1:${server.port}/element?dir=${dir}`);
     await elementPage.waitForFunction(() => window.elementReady);
-    await elementPage.waitForTimeout(200);
+    await settle(elementPage);
     const boxes = await elementPage.evaluate(() => {
       const host = document.querySelector("m-slider") as HTMLElement;
       const root = host.shadowRoot!;

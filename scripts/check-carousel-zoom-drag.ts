@@ -20,6 +20,7 @@ import * as sass from "sass";
 import { chromium, webkit, type Browser, type Page } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "./build-styles";
+import { settle } from "./browser-settle";
 
 const entry = resolve("scripts/carousel-zoom-drag-entry.ts");
 const bundle = await Bun.build({ entrypoints: [entry], target: "browser", format: "esm", minify: true });
@@ -87,8 +88,7 @@ const run = async (browser: Browser, engine: string) => {
       });
       host.append(carousel.element);
     }, { zoom, image });
-    await page.waitForTimeout(400);
-    await page.evaluate(() => {
+    await settle(page);await page.evaluate(() => {
       document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!.scrollLeft = 200;
     });
     const moved = await dragBy(page, -120);
@@ -113,8 +113,7 @@ const run = async (browser: Browser, engine: string) => {
     });
     host.append(carousel.element);
   }, { image });
-  await page.waitForTimeout(400);
-  const afterClick = await page.evaluate(async () => {
+  await settle(page);const afterClick = await page.evaluate(async () => {
     const scroller = document.querySelector<HTMLElement>(".mtrl-carousel__scroller")!;
     const box = scroller.getBoundingClientRect();
     const items = [...scroller.querySelectorAll<HTMLElement>(".mtrl-carousel__item")];

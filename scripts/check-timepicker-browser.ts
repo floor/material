@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type { Page } from "playwright";
 import { TIME_FORMAT, TIME_PICKER_ORIENTATION } from "../src/components/timepicker/types";
 import type createTimePicker from "../src/components/timepicker";
+import { settle } from "./browser-settle";
 
 type TimePickerWindow = Window & {
   createTimePicker: typeof createTimePicker;
@@ -41,7 +42,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
     state.openingInput.dispatchEvent(new Event("input", { bubbles: true }));
   });
   // Cross the old redraw deadline and verify the actual input survives.
-  await page.waitForTimeout(100);
+  await settle(page);
   assert.deepEqual(await page.evaluate(() => {
     const state = window as unknown as TimePickerWindow;
     return {
@@ -132,7 +133,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setValue("13:00"));
   const path: number[] = [];
-  for (let i = 0; i < 6; i++) { path.push((await hand()).angle); await page.waitForTimeout(40); }
+  for (let i = 0; i < 6; i++) { path.push((await hand()).angle); await page.waitForTimeout(40); } // stays: sampling the hand over frames: the motion is under test
   assert.ok(path.every(angle => angle >= 330 || angle <= 31), `11 to 1 springs forward through 12, not back round the dial (${path.join(", ")})`);
   assert.ok(new Set(path).size > 1, "the hand moves rather than jumping");
   await page.emulateMedia({ reducedMotion: "reduce" });

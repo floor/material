@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import type { Page } from "playwright";
 import type { CarouselComponent, CarouselConfig } from "../src/components/carousel";
+import { settle } from "./browser-settle";
 
 type CarouselWindow = Window & {
   createCarousel: (config: CarouselConfig) => CarouselComponent;
@@ -81,7 +82,7 @@ export async function checkCarouselWheel(page: Page): Promise<void> {
         const label = `${variant} ${momentum ? "30-event decay" : "100px notch"}`;
         const record = async () => {
           await scroller.evaluate(el => el.scrollTo({ left: 0, behavior: "instant" }));
-          await page.waitForTimeout(150);
+          await settle(page)
           return scroller.evaluate(async (element, momentum) => {
             const snaps = Array.from(element.querySelectorAll<HTMLElement>(".mtrl-carousel__snap"), el => parseFloat(el.style.left));
             const deltas = momentum ? Array.from({ length: 30 }, (_, i) => 300 * 0.9 ** i) : [100];
@@ -419,14 +420,14 @@ export async function checkCarouselUncontained(
         document.documentElement.classList.add("dark-theme");
         document.body.style.background = "#141318";
       });
-      await page.waitForTimeout(50);
+      await settle(page)
       await page.screenshot({ path: `${options.screenshotDir}/slide0-dark.png` });
       await page.evaluate(() => {
         document.documentElement.dataset.themeMode = "light";
         document.documentElement.classList.remove("dark-theme");
         document.body.style.background = "#fdfcf4";
       });
-      await page.waitForTimeout(50);
+      await settle(page)
     }
 
     for (const item of slide0.visibleItems) {
@@ -459,7 +460,7 @@ export async function checkCarouselUncontained(
       const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller");
       return el && Math.abs(el.scrollLeft - 2880) < 1;
     });
-    await page.waitForTimeout(50);
+    await settle(page)
     const slide10 = await measureLayout();
     console.log(`[uncontained check] Slide 10: containerWidth=${slide10.containerWidth}, scrollLeft=${slide10.scrollLeft}, scrollWidth=${slide10.scrollWidth}`);
     for (const item of slide10.visibleItems) {
@@ -474,14 +475,14 @@ export async function checkCarouselUncontained(
         document.documentElement.classList.add("dark-theme");
         document.body.style.background = "#141318";
       });
-      await page.waitForTimeout(50);
+      await settle(page)
       await page.screenshot({ path: `${options.screenshotDir}/slide10-dark.png` });
       await page.evaluate(() => {
         document.documentElement.dataset.themeMode = "light";
         document.documentElement.classList.remove("dark-theme");
         document.body.style.background = "#fdfcf4";
       });
-      await page.waitForTimeout(50);
+      await settle(page)
     }
 
     for (const item of slide10.visibleItems) {
@@ -575,14 +576,14 @@ export async function checkCarouselUncontained(
           const scroller = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
           scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: 240, bubbles: true, cancelable: true }));
         });
-        await page.waitForTimeout(40);
+        await settle(page)
         const atEnd = await page.evaluate(() => {
           const el = document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!;
           return el.scrollLeft >= el.scrollWidth - el.clientWidth - 1;
         });
         if (atEnd) break;
       }
-      await page.waitForTimeout(1300);
+      await settle(page)
       const wheelState = await page.evaluate(() => ({
         scroll: document.querySelector<HTMLElement>("#uncontained-carousel .mtrl-carousel__scroller")!.scrollLeft,
         changes: (window as unknown as { wheelChanges: number[] }).wheelChanges,
@@ -632,9 +633,9 @@ export async function checkCarouselUncontained(
         const scroller = document.querySelector<HTMLElement>("#contained-wheel-carousel .mtrl-carousel__scroller")!;
         scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: 240, bubbles: true, cancelable: true }));
       });
-      await page.waitForTimeout(60);
+      await settle(page)
     }
-    await page.waitForTimeout(1300);
+    await settle(page)
     const containedWheel = await page.evaluate(() => ({
       changes: (window as unknown as { containedChanges: number[] }).containedChanges,
     }));
@@ -833,7 +834,7 @@ export async function checkCarouselDragRelease(page: Page): Promise<void> {
       await page.mouse.move(380, 120);
       const beforePress = await state();
       await page.mouse.down();
-      await page.waitForTimeout(120);
+      await settle(page)
       // The strip must not move while the pointer holds it — the jump bug
       // scrolled on the press itself. The release may navigate to the slide
       // (a click selects it); only the held press is asserted here.
@@ -1156,7 +1157,7 @@ export async function checkCarouselOutsideRelease(page: Page): Promise<void> {
     await page.mouse.down();
     await page.mouse.move(box.x, 2, { steps: 4 });
     await page.mouse.up();
-    await page.waitForTimeout(600);
+    await settle(page)
     // The outside button swallows pointerup/pointercancel at its own node: the
     // release must still reach the carousel through the window's capture
     // phase, or snapping stays off.
@@ -1193,7 +1194,7 @@ export async function checkCarouselOutsideRelease(page: Page): Promise<void> {
     await page.mouse.down();
     await page.mouse.move(scrollerBox.x, 330, { steps: 4 });
     await page.mouse.up();
-    await page.waitForTimeout(600);
+    await settle(page)
     const afterStop = await page.evaluate(() => {
       const host = document.querySelector("m-carousel");
       const scope: ParentNode = host?.shadowRoot ?? document;
@@ -1230,7 +1231,7 @@ export async function checkCarouselOutsideRelease(page: Page): Promise<void> {
       const scope: ParentNode = host?.shadowRoot ?? document;
       scope.querySelector<HTMLElement>(".mtrl-carousel__scroller")?.scrollTo({ left: 0, behavior: "instant" });
     });
-    await page.waitForTimeout(120);
+    await settle(page)
     await page.locator("#outside-carousel .mtrl-carousel__button").first().click();
     assert.equal(await page.evaluate(() => window.location.hash), "#go", `${label}: a press keeps the link clickable`);
   }
@@ -1305,7 +1306,13 @@ export async function checkCarouselMixedPointers(page: Page): Promise<void> {
     assert.equal(afterTouch.dragging, true, `${label}: a touch released elsewhere keeps the mouse drag alive`);
     assert.notEqual(afterTouch.snap, "x mandatory", `${label}: snapping stays off while the mouse still holds the strip`);
     await page.mouse.up();
-    await page.waitForTimeout(700);
+    // The strip's settle is a scroll the component drives, not a CSS
+    // animation: wait for its own state rather than for an animation.
+    await page.waitForFunction(() => {
+      const host = document.querySelector("m-carousel");
+      const root = (host?.shadowRoot ?? document).querySelector<HTMLElement>(".mtrl-carousel");
+      return !!root && !root.hasAttribute("data-settling") && !root.hasAttribute("data-dragging");
+    });
     const end = await page.evaluate(() => {
       const host = document.querySelector("m-carousel");
       const scope: ParentNode = host?.shadowRoot ?? document;

@@ -573,7 +573,7 @@ async function sharedBehaviour(page: Page, kind: "menu" | "listbox"): Promise<vo
   assert.equal((await state(page)).active, "Cherry", `${label}: typeahead c`);
   await page.keyboard.press("z");
   assert.equal((await state(page)).active, "Cherry", `${label}: a no-match buffer keeps the active option`);
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(600); // stays: the typeahead reset window is under test
   await page.keyboard.press("e");
   assert.equal((await state(page)).active, "Elderberry", `${label}: a fresh buffer after 500 ms`);
   ok(`${label}: typeahead cycling, no match and the reset window`);

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** Build first. Check a packed production Vite app and compare CSS in Chromium. */
 import assert from "node:assert/strict";
+import { settle } from "./browser-settle";
 import { mkdir, readFile, writeFile, copyFile, rm, symlink } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -301,7 +302,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   await flatPage.goto(`${origin}/menu.html`);
   await flatPage.locator('body[data-ready="true"]').waitFor();
   await flatPage.getByRole("menuitem", { name: "Copy" }).waitFor();
-  await flatPage.waitForTimeout(300);
+  await flatPage.waitForTimeout(300); // stays: a chunk request lands over the network
   assert(!flatRequested.has(submenuChunk), "A menu without nested items requested the submenu chunk");
   const afterSetItems = submenuRequested(flatPage);
   await flatPage.evaluate(() => (window as unknown as { nest: () => void }).nest());
@@ -387,7 +388,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
       if (settled && JSON.stringify(full) === JSON.stringify(selective) && !fullPNG.equals(selectivePNG)) {
         await writeFile(join(artifacts, `${label}-first-full.png`), fullPNG);
         await writeFile(join(artifacts, `${label}-first-selective.png`), selectivePNG);
-        await pages[0].waitForTimeout(250);
+        await settle(pages[0]);
         [fullPNG, selectivePNG] = await capture();
         if (fullPNG.equals(selectivePNG)) {
           retaken.push(label);

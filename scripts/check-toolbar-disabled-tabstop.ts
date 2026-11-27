@@ -5,6 +5,7 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import * as sass from "sass";
 import { baseStyles, componentStyles, resolveStyleDependencies } from "./style-manifest";
 import type createToolbar from "../src/components/toolbar";
@@ -55,14 +56,13 @@ try {
       }, mode);
       await page.waitForFunction(() => document.querySelector<HTMLElement>('#item-0')?.tabIndex === 0);
       const indexes = () => page.evaluate(() => [0, 1, 2].map(i => document.querySelector<HTMLElement>(`#item-${i}`)!.tabIndex));
-      const settle = () => page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
       const focus = () => page.evaluate(() => document.activeElement?.id);
       assert.deepEqual(await indexes(), [0, -1, -1]);
       await page.evaluate(mode => {
         const item = document.querySelector<HTMLButtonElement>('#item-0')!;
         if (mode === 'slotted-element') item.setAttribute('disabled', ''); else item.disabled = true;
       }, mode);
-      await settle();
+      await settle(page);
       const disabled = await indexes();
       rows.push({ mode, disabled });
       await Bun.write(`${artifacts}/results.json`, JSON.stringify(rows, null, 2));
@@ -70,16 +70,16 @@ try {
       assert.equal(await focus(), 'before', 'resync must not move focus');
       await page.keyboard.press('Tab'); assert.equal(await focus(), 'item-1', `${mode}: Tab cannot enter`);
       await page.locator('#item-1').evaluate(item => item.setAttribute('aria-disabled', 'true'));
-      await settle(); assert.deepEqual(await indexes(), [-1, -1, 0]);
+      await settle(page); assert.deepEqual(await indexes(), [-1, -1, 0]);
       await page.locator('#before').focus(); await page.keyboard.press('Tab'); assert.equal(await focus(), 'item-2');
       await page.evaluate(() => [0, 1, 2].forEach(i => document.querySelector(`#item-${i}`)!.setAttribute('disabled', '')));
-      await settle(); assert.deepEqual(await indexes(), [-1, -1, -1]);
+      await settle(page); assert.deepEqual(await indexes(), [-1, -1, -1]);
       await page.locator('#before').focus(); await page.keyboard.press('Tab'); assert.equal(await focus(), 'after');
       await page.locator('#item-1').evaluate(item => { item.removeAttribute('disabled'); item.removeAttribute('aria-disabled'); });
-      await settle(); assert.deepEqual(await indexes(), [-1, 0, -1]);
+      await settle(page); assert.deepEqual(await indexes(), [-1, 0, -1]);
       await page.locator('#before').focus(); await page.keyboard.press('Tab'); assert.equal(await focus(), 'item-1');
       await page.locator('#item-0').evaluate(item => item.removeAttribute('disabled'));
-      await settle(); assert.deepEqual(await indexes(), [-1, 0, -1], 'keep an enabled remembered tab stop');
+      await settle(page); assert.deepEqual(await indexes(), [-1, 0, -1], 'keep an enabled remembered tab stop');
       if (mode === 'factory') {
         const retained = await page.evaluate(async () => {
           const item = document.querySelector<HTMLElement>('#item-1')!;

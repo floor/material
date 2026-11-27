@@ -21,6 +21,7 @@
 import assert from "node:assert/strict";
 import { type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 
 const FIXTURE = "scripts/fixtures/token-render.json";
 const update = process.argv.includes("--update");
@@ -150,8 +151,7 @@ const read = async (page: Page, probe: boolean): Promise<Record<string, Reading>
       }
     }, make);
     assert.equal(built, null, `${name}: ${built}`);
-    await page.waitForTimeout(250);
-    readings[name] = await page.evaluate(() => {
+    await settle(page);readings[name] = await page.evaluate(() => {
       const box = document.querySelector("#root > .box") as HTMLElement;
       const nodes = [...box.querySelectorAll<HTMLElement>("*")].filter((node) => !(node instanceof SVGElement));
       return nodes.map((node, index): [string, string, string] => {

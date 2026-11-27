@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import assert from 'node:assert/strict';
 import { checkRailHeaderFab } from './check-rail-header-fab';
 import { mkdir } from 'node:fs/promises';
@@ -173,8 +174,7 @@ try {
         { id: 'dotlabel', label: 'Dotlabel', icon, badge: true, badgeLabel: 'New messages' },
         { id: 'link', label: 'Link', icon, badge: 5, href: '/x' },
     ] }), itemIcon);
-    await page.waitForTimeout(200);
-    const expected = ['Count, 8', 'Thousand, 1000', 'Tenthousand, 999+', 'Dot, New notification', 'Dotlabel, New messages', 'Link, 5', 'Open navigation'];
+    await settle(page);const expected = ['Count, 8', 'Thousand, 1000', 'Tenthousand, 999+', 'Dot, New notification', 'Dotlabel, New messages', 'Link, 5', 'Open navigation'];
     assert.deepEqual(await namesOf(page), expected, 'the badge\'s displayed label is in the name, capped as the badge caps it, the dot announcing New notification');
     // Placement, collapsed: the badges spec states the distance "from top
     // trailing icon corner to bottom leading badge corner" — 14x12dp for the
@@ -193,8 +193,7 @@ try {
             `${id === 'count' ? 'the large badge' : 'the small dot'} sits ${inset}x${under}dp from the icon's top trailing corner (spec), measured ${insetMeasured.toFixed(1)}x${underMeasured.toFixed(1)}`);
     }
     await page.evaluate(() => window.rail.expand());
-    await page.waitForTimeout(500);
-    assert.deepEqual(await namesOf(page), expected, 'expansion keeps the badged names');
+    await settle(page);assert.deepEqual(await namesOf(page), expected, 'expansion keeps the badged names');
     const badgeState = () => page.evaluate(() => {
         const item = document.querySelector('.mtrl-navigation-rail__item[data-id="count"]')!;
         const badge = item.querySelector('.mtrl-navigation-rail__badge');
@@ -213,11 +212,9 @@ try {
     elementPage.on('pageerror', (error) => elementErrors.push(error.message));
     await elementPage.goto(`${server.url.href}element`);
     await elementPage.waitForFunction(() => (window as unknown as { navigationElementsReady?: boolean }).navigationElementsReady === true);
-    await elementPage.waitForTimeout(80);
-    assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 1000'], 'a declared badge names its item through the shadow root; the dot announces New notification; a zero clears');
+    await settle(elementPage);assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 1000'], 'a declared badge names its item through the shadow root; the dot announces New notification; a zero clears');
     await elementPage.evaluate(() => document.querySelector('m-navigation-rail-item[value="spam"]')!.setAttribute('badge', '10000'));
-    await elementPage.waitForTimeout(120);
-    assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 999+'], 'an attribute change updates the capped name in place');
+    await settle(elementPage);assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 999+'], 'an attribute change updates the capped name in place');
     assert.deepEqual(elementErrors, []);
     await elementPage.close();
 

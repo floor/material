@@ -6,6 +6,7 @@
 import { checkSearchSuggestionLayout } from "./check-search-suggestion-layout";
 import assert from "node:assert/strict";
 import type { Browser, Page } from "playwright";
+import { settle } from "./browser-settle";
 
 interface Context {
   browser: Browser;
@@ -32,8 +33,6 @@ const COVER = `<div id="cover" style="position: relative; z-index: 9999; height:
 
 export const checkSearch = async ({ browser, page, origin, check, fresh }: Context): Promise<void> => {
   const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
-  // The surface moves in on a frame, then its transition
-  const settle = (): Promise<unknown> => wait(400);
   const listen = (id: string): Promise<void> =>
     page.evaluate((id) => {
       const w = window as unknown as LogWin;
@@ -156,7 +155,7 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
 
   const combobox = page.getByRole("combobox", { name: "Find fruit", exact: true });
   await combobox.click();
-  await settle();
+  await settle(page);
   assert.deepEqual(await surface("q"), DOCKED, "the docked view");
   assert.deepEqual(await log(), [{ type: "open", detail: null }]);
   assert.deepEqual(await state("q"), { value: "", text: "", form: "", open: true, attribute: true });
@@ -180,7 +179,7 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   path.push(await active("q"));
   assert.deepEqual(path, ["apple", "apricot", "banana", "apricot"]);
   await page.keyboard.press("Enter");
-  await settle();
+  await settle(page);
   // Enter on a highlighted suggestion is its selection, not a submit of "ap"
   assert.deepEqual(await log(), [{ type: "select", detail: { value: "apricot" } }, { type: "close", detail: null }]);
   assert.deepEqual(await state("q"), { value: "apricot", text: "apricot", form: "apricot", open: false, attribute: false });
@@ -192,12 +191,12 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   check("search: Enter commits the query as change");
 
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).show());
-  await settle();
+  await settle(page);
   await page.keyboard.press("Escape");
-  await settle();
+  await settle(page);
   const cleared = { events: await log(), state: await state("q") };
   await page.keyboard.press("Escape");
-  await settle();
+  await settle(page);
   assert.deepEqual(cleared, {
     events: [{ type: "open", detail: null }, { type: "input", detail: { value: "" } }],
     state: { value: "", text: "", form: "", open: true, attribute: true },
@@ -207,16 +206,16 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   check("search: show() opens it; Escape clears the query (input), then closes it once; focus stays on the combobox");
 
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).show());
-  await settle();
+  await settle(page);
   await page.getByRole("button", { name: "Outside", exact: true }).click();
-  await settle();
+  await settle(page);
   assert.deepEqual(await log(), [{ type: "open", detail: null }, { type: "close", detail: null }]);
   assert.equal((await state("q")).attribute, false);
   check("search: a press outside closes the docked view once");
 
   // Declarations change under the open view: redrawn in place, once per batch
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).show());
-  await settle();
+  await settle(page);
   await log();
   const before = await options("q");
   const edits = await page.evaluate(async () => {
@@ -273,7 +272,7 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   check("search: suggestions added, replaced and removed while open update in place, one redraw per change, none when unchanged");
 
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).close());
-  await settle();
+  await settle(page);
   await log();
   const model = await page.evaluate(() => {
     const el = document.getElementById("q") as SearchHost;
@@ -291,15 +290,15 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
 
   await page.click("#ql");
   assert.equal(await focused(), "combobox", "a <label for> focuses the combobox");
-  await settle();
+  await settle(page);
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).close());
-  await settle();
+  await settle(page);
   await page.focus("#out");
   await page.evaluate(() => (document.getElementById("q") as SearchHost).focus());
   assert.equal(await focused(), "combobox", "focus() focuses the combobox, not the leading button");
-  await settle();
+  await settle(page);
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).close());
-  await settle();
+  await settle(page);
   const opens = (await log()).map((e) => e.type);
   assert.deepEqual(opens, ["open", "close", "open", "close"], "both open the view, as a click does");
   check("search: <label for> and focus() focus the combobox, which opens the view");
@@ -344,10 +343,10 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
     el.setAttribute("open", "");
     return (el as SearchHost).component?.isExpanded();
   });
-  await settle();
+  await settle(page);
   const byAttribute = await surface("q");
   await page.evaluate(() => (document.getElementById("q") as HTMLElement).removeAttribute("open"));
-  await settle();
+  await settle(page);
   assert.deepEqual({ opened, byAttribute, closed: (await state("q")).open }, { opened: true, byAttribute: DOCKED, closed: false });
   assert.deepEqual(await log(), [], "the attribute opening and closing it dispatches nothing");
   check("search: the open attribute opens and closes the view, silently");
@@ -389,21 +388,21 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
       };
     }, id);
   await page.mouse.move(890, 690); // no hover state layer on either
-  await settle();
+  await settle(page);
   await read(null); // creates the factory, which draws its suggestions on a timer
   await wait(50);
   const barParity = { element: await read("q"), factory: await read(null) };
   assert.deepEqual(barParity.element, barParity.factory, "the bar");
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).show());
-  await settle();
+  await settle(page);
   const elementView = await read("q");
   await page.evaluate(() => void (document.getElementById("q") as SearchHost).close());
-  await settle();
+  await settle(page);
   await page.evaluate(() => void ((window as unknown as { __searchFactory: { expand: () => unknown } }).__searchFactory.expand()));
-  await settle();
+  await settle(page);
   const factoryView = await read(null);
   await page.evaluate(() => void ((window as unknown as { __searchFactory: { collapse: () => unknown; destroy: () => void } }).__searchFactory.collapse()));
-  await settle();
+  await settle(page);
   assert.deepEqual(elementView, factoryView, "the open view");
   check("search: the bar and the open view render as the factory's in light DOM");
 
@@ -417,7 +416,7 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   );
   await listen("qs");
   await page.getByRole("combobox", { name: "Search mail", exact: true }).click();
-  await settle();
+  await settle(page);
   const modal = await page.evaluate(() => {
     const root = (document.getElementById("qs") as HTMLElement).shadowRoot as ShadowRoot;
     const view = root.querySelector('[class*="search__surface"]') as HTMLElement;
@@ -435,7 +434,7 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   await page.keyboard.press("ArrowDown");
   assert.equal(await active("qs"), "Inbox");
   await page.keyboard.press("Escape");
-  await settle();
+  await settle(page);
   // Escape with a highlight but no query: the view closes
   assert.deepEqual(await log(), [{ type: "open", detail: null }, { type: "close", detail: null }]);
   const back = await page.evaluate(() => {
@@ -447,10 +446,10 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
   assert.deepEqual(back, { modal: false, attribute: false });
   assert.equal(await focused(), "combobox", "focus returns to the combobox");
   await page.evaluate(() => void (document.getElementById("qs") as SearchHost).show());
-  await settle();
+  await settle(page);
   assert.deepEqual(await surface("qs"), DOCKED, "switched to docked in place");
   await page.evaluate(() => void (document.getElementById("qs") as SearchHost).close());
-  await settle();
+  await settle(page);
   check("search: full screen opens :modal over an inert page; Escape closes it once, focus back on the combobox; view-mode switches in place");
 
   // ------------------------------------------------------------ #263 attributes
@@ -473,19 +472,19 @@ export const checkSearch = async ({ browser, page, origin, check, fresh }: Conte
 
   assert.equal(await inner("nc", ".mtrl-search__clear-button"), null, "no-clear-button: no clear button");
   await page.evaluate(() => document.getElementById("nc")!.removeAttribute("no-clear-button"));
-  await settle();
+  await settle(page);
   assert.notEqual(await inner("nc", ".mtrl-search__clear-button"), null, "removed, the clear button is back");
   check("search: no-clear-button leaves out the clear button");
 
   await page.getByRole("combobox", { name: "No expand", exact: true }).focus();
-  await settle();
+  await settle(page);
   assert.equal(await page.evaluate(() => document.getElementById("nf")!.hasAttribute("open")), false, "no-expand-on-focus: focus does not open the view");
   check("search: no-expand-on-focus keeps the view closed on focus");
 
   await page.getByRole("combobox", { name: "No collapse", exact: true }).focus();
-  await settle();
+  await settle(page);
   await page.evaluate(() => document.getElementById("elsewhere")!.focus());
-  await settle();
+  await settle(page);
   assert.equal(await page.evaluate(() => document.getElementById("nb")!.hasAttribute("open")), true, "no-collapse-on-blur: the view stays open when focus leaves");
   check("search: no-collapse-on-blur keeps the view open when focus leaves");
 
