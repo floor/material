@@ -190,12 +190,18 @@ export const installChips = <C extends ElementComponent>(
      */
     // The field's required state as configured, kept apart from the input's own
     // `required`, which follows the chips: a committed chip satisfies it.
-    const wantedRequired = input.required;
+    let wantedRequired = input.required;
+    // Set while we write the input's own `required`, so the observer below
+    // does not read our write back as the field's configuration.
+    let writingRequired = false;
     const syncValidity = (): void => {
-      const satisfied = chips.length > 0 || !wantedRequired;
-      input.required = wantedRequired && chips.length === 0;
-      input.setCustomValidity(wantedRequired && chips.length === 0 ? " " : "");
-      void satisfied;
+      const missing = wantedRequired && chips.length === 0;
+      writingRequired = true;
+      input.required = missing;
+      input.setCustomValidity(missing ? " " : "");
+      queueMicrotask(() => {
+        writingRequired = false;
+      });
     };
 
     const sync = (): void => {
@@ -626,6 +632,14 @@ export const installChips = <C extends ElementComponent>(
       syncForm();
     });
     observer.observe(input, { attributes: true, attributeFilter: ["name"] });
+    // `setRequired(null)` and later calls write the input's own required
+    // attribute: the chips' validity follows it, outside our own writes.
+    const requiredObserver = new MutationObserver(() => {
+      if (writingRequired) return;
+      wantedRequired = input.required;
+      syncValidity();
+    });
+    requiredObserver.observe(input, { attributes: true, attributeFilter: ["required"] });
     // The disabled state reaches the field as a class, set by whichever copy of
     // the component runs it: the rows and the chips follow the class.
     const classObserver = new MutationObserver(() => {
@@ -643,12 +657,14 @@ export const installChips = <C extends ElementComponent>(
     // The form's own reset restores the chips the field started with. The
     // field is built before it is connected, so the form is not known at
     // creation: the listener is attached on the first sync that sees one.
+    // The full initial items keep their values (a `{label, value}` item submits
+    // its value, not its label), and the draft comes back at its default.
     const initial = options.items.map(configOf);
     const onReset = (): void => {
       queueMicrotask(() => {
-        setValuesInternal(initial.map((item) => item.label ?? String(item.value ?? "")), false);
-        input.value = "";
-        syncEmpty();
+        setValuesInternal(initial, false);
+        input.value = (input as HTMLInputElement).defaultValue ?? "";
+        sync();
       });
     };
     let resetForm: HTMLFormElement | null = null;
@@ -666,6 +682,7 @@ export const installChips = <C extends ElementComponent>(
         resetForm?.removeEventListener("reset", onReset);
         observer.disconnect();
         classObserver.disconnect();
+        requiredObserver.disconnect();
         target.removeEventListener("keydown", onInputKeydown);
         target.removeEventListener("paste", onPaste);
         target.removeEventListener("input", onInput);
@@ -712,6 +729,7 @@ export const installChips = <C extends ElementComponent>(
     };
 
     for (const item of options.items) attach(item);
+    if (isDisabled()) for (const chip of chips) chip.disable();
     sync();
 
     const feature: ChipsFeature = {
