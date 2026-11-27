@@ -70,13 +70,20 @@ export async function checkButtonStateLayers(page: Page, artifacts?: string): Pr
             await page.keyboard.press("Shift");
             await button.focus();
           }
-          await settle(page, { target: id });
-          const painted = await button.evaluate((element, state) => ({
+          const readPainted = () => button.evaluate((element, state) => ({
             color: getComputedStyle(element).color,
             layer: getComputedStyle(element, "::before").backgroundColor,
             opacity: Number(getComputedStyle(element, "::before").opacity),
             matches: state === "rest" ? true : element.matches(state === "hover" ? ":hover" : state === "pressed" ? ":active" : ":focus-visible"),
           }), state);
+          await settle(page, {
+            target: id,
+            verifyAnimationEnd: async () => {
+              const painted = await readPainted();
+              return painted.matches && painted.layer === painted.color && painted.opacity === opacity;
+            },
+          });
+          const painted = await readPainted();
           const name: ButtonCaseName = `${mode}-${variant}-${kind}-${state}`;
           assert.ok(painted.matches, `${name}: the button is not in the ${state} state`);
           assert.equal(painted.layer, painted.color, `${name}: the state layer is ${painted.layer}, the content colour ${painted.color}`);
