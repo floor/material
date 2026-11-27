@@ -167,11 +167,11 @@ export interface TextFieldConfig {
 
   /**
    * Input chips inside the field (m3.material.io chips), enabled by the value
-   * `textFieldChips()` returns from `material/components/text-field/chips`:
+   * `textFieldChips()` returns from `material/components/text-field-chips`:
    * the function carries the chip code, so a field created without it is
    * unchanged and its bundle does not grow.
    */
-  chips?: TextFieldChipsConfig | TextFieldChipsEnhancer;
+  chips?: TextFieldChipsEnhancer;
 
   /** Additional CSS classes */
   class?: string;

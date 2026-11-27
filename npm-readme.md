@@ -68,8 +68,8 @@ Every component comes three ways: a factory, a custom element and a framework co
 
 ### Input chips in a text field
 
-`createTextField({ chips: true })` and `<m-text-field chips>` turn the field's
-text into input chips. Enter or a separator commits the draft; Backspace at the
+`createTextField({ chips: textFieldChips() })` and `<m-text-field chips>` turn
+the field's text into input chips. Enter or a separator commits the draft; Backspace at the
 start selects the last chip and a second Backspace removes it; a second
 activation of a selected chip edits it as text. Each chip submits as its own
 form entry under the field's `name`.

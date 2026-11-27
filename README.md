@@ -168,8 +168,9 @@ Three names change, additively:
 
 ### Input chips in a text field
 
-A text field can hold input chips (m3.material.io chips). Type an address and
-press Enter or a separator and it becomes a chip. Backspace at the start of the
+A text field can hold input chips (m3.material.io chips), enabled with
+`textFieldChips()` from the opt-in module. Type an address and press Enter or
+a separator and it becomes a chip. Backspace at the start of the
 input selects the last chip, and a second Backspace removes it; a second
 activation of a selected chip edits it as text.
 
@@ -183,12 +184,13 @@ opt-in: a field created without `chips` is unchanged.
 import 'material/styles';
 import 'material/styles/text-field-chips';
 import { createTextField } from 'material';
+import { textFieldChips } from 'material/components/text-field-chips';
 
 const recipients = createTextField({
   label: 'To',
   name: 'to',
   type: 'email',
-  chips: { separators: [',', ';'], maxChips: 10 },
+  chips: textFieldChips({ separators: [',', ';'], maxChips: 10 }),
 });
 
 recipients.on('add', ({ values }) => console.log('To:', values.join(', ')));
