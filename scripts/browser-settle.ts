@@ -8,8 +8,14 @@
  * a Linux WebKit run read a pressed card shadow at 0.298 of its resting value.
  * This helper has three steps and never returns a mid-flight value:
  *
- * 1. every animation and transition running on the target (or the document, or
- *    the element's subtree) has finished, capped at 2 s;
+ * 1. every finite animation and transition running on the target (or the
+ *    document, or the element's subtree) has finished. A transition that
+ *    starts on a later frame — a child that inherits a colour which is itself
+ *    transitioning, and has its own colour transition — is not in the first
+ *    snapshot, so the step reads `getAnimations()` again after each set, for
+ *    the target subtree, its open shadow roots, and the document when there
+ *    is no target, until none are running. The whole step shares one cap of
+ *    2 s;
  * 2. every scroller has stopped — a `scrollTo({behavior: "smooth"})` or a fling
  *    is no Web Animations animation, so the document's scroller and every
  *    scroll container in the target's subtree, open shadow roots included, are
@@ -21,7 +27,8 @@
  * a rAF spring — starts on a later task, so step 1 would find nothing running
  * and step 3 would read the value at rest before the motion began. For those,
  * pass `until`: the state the motion ends in. It is awaited first, capped like
- * the animations, and then the steps above run from there.
+ * the animations, and then the steps above run from there. It is semantic
+ * readiness only; it is not a second scan of the animations.
  *
  * A cap that runs out is an error naming what never settled, not a value.
  *
@@ -50,6 +57,8 @@ export interface SettleOptions<T> {
    * The state a motion ends in, for a motion the Web Animations API cannot
    * see: a smooth scroll, a rAF spring. It is polled once per frame before
    * the animation step, so the motion is awaited rather than read at zero.
+   * A colour transition that starts late is the animation step's own rescan,
+   * not this.
    */
   until?: () => Promise<boolean>;
   /** How long the animations may take before the check fails. */
@@ -92,37 +101,70 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
       // `document.getAnimations()` does not reach a shadow tree's transitions on
       // an element's own render; every open shadow root is asked too, so an
       // element's fade is awaited like the page's. With a target, only its
-      // subtree and the shadow roots inside it are asked.
-      const scopes: Array<Element | Document | ShadowRoot> = [root];
-      const collect = (scope: Element | Document | ShadowRoot): void => {
-        for (const element of scope.querySelectorAll("*")) {
-          if (!element.shadowRoot) continue;
-          scopes.push(element.shadowRoot);
-          collect(element.shadowRoot);
+      // subtree and the shadow roots inside it are asked. The list is built
+      // again after each set: a child that inherits a transitioning colour
+      // starts its own colour transition on a later frame.
+      const scopesOf = (): Array<Element | Document | ShadowRoot> => {
+        const scopes: Array<Element | Document | ShadowRoot> = [root];
+        const collect = (scope: Element | Document | ShadowRoot): void => {
+          for (const element of scope.querySelectorAll("*")) {
+            if (!element.shadowRoot) continue;
+            scopes.push(element.shadowRoot);
+            collect(element.shadowRoot);
+          }
+        };
+        collect(root);
+        // The target may itself be a shadow host: its own root is not a
+        // descendant, and the element's transitions live in it.
+        if (root instanceof Element && root.shadowRoot) {
+          scopes.push(root.shadowRoot);
+          collect(root.shadowRoot);
         }
+        return scopes;
       };
-      collect(root);
-      // The target may itself be a shadow host: its own root is not a
-      // descendant, and the element's transitions live in it.
-      if (root instanceof Element && root.shadowRoot) {
-        scopes.push(root.shadowRoot);
-        collect(root.shadowRoot);
-      }
       // A running animation with no end — an indeterminate progress bar, a
       // pulsing badge — never finishes, and a paused one is not moving, so
       // neither is awaited: only what will end is what "settled" means.
-      const running = scopes
+      const running = (): Animation[] => scopesOf()
         .flatMap((scope) => (scope instanceof Element ? scope.getAnimations({ subtree: true }) : scope.getAnimations()))
         .filter((animation) => {
           if (animation.playState !== "running") return false;
           return Number.isFinite(animation.effect?.getComputedTiming().iterations ?? 0);
         });
-      const finished = Promise.all(running.map((animation) => animation.finished.catch(() => undefined)));
-      const outcome = await Promise.race([
-        finished.then(() => "finished" as const),
-        new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), cap)),
-      ]);
-      return outcome;
+      const started = performance.now();
+      const left = (): number => cap - (performance.now() - started);
+      const nextFrame = (remaining: number): Promise<"done" | "timeout"> => new Promise((resolve) => {
+        const timer = setTimeout(() => resolve("timeout"), remaining);
+        requestAnimationFrame(() => {
+          clearTimeout(timer);
+          resolve("done");
+        });
+      });
+      for (;;) {
+        if (left() <= 0) return "timeout" as const;
+        const current = running();
+        if (current.length === 0) {
+          // Nothing this frame. A transition that begins on the next one is
+          // still unseen, so one frame decides whether the step is done.
+          const remaining = left();
+          if (remaining <= 0) return "timeout" as const;
+          if ((await nextFrame(remaining)) === "timeout") return "timeout" as const;
+          if (left() <= 0) return "timeout" as const;
+          if (running().length === 0) return "finished" as const;
+          continue;
+        }
+        const remaining = left();
+        if (remaining <= 0) return "timeout" as const;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const outcome = await Promise.race([
+          Promise.all(current.map((animation) => animation.finished.catch(() => undefined))).then(() => "done" as const),
+          new Promise<"timeout">((resolve) => {
+            timer = setTimeout(() => resolve("timeout"), remaining);
+          }),
+        ]);
+        clearTimeout(timer);
+        if (outcome === "timeout") return "timeout" as const;
+      }
     },
     { target: target ?? null, cap: animationCapMs },
   );
