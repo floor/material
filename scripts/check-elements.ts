@@ -8536,8 +8536,9 @@ try {
 
   // A [dir=rtl] ancestor outside a shadow root does not reach the
   // menu sheet. The arrow sits at the item's inline end, as the factory
-  // already does: 12px from the right left-to-right, 16px from the left
-  // right-to-left. The item is clicked before the submenu's side is read.
+  // already does: 12px from the right left-to-right and 12px from the
+  // left right-to-left -- the 12dp left/right padding the baseline menu
+  // measurements give (m3.material.io/components/menus/specs). The item is clicked before the submenu's side is read.
   // That side is the placement script's physical right at the first level,
   // in both directions, including the factory under dir="rtl"; the element
   // matches the factory. The inline end would be a new side. A top-layer
@@ -8704,7 +8705,7 @@ try {
     for (const row of menuRtl.arrows) {
       console.log(`  rtl menu ${row.name}: arrow ${row.inset}px from the ${row.side} (padding ${row.paddingLeft}/${row.paddingRight}), submenu ${row.submenuSide}`);
       const end = row.dir === "rtl" ? "left" : "right";
-      const inset = row.dir === "rtl" ? 16 : 12;
+      const inset = 12;
       if (row.side !== end || Math.abs(row.inset - inset) > 1)
         menuFailures.push(`${row.name}: arrow ${row.inset}px from the ${row.side}, expected ${inset}px from the ${end}`);
       if (row.submenuSide === "missing")

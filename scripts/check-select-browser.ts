@@ -110,8 +110,12 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       const box = item.getBoundingClientRect();
       const style = getComputedStyle(item);
       const after = getComputedStyle(item, "::after");
+      // The mark's room is reserved on the content row, so the content box's
+      // padding ends under the mark while the text does not. Measure the text
+      // itself: the label's contents, or the item's when it carries no label.
+      const label = item.querySelector(".mtrl-menu__item-label .mtrl-menu__item-text") ?? item.querySelector(".mtrl-menu__item-text") ?? item;
       const range = document.createRange();
-      range.selectNodeContents(item);
+      range.selectNodeContents(label);
       const text = range.getBoundingClientRect();
       // The mark's box, from its own used left, margin and width inside the item
       const left = box.left + parseFloat(after.left) + parseFloat(after.marginLeft);

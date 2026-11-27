@@ -271,16 +271,18 @@ const run = async (name: Engine, launcher: typeof chromium | typeof webkit): Pro
     const vertical = await page.evaluate(() => {
       const lab = window as unknown as Lab;
       const items = [...lab.vertical!.element.querySelectorAll<HTMLElement>(".mtrl-menu__item")];
+      // The vertical item's own padding and no content reservation. Its label
+      // is content-sized, so its pixel width follows the platform's font and
+      // is not asserted here.
       return items.map((item) => ({
         padding: getComputedStyle(item).paddingInlineEnd,
         contentPadding: getComputedStyle(item.querySelector<HTMLElement>(".mtrl-menu__item-content")!).paddingInlineEnd,
-        labelWidth: Math.round((item.querySelector(".mtrl-menu__item-label") ?? item.querySelector(".mtrl-menu__item-text"))!.getBoundingClientRect().width),
       }));
     });
     try {
       assert.deepEqual(vertical, [
-        { padding: "16px", contentPadding: "0px", labelWidth: 134 },
-        { padding: "48px", contentPadding: "0px", labelWidth: 102 },
+        { padding: "16px", contentPadding: "0px" },
+        { padding: "48px", contentPadding: "0px" },
       ], `vertical items changed: ${JSON.stringify(vertical)}`);
       passed.push(`${name} vertical variants unchanged`);
     } catch (error) {
