@@ -153,7 +153,9 @@ $component: "#{base.$prefix}-list";
       transition: m.spring(transform, fast-spatial);
     }
   }
-  &__item--selected &__radio {
+  // Only the row's own radio: a listbox nested in the row keeps its own
+  // unselected ring and empty dot.
+  &__item--selected > &__radio {
     border-color: t.color("primary");
     &::after { transform: translate(-50%, -50%) scale(1); }
   }
@@ -234,7 +236,9 @@ $component: "#{base.$prefix}-list";
     > .#{$component}__text > .#{$component}__supporting,
     > .#{$component}__leading,
     > .#{$component}__trailing { color: t.color("on-secondary-container"); }
-    .#{$component}__action::before { background: t.color("on-secondary-container"); }
+    // The row's own action layer: a list nested in the row keeps its own
+    // action's OnSurface layer.
+    > .#{$component}__action::before { background: t.color("on-secondary-container"); }
     &[role="option"]::before { background: t.color("on-secondary-container"); }
     // Selected rest stays on-secondary-container. Hover, focus and press take
     // this row's own icon slots to on-surface. A list nested in the row keeps
