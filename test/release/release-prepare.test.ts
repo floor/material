@@ -255,6 +255,24 @@ describe("release table comparison", () => {
     expect(rows[0]!.committed).toContain("9.9 kB");
   });
 
+  test("a trailing space in a committed row is a difference", () => {
+    const spaced = readme.replace("| 1.0 kB |\n", "| 1.0 kB | \n");
+    expect(spaced).not.toBe(readme);
+    const diffs = tableDiffs({ "README.md": readme }, { "README.md": spaced });
+    expect(diffs).toHaveLength(1);
+    expect(diffs[0]).toContain("README.md");
+    const rows = tableRowDiffs({ "README.md": readme }, { "README.md": spaced });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.row).toContain("`" + README_SIZE_ROWS[0] + "`");
+    expect(rows[0]!.measured).toBe("| `" + README_SIZE_ROWS[0] + "` | 1.0 kB |");
+    expect(rows[0]!.committed).toBe("| `" + README_SIZE_ROWS[0] + "` | 1.0 kB | ");
+  });
+
+  test("a missing final newline is a difference", () => {
+    const trimmed = readme.replace(/\n$/, "");
+    expect(tableDiffs({ "README.md": readme }, { "README.md": trimmed })).toHaveLength(1);
+  });
+
   test("a missing committed table fails", () => {
     expect(tableDiffs({ "SIZES.md": "x" }, {})).toEqual(["SIZES.md: the tree has no table at this path"]);
   });

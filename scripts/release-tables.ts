@@ -88,10 +88,13 @@ export function tableRowDiffs(
     const left = normalisedTable(path, text).split("\n");
     const right = normalisedTable(path, committedText).split("\n");
     for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
-      const measuredLine = (left[index] ?? "").trim();
-      const committedLine = (right[index] ?? "").trim();
+      // Raw lines: a trailing space, a missing final newline or a blank line
+      // is a difference in the committed table. Only the printed row label is
+      // trimmed.
+      const measuredLine = left[index] ?? "";
+      const committedLine = right[index] ?? "";
       if (measuredLine === committedLine) continue;
-      const cell = (line: string): string | undefined => line.startsWith("|") ? line.split("|")[1]?.trim() : undefined;
+      const cell = (line: string): string | undefined => line.trimStart().startsWith("|") ? line.split("|")[1]?.trim() : undefined;
       rows.push({
         file: path,
         row: cell(measuredLine) ?? cell(committedLine) ?? `line ${index + 1}`,
