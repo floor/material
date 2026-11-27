@@ -32,7 +32,9 @@ describe("public configure-once Sass", () => {
   // clear button included, ends its text 16dp from the edge
   // (styles/components/_search.scss), and a card paints the hover and dragged
   // layers and keeps its own elevation when focused
-  // (styles/components/_card.scss).
+  // (styles/components/_card.scss), and a menu item takes the baseline 12dp
+  // end padding with a vibrant leading icon in tertiary on the interaction
+  // states (styles/components/_menu.scss).
   // The other entries are untouched.
   for (const [entry, digest] of Object.entries(baseline.sources)) {
     test(`${entry}: defaults match frozen main and adding the gateway is neutral`, () => {

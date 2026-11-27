@@ -462,6 +462,9 @@ jobs:
           - group: menu-item-checked
             browsers: chromium
             checks: menu-item-checked:check
+          - group: menu-drifts
+            browsers: chromium webkit
+            checks: menu-drifts:check
           - group: fab-menu-ripple
             browsers: chromium
             checks: fab-menu-ripple:check

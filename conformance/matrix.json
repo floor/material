@@ -12901,11 +12901,11 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "40px",
+            "value": "12px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "",
@@ -14695,17 +14695,17 @@
             }
           },
           "material": {
-            "value": "OnTertiaryContainer",
+            "value": "Tertiary",
             "engines": null,
             "resolved": {
-              "light": "#31111D",
-              "dark": "#FFD8E4",
-              "seed": "#244C5B"
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -14741,17 +14741,17 @@
             }
           },
           "material": {
-            "value": "OnTertiaryContainer",
+            "value": "Tertiary",
             "engines": null,
             "resolved": {
-              "light": "#31111D",
-              "dark": "#FFD8E4",
-              "seed": "#244C5B"
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -14787,17 +14787,17 @@
             }
           },
           "material": {
-            "value": "OnTertiaryContainer",
+            "value": "Tertiary",
             "engines": null,
             "resolved": {
-              "light": "#31111D",
-              "dark": "#FFD8E4",
-              "seed": "#244C5B"
+              "light": "#7D5260",
+              "dark": "#EFB8C8",
+              "seed": "#3D6373"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
