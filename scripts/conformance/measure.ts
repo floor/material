@@ -509,6 +509,14 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         await settle(page);
       }
       const parts = await readParts(false);
+      // The state can also go away between the wait and this read: a finite
+      // animation that carries the marker can complete during the settle.
+      // The read is the state the case names only if the marker is still
+      // there, so a vanished one throws with the same diagnostics.
+      if (verified && !parts[verified.name]) {
+        const theme = themeLabel ?? testCase.scheme ?? "light";
+        throw new Error(`${testCase.id} (${theme}): the verified state vanished before the read: no element matches ${verified.selector}`);
+      }
       await releaseState(page, state);
       rows.push({
         id: testCase.id,
