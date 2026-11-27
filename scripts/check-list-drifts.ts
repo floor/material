@@ -161,21 +161,39 @@ const run = async (page: Page, engine: string) => {
     `${engine}: the gap change moved a row that should only close 4px between its slots`,
   );
 
+  // A click toggles selection, so hover, press and focus each start from a
+  // new list. Focus arrives by Tab only: the selected row is the first
+  // button, and a click would both select with the pointer and clear the
+  // selected class on mouseup.
   const selected = "#standard [data-id='selected']";
   const action = `${selected} .mtrl-list__action`;
+  const remount = async () => {
+    await page.evaluate(() => { document.body.replaceChildren(); });
+    await page.evaluate(mount);
+  };
+  const stillSelected = () => page.evaluate((selector) => {
+    const row = document.querySelector(selector);
+    return !!row?.classList.contains("mtrl-list__item--selected");
+  }, selected);
+
+  await remount();
   await page.hover(action);
+  assert.equal(await stillSelected(), true, `${engine}: hover read a row that was no longer selected`);
   const hovered = await snapshot(page);
   assert.equal(hovered.selectedLeading, "OnSurface", `${engine}: list/leading-icon-colour/standard/selected-hover`);
   assert.equal(hovered.selectedTrailing, "OnSurface", `${engine}: list/trailing-icon-colour/standard/selected-hover`);
 
+  await remount();
+  await page.hover(action);
   await page.mouse.down();
+  assert.equal(await stillSelected(), true, `${engine}: press read a row that was no longer selected`);
   const pressed = await snapshot(page);
   await page.mouse.up();
+  await page.mouse.move(0, 0);
   assert.equal(pressed.selectedLeading, "OnSurface", `${engine}: list/leading-icon-colour/standard/selected-pressed`);
   assert.equal(pressed.selectedTrailing, "OnSurface", `${engine}: list/trailing-icon-colour/standard/selected-pressed`);
 
-  await page.mouse.move(0, 0);
-  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
+  await remount();
   const webkitEngine = engine === "webkit";
   let focusedOn = false;
   for (let attempt = 0; attempt < 8 && !focusedOn; attempt++) {
@@ -183,6 +201,7 @@ const run = async (page: Page, engine: string) => {
     focusedOn = await page.evaluate((selector) => !!document.querySelector(selector)?.matches(":focus-visible"), action);
   }
   assert.equal(focusedOn, true, `${engine}: the selected row did not take keyboard focus`);
+  assert.equal(await stillSelected(), true, `${engine}: focus read a row that was no longer selected`);
   const focused = await snapshot(page);
   assert.equal(focused.selectedLeading, "OnSurface", `${engine}: list/leading-icon-colour/standard/selected-focus`);
   assert.equal(focused.selectedTrailing, "OnSurface", `${engine}: list/trailing-icon-colour/standard/selected-focus`);
