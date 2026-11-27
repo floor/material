@@ -549,7 +549,11 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       const before = backed.map((property) => this.getProperty(property));
       const result = (method as (...a: unknown[]) => unknown).apply(component, args);
       // A method that moves the model (`toggle()`, `select()`) sets it by script.
-      if (backed.some((property, i) => this.getProperty(property) !== before[i])) this.#dirty = true;
+      // A list-valued property returns a fresh array each read: compare it by
+      // its items, or reading it would count as moving it.
+      const same = (a: unknown, b: unknown): boolean =>
+        a === b || (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((item, i) => item === b[i]));
+      if (backed.some((property, i) => !same(this.getProperty(property), before[i]))) this.#dirty = true;
       this.#syncForm();
       return result === component ? this : result;
     }
