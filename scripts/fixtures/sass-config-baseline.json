@@ -21,7 +21,7 @@
     "scripts/optional-style-profiles.ts": "001b3cb27a2fa887b73962d06891e1dac67dfe16412a7a9fb4157f834937e5ec"
   },
   "sources": {
-    "main": "bbb44572eed5b83d3199cbd4b72d58e3b2ccceb39c5504efa4e1eb8d1cc82077",
+    "main": "a1d830c37358ba95870d8495d2bc11e42028a120f185b0669a939a93a3750913",
     "themes": "87e58249637b431a6c3aff0488b6d447abfd88686bb857b9c7384336e5e0280c",
     "elements": "47f6bb62db1b21e600760ee3dae0db0035f4f8829f30ef3fdeb1e95fc24a20dc",
     "themes/neutral": "7260a3aa568672a5dd208884bc17e773e601215e8e1075b4a053c48bd6b31cf6",
@@ -291,7 +291,7 @@
     "components/text-field/features/field.js": "7d290412bb5dc1cf74a6fed26a77d8a2de119f45decf2193fb3f9ba6dceeb571",
     "components/text-field/features/index.js": "5e7dcd775173b8dd297837e9ee4cecf215d6c97aba0452ccfe36dd96d3233142",
     "components/text-field/features/leading-icon.js": "ce934f83723fc5229bd17a35016bfb2e0061c71aeda789fa5636a34e7604f85a",
-    "components/text-field/features/placement.js": "8a87d025b04e4cb5bc1b3c75bb107d92fdceda1c028560b3478d409d4db721ea",
+    "components/text-field/features/placement.js": "2ea36078f2c8ccac60675515ad5a849cfdd96e332f98d19c2fc77b24a00685e2",
     "components/text-field/features/prefix-text.js": "111fe93b74f86715358d0aa172501f243e73c8f2f13a740832b5913c641f13d4",
     "components/text-field/features/required.js": "6d5ed6c5067cdc414abc384dd9aa9ad7e8d3eddd6c5982bb19f40ccd37ffb15f",
     "components/text-field/features/suffix-text.js": "ca3e8f91cd3ede0385cbb8e62374aa777ffca7ac327fbd1a08cebba200190fab",
@@ -515,7 +515,7 @@
     "elements/css/switch.js": "7ff8c20adc9db669d91bf5f3f650734a7ea2c38375f6962bd2afd80144f898a9",
     "elements/css/tabs.css": "65a107dba48ed26464926f00fb25557646b8fc5dac7cf1cce48932fa3340127f",
     "elements/css/tabs.js": "928ef53805a14675bd4fbd13be82529fb5370f51dcebaed673d3bb8203ee05e7",
-    "elements/css/text-field.css": "a3f73c7d497c3b9c4e979eb9722cbd295c2213ae11cd436cef856f3397bfc52a",
+    "elements/css/text-field.css": "8123ff3266fb722a45a72feabd841533c034b619729adbe07ffcd3229fd1aa04",
     "elements/css/text-field.js": "085c018d4bb5f152a5b8f7f0057b82af3ab1b273ae7d40a8ed9dbf80fbef3e60",
     "elements/css/timepicker.css": "62fe092220a0bb331426f3f8581971aef98dc5aa610f949c15c5ef08f4497f9e",
     "elements/css/timepicker.js": "a2b0a39f07823bd571d3652f3c4784f31967bfcdc68b93732ee2264f074ebb39",
@@ -592,7 +592,7 @@
     "elements/slider.js": "8b3118bb9e4c368af200cbd937e32effe361332db2ee108c776a08905491dda7",
     "elements/snackbar.js": "89de64febb6e437e20b5d992ba46394f54efa9aebd6580d224697ab28f524f40",
     "elements/split-button.js": "b6313d9f72ef8918e2c7a493692d57640595c4f2b15d9625a4ceef8c0f23a814",
-    "elements/styles.js": "68dd55567e12e0c01e78e1ca89a07c3648ffd07b71b29dd57db660b6915112b0",
+    "elements/styles.js": "e9565a33c51f0fe9b1b3d834e75569b59bbfaddd488c39ef21d414fd91fdb6fa",
     "elements/switch.js": "e16cd4b4c0b4dcb63740c91af2388849b3a2a30920e81dd499d493d9aa7fec6a",
     "elements/tabs.js": "99e7c71d29eb2f783cf4de38698fb2d6a4060330ed5666ba0d48a52a010b1a71",
     "elements/text-field.js": "b0bb1b5601adf35f7ffbfe4165df23385295442cce1d6407c50d9b1286187796",
@@ -713,7 +713,7 @@
     "ssr/solid.js": "65137f0a07f819f8066ac665d70bbb4fb027f9440453eb94bf36145ecc31b33e",
     "ssr/svelte.js": "1f741a58b9fd0c26d1517fe07382845644626c796d6e2e420f2687cc5c263ef2",
     "ssr/vue.js": "82545059c3d1184b4ec6fca9f0aa8369df8829c0132864793fef1f8a2df257c5",
-    "styles.css": "bba340c1fa4961fe05c04ee54eebb861f6080ae7f2e96b984098ae1d5e12ed5b",
+    "styles.css": "4c9b21bb636619079b1834ad9e15ed712d42459ce838680f63071a094fd0294c",
     "styles/badge.css": "be52dc9de18a3afbcb5d1004cbe52db5befa9c3cb3585e008aa090952e456c71",
     "styles/badge.js": "79dcf8253d668161aecd89b5569468f8a215fce90c85b0431fe0acad512b84a7",
     "styles/base-elements.css": "49645ad5584d6b45d36a9cce3db96a42ad798d84314d46ae27f9e07812d2a436",
@@ -790,7 +790,7 @@
     "styles/switch.js": "b6ca55454059746af9dbd0e69d09c827f34307c6239354760c8c39ab9810675c",
     "styles/tabs.css": "f25e262e42c864cfe1af56aac81536804d511ea921968846bac90fcfeaf925bc",
     "styles/tabs.js": "9d122845a64acdb484538b478baa24cb161c3bab8066269995490a62cd8361ba",
-    "styles/text-field.css": "5a12fbd8d473fbd900f96cdfd1001847bfb149dd3d7d21710149f29c24283f10",
+    "styles/text-field.css": "813614599189358ed5198efaa6084dc5622270e0de40cd43e3c9ae92e97086c6",
     "styles/text-field.js": "c197834be9b3537de4f8c63b7def585660ef563255b605a7f6b51dd60c398b9f",
     "styles/timepicker.css": "b74052c56837dd816e0d3a3a7a95b506d75a8a6b3b7420b6e21efe768d39147f",
     "styles/timepicker.js": "e8dd5cbff1da70b3a4f5cecef4d6ae2f7f94e938c59a7c05aa63b5362f1c83af",
@@ -974,7 +974,7 @@
       }
     ],
     "modes": {
-      "inline": "af99caac0c12b72dab3cd04ec7bb3d933b060e276ad246954531b3cb1221642b",
+      "inline": "36b51eafff48b2e28a2c51fe02cc7b199ce3a9be922db54596194817214d5a60",
       "link": "260113e4ea7cbea6618cfb46f54f9dc82441bdd1eb1c4497da92a451604869f7"
     },
     "random": "constant 0.123456 during the synthetic render fixture only"

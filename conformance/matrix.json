@@ -24682,11 +24682,11 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "4.28px",
+            "value": "4px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "",
@@ -24713,11 +24713,11 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "7px",
+            "value": "8px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "",
