@@ -665,8 +665,8 @@ describe('slider track geometry', () => {
 });
 
 // A change of value that does not follow a pointer settles on a
-// spring (the stylesheet animates under `--settling`); the first render, a resize
-// and a drag set nothing, so the slider appears at its value and follows the finger.
+// spring (the stylesheet animates under `--settling`). The first render, a resize,
+// the indicator's entrance and a drag skip the spring.
 describe('slider settling', () => {
   const SETTLING = 'mtrl-slider--settling';
 
@@ -675,8 +675,10 @@ describe('slider settling', () => {
     expect(slider.element.classList.contains(SETTLING)).toBe(false);
   });
 
-  test('a key or setValue settles, and the class goes once the spring has', async () => {
+  test('the first key reveals the indicator and subsequent changes settle', async () => {
     const slider = await mount({ value: 60 });
+    key(handles(slider)[0]!, 'ArrowRight');
+    expect(slider.element.classList.contains(SETTLING)).toBe(false);
     key(handles(slider)[0]!, 'ArrowRight');
     expect(slider.element.classList.contains(SETTLING)).toBe(true);
     await wait(475);
@@ -692,8 +694,9 @@ describe('slider settling', () => {
     expect(slider.element.classList.contains(SETTLING)).toBe(false);
   });
 
-  test('a tap on the track settles; dragging from it stops settling at once', async () => {
+  test('a tap with a visible indicator settles; dragging stops settling at once', async () => {
     const slider = await mount({ value: 10 });
+    handles(slider)[0]!.dispatchEvent(new dom.window.FocusEvent('focus'));
     const container = slider.element.querySelector<HTMLElement>('.mtrl-slider__container')!;
     container.getBoundingClientRect = () => ({ width: 300, height: 48, top: 0, left: 0, right: 300, bottom: 48, x: 0, y: 0, toJSON() {} }) as DOMRect;
     container.dispatchEvent(new dom.window.MouseEvent('mousedown', { clientX: 240, bubbles: true }));

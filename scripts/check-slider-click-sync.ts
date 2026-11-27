@@ -92,15 +92,17 @@ const geometry = (page: Page) =>
 /** Every frame of the settle: the handle against both piece edges, in the page. */
 const startFrames = (page: Page) =>
   page.evaluate(() => {
-    const frames: { handle: number; activeEnd: number | null; inactiveStart: number | null; settling: boolean }[] = [];
+    const frames: { handle: number; indicator: number; activeEnd: number | null; inactiveStart: number | null; settling: boolean }[] = [];
     const samples = (window as unknown as { frames?: typeof frames }).frames = frames;
     const sample = () => {
       const element = document.querySelector<HTMLElement>(".mtrl-slider")!;
       const track = element.querySelector<HTMLElement>(".mtrl-slider__track")!.getBoundingClientRect();
       const handle = element.querySelector<HTMLElement>('[role="slider"]')!.getBoundingClientRect();
+      const indicator = element.querySelector<HTMLElement>(".mtrl-slider__value")!.getBoundingClientRect();
       const [active, trailing] = [...element.querySelectorAll<HTMLElement>(".mtrl-slider__segment")].slice(1).map((piece) => piece.getBoundingClientRect());
       samples.push({
         handle: handle.x + handle.width / 2 - track.left,
+        indicator: indicator.x + indicator.width / 2 - track.left,
         activeEnd: active && active.width + (trailing?.width ?? 0) > 0 ? active.right - track.left : null,
         inactiveStart: trailing && active && active.width + trailing.width > 0 ? trailing.left - track.left : null,
         settling: element.classList.contains("mtrl-slider--settling"),
@@ -111,7 +113,7 @@ const startFrames = (page: Page) =>
   });
 
 const stopFrames = (page: Page) =>
-  page.evaluate(() => (window as unknown as { frames: { handle: number; activeEnd: number | null; inactiveStart: number | null; settling: boolean }[] }).frames);
+  page.evaluate(() => (window as unknown as { frames: { handle: number; indicator: number; activeEnd: number | null; inactiveStart: number | null; settling: boolean }[] }).frames);
 
 const run = async (browser: Browser, engine: string) => {
   const page = await browser.newPage({ viewport: { width: 600, height: 300 } });
@@ -119,9 +121,11 @@ const run = async (browser: Browser, engine: string) => {
   page.on("pageerror", (error) => errors.push(error.message));
 
   // 1. Every frame of the settle keeps the handle one gap from each piece edge.
+  // Focus first so the indicator is already visible and the track press settles.
   // A click is a press held over frames and then released, not a down and an up
   // in one frame: the held state has to be committed for a restart to happen.
   let point = await mount(page);
+  await page.locator(".mtrl-slider__handle").focus();
   await startFrames(page);
   await page.waitForTimeout(30); // stays: sampling frames: the animation is under test
   await page.mouse.move(point.x, point.y);
@@ -134,6 +138,7 @@ const run = async (browser: Browser, engine: string) => {
   let worstBefore = 0;
   let worstAfter = 0;
   for (const frame of frames) {
+    assert(Math.abs(frame.handle - frame.indicator) <= 0.5, `${engine}: the visible indicator left the handle during the settle`);
     worstBefore = Math.max(worstBefore, Math.abs(frame.handle - frame.activeEnd! - GAP));
     worstAfter = Math.max(worstAfter, Math.abs(frame.inactiveStart! - frame.handle - GAP));
   }
