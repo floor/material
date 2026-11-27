@@ -19,7 +19,8 @@
  * again.
  */
 import assert from "node:assert/strict";
-import { readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { assemble, FRAGMENT_DIR, parseFragment, type Fragment } from "./changelog-fragments";
@@ -75,8 +76,8 @@ const parseArguments = (argv: readonly string[]): Options => {
   };
 };
 
-const run = async (command: string[], cwd: string): Promise<void> => {
-  const child = Bun.spawn(command, { cwd, stdout: "inherit", stderr: "inherit" });
+const run = async (command: string[], cwd: string, env: Record<string, string> = {}): Promise<void> => {
+  const child = Bun.spawn(command, { cwd, stdout: "inherit", stderr: "inherit", env: { ...process.env, ...env } });
   const code = await child.exited;
   if (code !== 0) throw new Error(`${command.join(" ")} failed with exit code ${code}`);
 };
@@ -110,6 +111,16 @@ async function main(): Promise<void> {
     changelog: join(options.root, "CHANGELOG.md"),
     matrix: join(options.root, "conformance/matrix.json"),
   };
+  // The release commit is `git add` + `git commit` over the files this command
+  // writes. Anything else already staged or modified would ride along, so a
+  // real run refuses a tree that is not clean.
+  if (!options.dryRun) {
+    const status = (await new Command("git", ["status", "--porcelain"], options.root).text()).trim();
+    if (status) {
+      throw new Error(`release:prepare needs a clean index and worktree; these are not clean:\n${status}\nCommit or stash them, then run it again.`);
+    }
+  }
+
   const manifest = JSON.parse(await readFile(paths.manifest, "utf8")) as { version?: string };
   assert(manifest.version, "package.json has no version");
   if (!newerThan(options.version, manifest.version)) {
@@ -122,46 +133,56 @@ async function main(): Promise<void> {
   const matrix = JSON.parse(await readFile(paths.matrix, "utf8")) as { material?: string };
   assert(matrix.material, "conformance/matrix.json has no material version");
 
-  if (options.measure) {
-    await run(["bun", "run", "size"], options.root);
-    await run(["bun", "run", "size:check"], options.root);
+  let analysisDir = options.analysis;
+  let scratch: string | undefined;
+  try {
+    if (options.measure) {
+      // A dry run writes nothing, the measurement's analysis output included.
+      if (options.dryRun) scratch = await mkdtemp(join(tmpdir(), "release-prepare-analysis-"));
+      const env: Record<string, string> = scratch ? { MTRL_SIZE_ANALYSIS: scratch } : {};
+      await run(["bun", "run", "size"], options.root, env);
+      await run(["bun", "run", "size:check"], options.root, env);
+      if (scratch) analysisDir = scratch;
+    }
+    const commit = await new Command("git", ["rev-parse", "--short", "HEAD"], options.root).text().catch(() => "local");
+    const tables = await buildReleaseTables(options.root, analysisDir, { commit: commit.trim() || "local", date: options.date });
+
+    const committed: Record<string, string | undefined> = {};
+    for (const path of Object.keys(tables)) {
+      committed[path] = await readFile(join(options.root, path), "utf8").catch(() => undefined);
+    }
+    const diffs = tableDiffs(tables, committed);
+
+    const changes = [
+      `package.json: version ${manifest.version} → ${options.version}`,
+      `CHANGELOG.md: a ${options.version} section from ${fragments.length} fragment(s), and ${fragments.map((fragment) => fragment.path).join(", ")} deleted`,
+      `conformance/matrix.json: material ${matrix.material} → ${options.version}`,
+      ...Object.keys(tables).map((path) => `${path}: ${committed[path] === undefined ? "created" : diffs.some((diff) => diff.startsWith(`${path}:`)) ? "changed" : "unchanged"} from the local measurement`),
+    ];
+    console.log(`release:prepare ${options.version}${options.dryRun ? " (dry run)" : ""}\n`);
+    for (const change of changes) console.log(`  ${change}`);
+    for (const diff of diffs) console.log(`  measurement vs commit: ${diff}`);
+
+    if (options.dryRun) {
+      console.log("\ndry run: no file written, no fragment deleted, no commit made");
+      return;
+    }
+
+    const nextManifest = `${JSON.stringify({ ...manifest, version: options.version }, null, 2)}\n`;
+    await writeFile(paths.manifest, nextManifest);
+    await writeFile(paths.changelog, changelog.changelog);
+    await writeFile(paths.matrix, `${JSON.stringify({ ...matrix, material: options.version }, null, 2)}\n`);
+    for (const [path, text] of Object.entries(tables)) await writeFile(join(options.root, path), text);
+    for (const fragment of fragments) await rm(join(options.root, fragment.path));
+
+    const staged = ["package.json", "CHANGELOG.md", "conformance/matrix.json", ...Object.keys(tables), ...fragments.map((fragment) => fragment.path)];
+    await run(["git", "add", "--", ...staged], options.root);
+    await run(["git", "commit", "-m", `release: bump material to ${options.version}`, "-m", options.trailer!], options.root);
+    const head = (await new Command("git", ["log", "-1", "--oneline"], options.root).text()).trim();
+    console.log(`\nrelease:prepare wrote ${head}`);
+  } finally {
+    if (scratch) await rm(scratch, { recursive: true, force: true });
   }
-  const commit = await new Command("git", ["rev-parse", "--short", "HEAD"], options.root).text().catch(() => "local");
-  const tables = await buildReleaseTables(options.root, options.analysis, { commit: commit.trim() || "local", date: options.date });
-
-  const committed: Record<string, string | undefined> = {};
-  for (const path of Object.keys(tables)) {
-    committed[path] = await readFile(join(options.root, path), "utf8").catch(() => undefined);
-  }
-  const diffs = tableDiffs(tables, committed);
-
-  const changes = [
-    `package.json: version ${manifest.version} → ${options.version}`,
-    `CHANGELOG.md: a ${options.version} section from ${fragments.length} fragment(s), and ${fragments.map((fragment) => fragment.path).join(", ")} deleted`,
-    `conformance/matrix.json: material ${matrix.material} → ${options.version}`,
-    ...Object.keys(tables).map((path) => `${path}: ${committed[path] === undefined ? "created" : diffs.some((diff) => diff.startsWith(`${path}:`)) ? "changed" : "unchanged"} from the local measurement`),
-  ];
-  console.log(`release:prepare ${options.version}${options.dryRun ? " (dry run)" : ""}\n`);
-  for (const change of changes) console.log(`  ${change}`);
-  for (const diff of diffs) console.log(`  measurement vs commit: ${diff}`);
-
-  if (options.dryRun) {
-    console.log("\ndry run: no file written, no fragment deleted, no commit made");
-    return;
-  }
-
-  const nextManifest = `${JSON.stringify({ ...manifest, version: options.version }, null, 2)}\n`;
-  await writeFile(paths.manifest, nextManifest);
-  await writeFile(paths.changelog, changelog.changelog);
-  await writeFile(paths.matrix, `${JSON.stringify({ ...matrix, material: options.version }, null, 2)}\n`);
-  for (const [path, text] of Object.entries(tables)) await writeFile(join(options.root, path), text);
-  for (const fragment of fragments) await rm(join(options.root, fragment.path));
-
-  const staged = ["package.json", "CHANGELOG.md", "conformance/matrix.json", ...Object.keys(tables), ...fragments.map((fragment) => fragment.path)];
-  await run(["git", "add", "--", ...staged], options.root);
-  await run(["git", "commit", "-m", `release: bump material to ${options.version}`, "-m", options.trailer!], options.root);
-  const head = (await new Command("git", ["log", "-1", "--oneline"], options.root).text()).trim();
-  console.log(`\nrelease:prepare wrote ${head}`);
 }
 
 /** A git invocation in `root`, with a readable failure. */

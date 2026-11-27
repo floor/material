@@ -415,8 +415,9 @@ try {
   rows.push(...(await measureConsumerSizes(temporary)).rows);
 
   console.table(sizes);
-  await mkdir("analysis", { recursive: true });
-  await writeFile("analysis/package-size.json", JSON.stringify({ rows, sizes, package: {
+  const analysis = process.env.MTRL_SIZE_ANALYSIS ?? "analysis";
+  await mkdir(analysis, { recursive: true });
+  await writeFile(join(analysis, "package-size.json"), JSON.stringify({ rows, sizes, package: {
     size: pack.size, unpackedSize: pack.unpackedSize, entryCount: pack.entryCount,
   } }, null, 2) + "\n");
 } finally {
