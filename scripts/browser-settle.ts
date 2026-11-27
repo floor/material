@@ -31,7 +31,9 @@
  * the animations, and then the steps above run from there. It is semantic
  * readiness only; it is not a second scan of the animations.
  *
- * A cap that runs out is an error naming what never settled, not a value.
+ * An expired animation wait lists the animations still running. A caller
+ * that supplies an end-state check can recover if the final scan is empty
+ * and its expected value has landed.
  *
  *   import { settle } from "./browser-settle";
  *
@@ -64,6 +66,8 @@ export interface SettleOptions<T> {
   until?: () => Promise<boolean>;
   /** How long the animations may take before the check fails. */
   animationCapMs?: number;
+  /** Confirms the expected end state after an animation deadline with no running animations. */
+  verifyAnimationEnd?: () => Promise<boolean>;
   /** How long the reading may keep changing before the check fails. */
   readCapMs?: number;
   /** How long the awaited state may take to arrive before the check fails. */
@@ -78,7 +82,7 @@ export interface SettleOptions<T> {
  * @returns The last reading, when one was asked for
  */
 export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {}): Promise<T | undefined> => {
-  const { target, read, until, animationCapMs = ANIMATION_CAP_MS, readCapMs = READ_CAP_MS, untilCapMs = ANIMATION_CAP_MS } = options;
+  const { target, read, until, animationCapMs = ANIMATION_CAP_MS, verifyAnimationEnd, readCapMs = READ_CAP_MS, untilCapMs = ANIMATION_CAP_MS } = options;
 
   const frame = (): Promise<void> => page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => done())));
 
@@ -126,11 +130,11 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
       // A running animation with no end — an indeterminate progress bar, a
       // pulsing badge — never finishes, and a paused one is not moving, so
       // neither is awaited: only what will end is what "settled" means.
-      const running = (): Animation[] => scopesOf()
+      const running = (includeInfinite = false): Animation[] => scopesOf()
         .flatMap((scope) => (scope instanceof Element ? scope.getAnimations({ subtree: true }) : scope.getAnimations()))
         .filter((animation) => {
           if (animation.playState !== "running") return false;
-          return Number.isFinite(animation.effect?.getComputedTiming().iterations ?? 0);
+          return includeInfinite || Number.isFinite(animation.effect?.getComputedTiming().iterations ?? 0);
         });
       const started = performance.now();
       const left = (): number => cap - (performance.now() - started);
@@ -154,27 +158,29 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
         clearTimeout(timer);
         return outcome;
       };
+      const timedOut = (wait: "animation completion" | "animation confirmation frame") => ({
+        wait,
+        running: running(true).map(animation => {
+          const effect = animation.effect instanceof KeyframeEffect ? animation.effect : null;
+          const element = effect?.target;
+          const name = animation instanceof CSSTransition ? animation.transitionProperty
+            : animation instanceof CSSAnimation ? animation.animationName
+            : animation.id || "unnamed animation";
+          const subject = element ? `${element.localName}${element.id ? `#${element.id}` : ""}${effect?.pseudoElement ?? ""}` : "";
+          return subject ? `${name} on ${subject}` : name;
+        }),
+      });
+
       let pending = running();
       for (;;) {
-        if (left() <= 0) return "timeout" as const;
-        if (pending.length === 0) {
-          // Nothing yet. A transition that begins on the next frame is still
-          // unseen, so one more read confirms the step is done.
-          const remaining = left();
-          if (remaining <= 0) return "timeout" as const;
-          if ((await nextFrame(remaining)) === "timeout") return "timeout" as const;
-          if (left() <= 0) return "timeout" as const;
-          pending = running();
-          if (pending.length === 0) return "finished" as const;
-          continue;
+        if (pending.length > 0 && (await awaitBatch(pending)) === "timeout") {
+          return timedOut("animation completion");
         }
-        if ((await awaitBatch(pending)) === "timeout") return "timeout" as const;
-        // The batch has finished. One frame, then one scan: a child transition
-        // that starts then is included, and an empty scan is the confirmation.
+        // Confirm on the next frame so a later transition joins the next batch.
         const remaining = left();
-        if (remaining <= 0) return "timeout" as const;
-        if ((await nextFrame(remaining)) === "timeout") return "timeout" as const;
-        if (left() <= 0) return "timeout" as const;
+        if (remaining <= 0 || (await nextFrame(remaining)) === "timeout" || left() <= 0) {
+          return timedOut("animation confirmation frame");
+        }
         pending = running();
         if (pending.length === 0) return "finished" as const;
       }
@@ -182,7 +188,14 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
     { target: target ?? null, cap: animationCapMs },
   );
   if (animations === "missing") throw new Error(`settle: ${target} is not in the page`);
-  if (animations === "timeout") throw new Error(`settle: ${target ?? "the document"} was still animating after ${animationCapMs} ms`);
+  if (typeof animations === "object") {
+    const { wait, running } = animations;
+    if (running.length || !verifyAnimationEnd || !await verifyAnimationEnd()) {
+      throw new Error(
+        `settle: ${target ?? "the document"} timed out waiting for ${wait} after ${animationCapMs} ms (running animations: ${running.join(", ") || "none"})`,
+      );
+    }
+  }
 
   // A smooth scroll is invisible to the animation step above: the scrollers are
   // read until two frames agree, so a bare settle() after a goTo is correct by

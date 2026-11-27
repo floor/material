@@ -37,6 +37,7 @@ const server = Bun.serve({
       <div id="light" class="colour-parent"><span class="colour-child">light</span></div>
       <div id="scoped" class="colour-parent"><span class="colour-child">scoped</span></div>
       <div id="colour-host"></div>
+      <button id="deadline">State layer</button>
       <script type="module">
         const host = document.getElementById("host");
         const root = host.attachShadow({ mode: "open" });
@@ -154,6 +155,50 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
         failures.push(`${engine} ${where} colour: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
+    const deadline = page.locator("#deadline");
+    const animationCapMs = 200;
+    for (const expectedOpacity of [0.08, 0.09]) {
+      await deadline.evaluate(async (button) => {
+        const animation = button.animate([{ opacity: 0 }, { opacity: 0.08 }], { duration: 40, fill: "forwards" });
+        await animation.finished;
+        // Delay only the helper's first confirmation frame past its deadline.
+        const frame = window.requestAnimationFrame.bind(window);
+        window.requestAnimationFrame = (callback) => {
+          window.requestAnimationFrame = frame;
+          return window.setTimeout(() => frame(callback), 400);
+        };
+      });
+      try {
+        const check = settle(page, {
+          target: "#deadline",
+          animationCapMs,
+          verifyAnimationEnd: async () => await deadline.evaluate(button => Number(getComputedStyle(button).opacity)) === expectedOpacity,
+        });
+        if (expectedOpacity === 0.08) {
+          await check;
+          lines.push(`${engine} delayed confirmation with the expected opacity`);
+        } else {
+          await assert.rejects(check, /#deadline.*confirmation frame.*running animations: none/);
+          lines.push(`${engine} delayed confirmation with an unexpected opacity fails`);
+        }
+      } catch (error) {
+        failures.push(`${engine} deadline at opacity ${expectedOpacity}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    await deadline.evaluate((button) => {
+      button.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 60_000, id: "long-opacity" });
+    });
+    try {
+      await assert.rejects(
+        settle(page, { target: "#deadline", animationCapMs, verifyAnimationEnd: async () => true }),
+        /#deadline.*animation completion.*running animations:.*long-opacity/,
+      );
+      lines.push(`${engine} a running animation still times out`);
+    } catch (error) {
+      failures.push(`${engine} running animation: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
     return lines;
   } finally {
     await page.close();
