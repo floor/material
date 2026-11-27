@@ -604,6 +604,7 @@
     "closed-surfaces:check": "bun run scripts/check-closed-dialog-snackbar.ts",
     "divider-sheet-conformance:check": "bun run scripts/check-divider-sheet-conformance.ts",
     "list-conformance:check": "bun run scripts/check-list-conformance.ts",
+    "list-drifts:check": "bun run scripts/check-list-drifts.ts",
     "select:check": "bun run scripts/check-select-on-demand.ts && bun run scripts/check-icon-registry-expand-more.ts",
     "listbox:check": "bun run scripts/check-listbox.ts && bun run scripts/check-listbox-rtl.ts && bun run scripts/check-listbox-forced-colors.ts",
     "datepicker-deferred:check": "bun run scripts/check-datepicker-deferred.ts && bun run scripts/check-datepicker-load-failure.ts",
