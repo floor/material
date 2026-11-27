@@ -11975,7 +11975,14 @@ try {
       await wait(300);
       const hovered = await visible();
       await page.mouse.move(600, 600);
-      await wait(400);
+      // The pointer leaving starts the 1.5 s hide. A 400 ms wait still saw the
+      // tooltip, so the focus read blamed no-show-on-focus. Wait until it is
+      // hidden, capped above that delay plus the 150 ms exit. The delay stays.
+      await settle(page, {
+        target: "#gt",
+        until: async () => !(await visible()),
+        untilCapMs: 2_200,
+      });
       await page.focus("#gtb");
       await wait(300);
       const focused = await visible();
