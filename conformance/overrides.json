@@ -1507,19 +1507,19 @@
     }
   },
   "navigation-rail/item-hit-width/modal-expanded/rest": {
-    "reason": "The site shows a target spanning the rail. Compose permits content-sized items. There is no single Compose dp value for item width. The reference choice is pending.",
+    "reason": "The site specifies a full-width target. Compose has no default item width, so the site sets the hit width. The indicator keeps its visual inset.",
     "spec": {
       "value": "Full rail width",
       "url": "https://m3.material.io/components/navigation-rail/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "States",
+      "read": "2026-11-27"
     },
     "compose": {
       "value": "Content-sized target",
       "file": "NavigationItem.kt",
       "symbol": "NavigationItem",
-      "line": 466,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt#L466"
+      "line": 441,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/NavigationItem.kt#L441-L458"
     }
   },
   "navigation-rail/side-padding/modal-expanded/rest": {
@@ -1527,8 +1527,8 @@
     "spec": {
       "value": "0dp",
       "url": "https://m3.material.io/components/navigation-rail/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "States",
+      "read": "2026-11-27"
     },
     "compose": {
       "value": "0dp",
