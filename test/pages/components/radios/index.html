@@ -22,19 +22,18 @@ const token = (role) => {
   return color;
 };
 
-const layerOf = (root) => root.querySelector(".mtrl-radios__ripple");
-
 const focusReadout = (root) => {
-  const layer = layerOf(root);
-  const input = root.querySelector(".mtrl-radios__input");
+  const inputs = [...root.querySelectorAll(".mtrl-radios__input")];
   const press = root.querySelector(".mtrl-ripple");
-  if (!layer || !input) return "no radio";
-  const focused = input.matches(":focus-visible");
+  if (!inputs.length) return "no radio";
+  const focused = inputs.find((input) => input.matches(":focus-visible"));
   if (!focused) {
     return press
       ? "state layer present, and a press ripple is mounted — tab to a radio"
       : "state layer present, no press ripple — tab to a radio";
   }
+  const layer = focused.closest(".mtrl-radios__item")?.querySelector(".mtrl-radios__ripple");
+  if (!layer) return `${focused.value} focused, no state layer`;
   const paint = getComputedStyle(layer);
   const ring = paint.outlineColor === token("secondary") && paint.outlineWidth === "3px";
   const fill = paint.backgroundColor !== "rgba(0, 0, 0, 0)" && paint.backgroundColor !== "transparent";
@@ -43,7 +42,7 @@ const focusReadout = (root) => {
     fill ? "focus layer" : "no focus layer",
     press ? "press ripple mounted" : "no press ripple",
   ];
-  return parts.join(", ");
+  return `${focused.value}: ${parts.join(", ")}`;
 };
 
 const variants = section(main, "Variants & sizes");
