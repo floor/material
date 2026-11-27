@@ -73,27 +73,54 @@ const focusCase: Case = {
 };
 
 const RUNS = 60;
+
+// A case whose verified state can never match: the shared measurement must
+// throw, naming the case, the selector and the theme, instead of emitting a
+// reading of the wrong state.
+const missingCase: Case = {
+  ...focusCase,
+  id: "baseline/light/unselected/focus-missing",
+  parts: [
+    { name: "item", selector: item, document: true },
+    { name: "verifiedState", selector: `${item}[data-missing='never']`, document: true },
+  ],
+};
+
 const failures: string[] = [];
-const harness = await createConformanceHarness({ component: "menu", engine: "webkit" });
-try {
-  for (let run = 1; run <= RUNS; run += 1) {
-    const rows = await harness.measure([focusCase]);
-    const row = rows.find((candidate) => candidate.id === focusCase.id);
-    assert.ok(row?.themes, `run ${run}: no three-theme reading for ${focusCase.id}`);
-    const seed = row.themes.seed.item;
-    if (!seed) {
-      failures.push(`run ${run}: the item is missing from the seed reading`);
-      continue;
+for (const engine of ["webkit", "chromium"] as const) {
+  const harness = await createConformanceHarness({ component: "menu", engine });
+  try {
+    for (let run = 1; run <= RUNS; run += 1) {
+      const rows = await harness.measure([focusCase]);
+      const row = rows.find((candidate) => candidate.id === focusCase.id);
+      assert.ok(row?.themes, `${engine} run ${run}: no three-theme reading for ${focusCase.id}`);
+      const seed = row.themes.seed.item;
+      if (!seed) {
+        failures.push(`${engine} run ${run}: the item is missing from the seed reading`);
+        continue;
+      }
+      const expected = row.themes.palettes.seed.Secondary;
+      const style = seed.style;
+      const colour = style.outlineColor ? parseColour(style.outlineColor) : undefined;
+      if (style.outlineStyle !== "solid" || colour?.hex !== expected || colour?.opacity !== 1) {
+        failures.push(`${engine} run ${run}: outline ${style.outlineStyle} ${style.outlineColor}, expected solid ${expected}`);
+      }
     }
-    const expected = row.themes.palettes.seed.Secondary;
-    const style = seed.style;
-    const colour = style.outlineColor ? parseColour(style.outlineColor) : undefined;
-    if (style.outlineStyle !== "solid" || colour?.hex !== expected || colour?.opacity !== 1) {
-      failures.push(`run ${run}: outline ${style.outlineStyle} ${style.outlineColor}, expected solid ${expected}`);
-    }
+    // The negative: a missing verified state throws, naming all three.
+    await assert.rejects(
+      () => harness.measure([missingCase]),
+      (error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        return message.includes(missingCase.id)
+          && message.includes("data-missing='never'")
+          && /\b(seed|dark|light)\b/.test(message);
+      },
+      `${engine}: a missing verified state must throw, naming the case, selector and theme`,
+    );
+    console.log(`ok ${engine}: ${RUNS} seed-theme reads are the solid Secondary ring; a missing state throws naming case, selector and theme`);
+  } finally {
+    await harness.close();
   }
-} finally {
-  await harness.close();
 }
 assert.deepEqual(failures, [], `menu focus ring:\n  ${failures.join("\n  ")}`);
-console.log(`menu focus ring: ${RUNS} seed-theme reads, every one the solid Secondary ring.`);
+console.log(`menu focus ring: ${RUNS} seed-theme reads in Chromium and WebKit, every one the solid Secondary ring.`);
