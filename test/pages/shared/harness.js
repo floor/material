@@ -30,13 +30,14 @@ const HUMAN = {
   "fab-menu": "FAB menu",
   carousel: "Carousel",
   "bottom-sheet": "Bottom sheet",
+  list: "List",
   progress: "Progress",
   slider: "Slider",
 };
 
 /** The component pages, grouped the way the rail groups them. */
 const GROUPS = [
-  { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu"] },
+  { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu", "list"] },
   { label: "Surfaces", icon: "layers", pages: ["bottom-sheet", "drawer"] },
   { label: "Media", icon: "image", pages: ["carousel"] },
   { label: "Status", icon: "stacked_line_chart", pages: ["progress"] },

@@ -29,6 +29,7 @@ modules.
 - `components/drawer/` — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu (5x slow motion).
 - `components/progress/` — buffer colour candidates; value scrubbing.
 - `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.
+- `components/list/` — 12 px between the slots, 20 px segmented icons, the segmented trailing icon in on-surface, and a selected icon that turns on-surface while hovered, focused, or pressed.
 
 ## Harness
 

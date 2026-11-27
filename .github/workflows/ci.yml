@@ -472,6 +472,9 @@ jobs:
           - group: list-conformance
             browsers: chromium
             checks: list-conformance:check
+          - group: list-drifts
+            browsers: chromium webkit
+            checks: list-drifts:check
           - group: search-trailing-space
             browsers: chromium webkit
             checks: search-trailing-space:check
