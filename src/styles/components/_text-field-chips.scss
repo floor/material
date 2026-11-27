@@ -112,7 +112,9 @@ $component: "#{base.$prefix}-text-field";
         }
     }
 
-    &--with-chips.#{$component}--with-chips-label .#{$component}__label {
+    // The filled variant only: the outlined label sits on the field's top edge
+    // through its own floated transform, wrapped rows or not.
+    &--filled.#{$component}--with-chips.#{$component}--with-chips-label .#{$component}__label {
         top: f.density(24px, 12px, 3px);
         transform: none;
         transform-origin: left top;
