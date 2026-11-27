@@ -1,3 +1,4 @@
+import { listCoverageSpecs } from "./list-bindings";
 import { textFieldCoverageSpecs } from "./text-field-bindings";
 import type { FixtureBinding, Probe, RowBinding, RowSpec } from "./matrix-types";
 
@@ -217,8 +218,9 @@ export const bindings: FixtureBinding[] = [
     ["focus-ring/filled/focus", "Focus indicator", "focus", "filled/m/focus", outline("root"), undefined, "filled"],
   ]),
   fixture("list", "List", [
+    ...listCoverageSpecs,
     ["container-colour/segmented/rest", "Segmented row tone", "colour", "segmented/light/unselected/rest", colour("row")],
-    ["between-space/segmented-one-line/rest", "Segmented item gap", "spacing", "segmented/lines-1/density-0", gap("row", "second", "bottom")],
+    ["between-space/segmented-one-line/rest", "Segmented item gap", "spacing", "segmented/lines-1/density-0", gap("row", "second", "bottom"), "ListTokens.SegmentedGap"],
     ["divider-trailing-space/inset/rest", "Inset divider end spacing", "spacing", "standard/lines-3/density-0", inset("divider", "content", "right")],
     ["vertical-padding/segmented-two-line/rest", "Segmented vertical padding", "spacing", "segmented/lines-2/density-0", css("row", "paddingTop")],
     ["vertical-padding/segmented-three-line/rest", "Segmented vertical padding", "spacing", "segmented/lines-3/density-0", css("row", "paddingTop")],

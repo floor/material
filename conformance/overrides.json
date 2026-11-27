@@ -1177,16 +1177,6 @@
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
     }
   },
-  "list/between-space/segmented-one-line/rest": {
-    "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
-    "compose": {
-      "value": "12dp",
-      "file": "ListTokens.kt",
-      "symbol": "ItemBetweenSpace",
-      "line": 42,
-      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L42"
-    }
-  },
   "list/bottom-space/segmented-one-line/rest": {
     "reason": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
     "compose": {
@@ -1212,8 +1202,8 @@
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/lists/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "Baseline list item measurements and padding",
+      "read": "2026-11-27"
     },
     "compose": {
       "value": "16dp",
@@ -1261,8 +1251,8 @@
     "spec": {
       "value": "24dp",
       "url": "https://m3.material.io/components/lists/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "Baseline list item measurements and padding",
+      "read": "2026-11-27"
     }
   },
   "list/vertical-padding/segmented-three-line/rest": {
