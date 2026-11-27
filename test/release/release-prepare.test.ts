@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { tableDiffs } from "../../scripts/release-tables";
+import { tableDiffs, tableRowDiffs } from "../../scripts/release-tables";
 import { README_SIZE_ROWS } from "../../scripts/readme-sizes";
 
 const rows = README_SIZE_ROWS.length;
@@ -105,7 +105,11 @@ describe("the release run gates the committed tables", () => {
       expect(code).toBe(1);
       const output = `${stdout}\n${stderr}`;
       expect(output).toContain("differ from this run's measurement");
+      expect(output).toContain("Replace them with this run's files from the package-sizes artifact");
+      expect(output).toContain("do not re-measure locally");
       expect(output).toContain("README.md");
+      expect(output).toContain("measured:");
+      expect(output).toContain("9.9 kB");
     } finally {
       await rm(base, { recursive: true, force: true });
       await rm(head, { recursive: true, force: true });
@@ -222,6 +226,16 @@ describe("release table comparison", () => {
     expect(diffs[0]).toContain("README.md");
     expect(diffs[0]).toContain("line");
     expect(diffs[0]).toContain("9.9 kB");
+  });
+
+  test("the row diff names each row, its measured and its committed value", () => {
+    const wrong = readme.replace("| 1.0 kB |", "| 9.9 kB |");
+    const rows = tableRowDiffs({ "README.md": readme }, { "README.md": wrong });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.file).toBe("README.md");
+    expect(rows[0]!.row).toContain("`" + README_SIZE_ROWS[0] + "`");
+    expect(rows[0]!.measured).toContain("1.0 kB");
+    expect(rows[0]!.committed).toContain("9.9 kB");
   });
 
   test("a missing committed table fails", () => {

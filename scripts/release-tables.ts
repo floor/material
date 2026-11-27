@@ -60,6 +60,49 @@ const firstDifference = (path: string, measured: string, committed: string): str
   return "the files differ";
 };
 
+/** One differing line of a measured table, ready to print as a replacement row. */
+export interface RowDifference {
+  file: string;
+  /** The row's first cell, or its line number when it is not a table row. */
+  row: string;
+  measured: string;
+  committed: string;
+}
+
+/**
+ * The rows that differ, file by file: what the release run prints so the
+ * artifact's files can be committed as they are. Missing files and prose
+ * lines report as their own rows.
+ */
+export function tableRowDiffs(
+  measured: Record<string, string>,
+  committed: Record<string, string | undefined>,
+): RowDifference[] {
+  const rows: RowDifference[] = [];
+  for (const [path, text] of Object.entries(measured)) {
+    const committedText = committed[path];
+    if (committedText === undefined) {
+      rows.push({ file: path, row: "(file)", measured: "measured", committed: "missing from the tree" });
+      continue;
+    }
+    const left = normalisedTable(path, text).split("\n");
+    const right = normalisedTable(path, committedText).split("\n");
+    for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+      const measuredLine = (left[index] ?? "").trim();
+      const committedLine = (right[index] ?? "").trim();
+      if (measuredLine === committedLine) continue;
+      const cell = (line: string): string | undefined => line.startsWith("|") ? line.split("|")[1]?.trim() : undefined;
+      rows.push({
+        file: path,
+        row: cell(measuredLine) ?? cell(committedLine) ?? `line ${index + 1}`,
+        measured: measuredLine,
+        committed: committedLine,
+      });
+    }
+  }
+  return rows;
+}
+
 /**
  * One message per table whose committed text differs from the measured one,
  * or that is missing. Empty when the committed tables are the measurement.
