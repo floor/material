@@ -119,6 +119,58 @@
     measure: () => json(labelInfo(window.__stateField)),
   });
 
+  // From #518: a floated filled label starts 8 px from the top, and the
+  // outlined notch leaves 4 px on each side of the label, in both directions.
+  scenario(states, {
+    title: "The floated label and the outlined notch",
+    lookFor: "focus an empty field to float its label; the filled label starts 8 px from the top, and the outlined notch leaves 4 px on each side, mirrored in RTL.",
+    expected: "the same geometry in left-to-right and right-to-left, at a whole and a fractional label width.",
+    mount: (body) => {
+      const box = stage(body);
+      const samples = [
+        { variant: "filled", label: "Email address", value: "ada@example.com" },
+        { variant: "filled", label: "Email address" },
+        { variant: "outlined", label: "Backup email for account recovery", value: "ada@example.com", fractional: true },
+        { variant: "outlined", label: "Email address" },
+      ];
+      const reads = [];
+      for (const dir of ["ltr", "rtl"]) {
+        const wrapper = document.createElement("div");
+        wrapper.dir = dir;
+        wrapper.style.display = "grid";
+        wrapper.style.gap = "16px";
+        wrapper.dataset.dir = dir;
+        box.append(wrapper);
+        for (const sample of samples) {
+          const field = factoryField(wrapper, { ...sample, class: undefined });
+          const element = field.element;
+          reads.push({
+            dir,
+            variant: sample.variant,
+            field,
+            label: element.querySelector(".mtrl-text-field__label"),
+            notch: element.querySelector(".mtrl-text-field__outline-notch"),
+            outline: element.querySelector(".mtrl-text-field__outline"),
+            fractional: !!sample.fractional,
+          });
+        }
+      }
+      window.__labelReads = reads;
+    },
+    measure: () => {
+      const reads = window.__labelReads.map(({ dir, variant, field, label, notch, outline, fractional }) => {
+        const box = field.element.getBoundingClientRect();
+        const labelBox = label.getBoundingClientRect();
+        if (variant === "filled") return `${dir} filled label top ${(labelBox.top - box.top).toFixed(2)}`;
+        if (!outline.classList.contains("mtrl-text-field__outline--notched")) return `${dir} outlined notch closed`;
+        const gap = notch.getBoundingClientRect();
+        const width = fractional ? ` label width ${getComputedStyle(label).width}` : "";
+        return `${dir} outlined notch left ${(labelBox.left - gap.left).toFixed(2)} right ${(gap.right - labelBox.right).toFixed(2)}${width}`;
+      });
+      return json(reads);
+    },
+  });
+
   // ------------------------------------------------------------- Interaction
   const interaction = section(main, "Interaction");
   scenario(interaction, {
