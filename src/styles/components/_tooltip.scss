@@ -55,6 +55,16 @@ $arrow-size: 8px;
     // (WCAG 1.4.13); hidden, it still lets clicks through
     pointer-events: auto;
   }
+
+  // Reduced motion: a subtle fade, not the scale. The same fade the menu uses.
+  @include m.reduced-motion {
+    transition: opacity v.motion('duration-short2') linear;
+
+    &,
+    &--visible {
+      transform: none;
+    }
+  }
   
   // Variants
   
