@@ -7673,12 +7673,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L42"
           },
           "material": {
-            "value": "16px",
+            "value": "12px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -9144,17 +9144,17 @@
             }
           },
           "material": {
-            "value": "OnSecondaryContainer",
+            "value": "OnSurface",
             "engines": null,
             "resolved": {
-              "light": "#1D192B",
-              "dark": "#E8DEF8",
-              "seed": "#354B40"
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -9190,17 +9190,17 @@
             }
           },
           "material": {
-            "value": "OnSecondaryContainer",
+            "value": "OnSurface",
             "engines": null,
             "resolved": {
-              "light": "#1D192B",
-              "dark": "#E8DEF8",
-              "seed": "#354B40"
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -9236,17 +9236,17 @@
             }
           },
           "material": {
-            "value": "OnSecondaryContainer",
+            "value": "OnSurface",
             "engines": null,
             "resolved": {
-              "light": "#1D192B",
-              "dark": "#E8DEF8",
-              "seed": "#354B40"
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -9380,12 +9380,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L153"
           },
           "material": {
-            "value": "24px",
+            "value": "20px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -10417,17 +10417,17 @@
             }
           },
           "material": {
-            "value": "OnSurfaceVariant",
+            "value": "OnSurface",
             "engines": null,
             "resolved": {
-              "light": "#49454F",
-              "dark": "#CAC4D0",
-              "seed": "#404943"
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -10739,17 +10739,17 @@
             }
           },
           "material": {
-            "value": "OnSecondaryContainer",
+            "value": "OnSurface",
             "engines": null,
             "resolved": {
-              "light": "#1D192B",
-              "dark": "#E8DEF8",
-              "seed": "#354B40"
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -10785,17 +10785,17 @@
             }
           },
           "material": {
-            "value": "OnSecondaryContainer",
+            "value": "OnSurface",
             "engines": null,
             "resolved": {
-              "light": "#1D192B",
-              "dark": "#E8DEF8",
-              "seed": "#354B40"
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -10831,17 +10831,17 @@
             }
           },
           "material": {
-            "value": "OnSecondaryContainer",
+            "value": "OnSurface",
             "engines": null,
             "resolved": {
-              "light": "#1D192B",
-              "dark": "#E8DEF8",
-              "seed": "#354B40"
+              "light": "#1D1B20",
+              "dark": "#E6E0E9",
+              "seed": "#171D1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
@@ -10975,12 +10975,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L332"
           },
           "material": {
-            "value": "24px",
+            "value": "20px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "",
           "issue": null
