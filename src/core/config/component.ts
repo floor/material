@@ -103,18 +103,16 @@ export const keepDefaults = <T extends object>(
   componentName: string,
 ): T => {
   const target = merged as Record<PropertyKey, unknown>;
-  const globalDefaults = getComponentDefaults(componentName as keyof ComponentConfigMap);
-  const sources = [globalDefaults, defaults] as Record<PropertyKey, unknown>[];
+  const builtInDefaults = defaults as Record<PropertyKey, unknown>;
+  const globalDefaults = getComponentDefaults(componentName as keyof ComponentConfigMap) as Record<PropertyKey, unknown>;
+  const isEnumerable = Object.prototype.propertyIsEnumerable;
   for (const key of Reflect.ownKeys(target)) {
     // The merge resolves className separately and may remove the class alias.
     if (key === "className" || target[key] !== undefined) continue;
-    for (const source of sources) {
-      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
-      const value = source[key];
-      if (value === undefined) continue;
-      target[key] = value;
-      break;
-    }
+    const globalValue = isEnumerable.call(globalDefaults, key) ? globalDefaults[key] : undefined;
+    target[key] = globalValue === undefined && isEnumerable.call(builtInDefaults, key)
+      ? builtInDefaults[key]
+      : globalValue;
   }
   return merged;
 };
