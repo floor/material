@@ -32,7 +32,7 @@ modules.
 - `components/radios/` — `ripple: false` still paints the keyboard focus ring and the focus layer.
 - `components/select/` — the trailing arrow takes its colour with the field, and rotates 180° while the menu is open.
 - `components/extended-fab/` — undefined variant and width match omitted ones; a defined global variant wins.
-- `components/tooltip/` — an undefined variant matches an omitted one; a global default wins.
+- `components/tooltip/` — an undefined variant matches an omitted one and a global default wins; the plain label stays to 1,400 ms after the pointer leaves and is gone after 1,500 ms plus its exit, and Escape closes it at once.
 
 ## Harness
 
