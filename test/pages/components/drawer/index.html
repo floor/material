@@ -355,7 +355,7 @@ scenario(interaction, {
     note.style.margin = "4px 0 0";
     note.style.fontSize = "12px";
     note.style.opacity = "0.7";
-    note.textContent = "The section reveal is the shipped one (#458): the panel's clipped height grows on duration-medium1 + easing-emphasized with the fade on the same tokens, and the rows keep their full height inside it. The menu's scaleY and the drawer's visible height should stay together frame for frame.";
+    note.textContent = "The section reveal is the shipped one (#458): the panel's clipped height grows on duration-medium1 + easing-emphasized with the fade on the same tokens, and the rows keep their full height inside it. The menu's scaleY and the drawer's visible height are two live values. Their transitions can start a frame or two apart, and the readout compares them at the same local time.";
     interactionBox.append(both, note);
   },
 });
