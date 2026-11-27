@@ -736,7 +736,7 @@
     }
   },
   "carousel/item-state/all/disabled": {
-    "reason": "The fixture asks for a disabled first item and checks its accessibility state.",
+    "reason": "Material has no disabled carousel item. The marker is absent, which drifts from the spec.",
     "spec": {
       "value": "Present",
       "url": "https://m3.material.io/components/carousel/specs",
