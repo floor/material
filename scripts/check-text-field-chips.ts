@@ -27,7 +27,9 @@ const enhancerBundle = await Bun.build({ entrypoints: [resolve("src/components/t
 assert(enhancerBundle.success, String(enhancerBundle.logs));
 const enhancer = await enhancerBundle.outputs[0]!.text();
 
-const elementBundle = await Bun.build({ entrypoints: [resolve("src/elements/index.ts")], target: "browser", format: "esm", minify: false });
+// The elements with the CSS modules a page imports (`material/elements/css`),
+// so a shadow root in this check adopts what a consumer's would.
+const elementBundle = await Bun.build({ entrypoints: [resolve("scripts/fixtures/text-field-chips-elements.ts")], target: "browser", format: "esm", minify: false });
 assert(elementBundle.success, String(elementBundle.logs));
 const elements = await elementBundle.outputs[0]!.text();
 
@@ -100,8 +102,8 @@ const mountFactory = (page: Page, config: Record<string, unknown>): Promise<void
     (window as unknown as { field: unknown }).field = field;
   }, config);
 
-const mountElement = (page: Page): Promise<void> =>
-  page.evaluate(() => {
+const mountElement = (page: Page, html = ""): Promise<void> =>
+  page.evaluate((html) => {
     const host = document.getElementById("host")!;
     host.replaceChildren();
     const field = document.createElement("m-text-field");
@@ -109,9 +111,10 @@ const mountElement = (page: Page): Promise<void> =>
     field.setAttribute("name", "to");
     field.setAttribute("chips", "");
     field.id = "field";
+    field.innerHTML = html;
     (window as unknown as { chipField: unknown }).chipField = field;
     host.append(field);
-  });
+  }, html);
 
 const values = (page: Page): Promise<string[]> =>
   page.evaluate(() => (window as unknown as { field: { getValues: () => string[] } }).field.getValues());
@@ -715,6 +718,201 @@ section("the chip's focus ring is the M3 3px Secondary outline at +2", async (pa
     return { width: style.outlineWidth, style: style.outlineStyle, offset: style.outlineOffset, visible: action.matches(":focus-visible") };
   });
   assert.deepEqual(ring, { width: "3px", style: "solid", offset: "2px", visible: true });
+});
+
+// ---------------------------------------------------------------------------
+// Element styles: the chip sheets follow the attribute, with no fixed waits
+const shadowState = (page: Page) =>
+  page.evaluate(() => {
+    const field = document.getElementById("field") as HTMLElement;
+    const root = field.shadowRoot!;
+    const texts = root.adoptedStyleSheets.map((sheet) => Array.from(sheet.cssRules, (rule) => rule.cssText).join("\n"));
+    const chip = root.querySelector(".mtrl-chip") as HTMLElement | null;
+    const remove = root.querySelector(".mtrl-chip__remove") as HTMLElement | null;
+    const before = remove ? getComputedStyle(remove, "::before") : null;
+    return {
+      rowSheets: texts.filter((text) => text.includes(".mtrl-text-field__chips")).length,
+      unique: new Set(texts).size === texts.length,
+      chipWidth: chip ? Math.round(chip.getBoundingClientRect().width) : null,
+      removeBefore: before ? `${before.width}x${before.height}` : null,
+      chips: root.querySelectorAll(".mtrl-chip").length,
+      values: (field as unknown as { getValues: () => string[] }).getValues(),
+    };
+  });
+
+section("the element adopts the chip sheets while chips is on, and drops them after", async (page) => {
+  await mountElement(page, '<m-chip value="a">a</m-chip>');
+  await page.evaluate(() => { (document.getElementById("host") as HTMLElement).style.width = "200px"; });
+  await settle(page, { target: "#field" });
+  const on = await shadowState(page);
+  // The short chip is its 88 dp minimum, and the remove target its 48 dp box:
+  // both come from the two sheets the element adopted for the attribute.
+  assert.equal(on.rowSheets, 1, `one chips row sheet in the shadow root (${JSON.stringify(on)})`);
+  assert.equal(on.unique, true, "no adopted sheet is duplicated");
+  assert.equal(on.chipWidth, 88, "the short chip is 88 px in the shadow root");
+  assert.equal(on.removeBefore, "48pxx48px", "the remove ::before is 48 dp in the shadow root");
+  assert.deepEqual(on.values, ["a"]);
+  // Off, then on, twice: with no user change the declared child comes back and
+  // exactly one copy of each sheet is adopted, never two.
+  await page.evaluate(() => document.getElementById("field")!.removeAttribute("chips"));
+  await settle(page, { target: "#field" });
+  const off = await shadowState(page);
+  assert.equal(off.rowSheets, 0, `no chips sheet without the attribute (${JSON.stringify(off)})`);
+  assert.equal(off.chips, 0);
+  assert.deepEqual(off.values, []);
+  for (const _ of [1, 2]) {
+    await page.evaluate(() => document.getElementById("field")!.setAttribute("chips", ""));
+    await settle(page, { target: "#field" });
+    const again = await shadowState(page);
+    assert.equal(again.rowSheets, 1, `one copy after a re-toggle (${JSON.stringify(again)})`);
+    assert.equal(again.unique, true, "no adopted sheet is duplicated after a re-toggle");
+    assert.equal(again.chipWidth, 88, "the sheet is applied again, not just present");
+    assert.equal(again.chips, 1, "the declared chip is back");
+    assert.deepEqual(again.values, ["a"]);
+    await page.evaluate(() => document.getElementById("field")!.removeAttribute("chips"));
+    await settle(page, { target: "#field" });
+    await page.evaluate(() => document.getElementById("field")!.setAttribute("chips", ""));
+    await settle(page, { target: "#field" });
+  }
+  // A real click at the chip's end removes it, through the shadow root. The
+  // removal is the model's (the element is dirty now), so the declared child
+  // no longer comes back: that is native default-versus-state behaviour.
+  const end = await page.evaluate(() => {
+    const chip = document.getElementById("field")!.shadowRoot!.querySelector(".mtrl-chip") as HTMLElement;
+    const box = chip.getBoundingClientRect();
+    return { x: Math.round(box.right - 2), y: Math.round(box.top + box.height / 2) };
+  });
+  await page.mouse.click(end.x, end.y);
+  await settle(page, { target: "#field" });
+  assert.equal((await shadowState(page)).chips, 0, "a click at the chip's end removes it");
+  assert.deepEqual((await shadowState(page)).values, []);
+});
+
+section("a chip child added after upgrade becomes a chip, and one removed goes", async (page) => {
+  await mountElement(page);
+  await settle(page, { target: "#field" });
+  assert.deepEqual(await shadowState(page), {
+    rowSheets: 1, unique: true, chipWidth: null, removeBefore: null, chips: 0, values: [],
+  });
+  // The light DOM is observed: a child added after upgrade is a starting chip.
+  await page.evaluate(() => document.getElementById("field")!.insertAdjacentHTML("beforeend", '<m-chip value="b">b</m-chip>'));
+  await settle(page, { target: "#field" });
+  assert.deepEqual((await shadowState(page)).values, ["b"], "a child added after upgrade becomes a chip");
+  await page.evaluate(() => document.getElementById("field")!.querySelector("m-chip")!.setAttribute("value", "zz"));
+  await settle(page, { target: "#field" });
+  assert.deepEqual((await shadowState(page)).values, ["zz"], "a changed child value moves the chip");
+  await page.evaluate(() => document.getElementById("field")!.querySelector("m-chip")!.remove());
+  await settle(page, { target: "#field" });
+  const gone = await shadowState(page);
+  assert.equal(gone.chips, 0, "a removed child leaves no chip");
+  assert.deepEqual(gone.values, []);
+});
+
+// ---------------------------------------------------------------------------
+// Layout: hit targets across rows, real clicks per target
+section("both 48dp targets own their edge at 100% and 200% zoom, light DOM and shadow root", async (page) => {
+  const probe = async (where: "factory" | "shadow") =>
+    page.evaluate((where) => {
+      const field = document.getElementById("field") as HTMLElement;
+      const root: ParentNode = where === "shadow" ? (field.shadowRoot ?? field) : field;
+      const chip = root.querySelector(".mtrl-chip") as HTMLElement;
+      const box = chip.getBoundingClientRect();
+      const y = box.top + box.height / 2;
+      // The rect is in viewport pixels: a CSS-pixel offset scales with the
+      // page's zoom. elementsFromPoint pierces the shadow tree; the first entry
+      // inside the chip names the control the point belongs to.
+      const zoom = Number(getComputedStyle(document.getElementById("host")!).zoom) || 1;
+      const at = (offset: number): string => {
+        const hits = document.elementsFromPoint(box.left + offset * zoom, y) as HTMLElement[];
+        const inside = hits.find((hit) => chip.contains(hit) || (chip.shadowRoot?.contains(hit) ?? false)) ?? null;
+        if (!inside) return "nothing";
+        return inside.closest(".mtrl-chip__remove") ? "remove" : inside.closest(".mtrl-chip__action") ? "action" : inside.className;
+      };
+      return { width: Math.round(box.width / zoom), at0: at(0), at40: at(40), at44: at(44), at48: at(48), atEnd: at(Math.round(box.width / zoom) - 2) };
+    }, where);
+  const run = async (zoom: number, where: "factory" | "shadow") => {
+    await page.evaluate((z) => { (document.getElementById("host") as HTMLElement).style.zoom = String(z); }, zoom);
+    await settle(page, { target: "#field" });
+    const measured = await probe(where);
+    assert.equal(measured.at0, "action", `${where} ${zoom}x: the chip's start belongs to the action (${JSON.stringify(measured)})`);
+    assert.equal(measured.at40, "action", `${where} ${zoom}x: 40dp belongs to the action`);
+    assert.equal(measured.at44, "action", `${where} ${zoom}x: 44dp belongs to the action`);
+    assert.equal(measured.at48, "remove", `${where} ${zoom}x: 48dp belongs to the remove button`);
+    assert.equal(measured.atEnd, "remove", `${where} ${zoom}x: the chip's end belongs to the remove button`);
+  };
+  await page.evaluate(() => { (document.getElementById("host") as HTMLElement).style.width = "200px"; });
+  // Four one-character chips wrap a 200px field: each chip is its minimum 88dp.
+  await mountFactory(page, { label: "To", chips: { items: ["a", "b", "c", "d"] } });
+  await page.evaluate(() => { (document.getElementById("host") as HTMLElement).style.width = "200px"; });
+  await settle(page, { target: "#field" });
+  await run(1, "factory");
+  await run(2, "factory");
+  await page.evaluate(() => { (document.getElementById("host") as HTMLElement).style.zoom = "1"; });
+  // The element's chips are declared children: they exist at upgrade, so the
+  // short-chip width does not depend on when a property lands.
+  await mountElement(page, ["a", "b", "c", "d"].map((text) => `<m-chip value="${text}">${text}</m-chip>`).join(""));
+  await page.evaluate(() => { (document.getElementById("host") as HTMLElement).style.width = "200px"; });
+  await settle(page, { target: "#field" });
+  // WebKit's elementsFromPoint stops at a shadow host, so inside the element
+  // the proof is a real click on each target (which pierces the tree) rather
+  // than a hit list: +40 activates the chip, the chip's end removes it.
+  const declared = ["a", "b", "c", "d"].map((text) => `<m-chip value="${text}">${text}</m-chip>`).join("");
+  const shadowClick = async (zoom: number) => {
+    // A fresh element each zoom: the previous click removed a chip, and a
+    // user removal is the model's, not the declared default's.
+    await mountElement(page, declared);
+    await page.evaluate((z) => { (document.getElementById("host") as HTMLElement).style.zoom = String(z); }, zoom);
+    await settle(page, { target: "#field" });
+    const boxes = await page.evaluate(() => {
+      const field = document.getElementById("field") as HTMLElement;
+      const chip = (field.shadowRoot ?? field).querySelector(".mtrl-chip") as HTMLElement;
+      const rect = chip.getBoundingClientRect();
+      const zoom = Number(getComputedStyle(document.getElementById("host")!).zoom) || 1;
+      return { left: rect.left, mid: rect.top + rect.height / 2, width: rect.width, zoom };
+    });
+    await page.mouse.click(Math.round(boxes.left + 40 * boxes.zoom), Math.round(boxes.mid));
+    const selected = await page.evaluate(() => {
+      const field = document.getElementById("field") as HTMLElement;
+      return (field.shadowRoot ?? field).querySelector(".mtrl-chip__action")?.getAttribute("aria-checked");
+    });
+    assert.equal(selected === "true" || selected === "false", true, `shadow ${zoom}x: a click at +40 reaches the chip's action (${selected})`);
+    await page.keyboard.press("Escape");
+    await page.mouse.click(Math.round(boxes.left + (boxes.width / boxes.zoom - 2) * boxes.zoom), Math.round(boxes.mid));
+    await settle(page, { target: "#field" });
+    const remaining = await page.evaluate(() => {
+      const field = document.getElementById("field") as HTMLElement;
+      return (field.shadowRoot ?? field).querySelectorAll(".mtrl-chip").length;
+    });
+    assert.equal(remaining, 3, `shadow ${zoom}x: a click at the chip's end removes it (${remaining} left)`);
+  };
+  await shadowClick(1);
+  await shadowClick(2);
+});
+
+// A hit test does not prove activation: one real click per target.
+section("a real click at the action's area fires it, and one at the remove's area removes", async (page) => {
+  await mountFactory(page, { label: "To", chips: { items: ["a"] } });
+  await page.evaluate(() => { (document.getElementById("host") as HTMLElement).style.width = "200px"; });
+  await settle(page, { target: "#field" });
+  const point = async (offset: number) => {
+    const box = await page.evaluate(() => {
+      const chip = document.querySelector("#field .mtrl-chip") as HTMLElement;
+      const rect = chip.getBoundingClientRect();
+      return { left: rect.left, mid: rect.top + rect.height / 2 };
+    });
+    return { x: Math.round(box.left + offset), y: Math.round(box.mid) };
+  };
+  // +40 is inside the action; the chip's own click selects it.
+  const actionPoint = await point(40);
+  await page.mouse.click(actionPoint.x, actionPoint.y);
+  assert.equal(await page.evaluate(() => (document.querySelector("#field .mtrl-chip__action") as HTMLElement).getAttribute("aria-checked")), "true", "a click at +40 activates the chip's action");
+  // The chip is now selected; a second activation edits, so clear the state
+  // before the removal click by pressing Escape.
+  await page.keyboard.press("Escape");
+  const removePoint = await point(86);
+  await page.mouse.click(removePoint.x, removePoint.y);
+  await settle(page, { target: "#field" });
+  assert.equal(await page.locator("#field .mtrl-chip").count(), 0, "a click at +86 removes the chip");
 });
 
 // ---------------------------------------------------------------------------
