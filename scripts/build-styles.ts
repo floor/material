@@ -70,9 +70,12 @@ export function directionArmsPrelude(): string {
 export function styleLayerOrder(): string {
   // Opt-in entries (`material/styles/listbox`) are selective-only: they are not
   // in the full stylesheet, so their layer joins the order only when their own
-  // sheet is loaded, and no default asset's declared order moves.
+  // sheet is loaded, and no default asset's declared order moves. When it is
+  // loaded, its layer is declared after every component's, so its rules win
+  // over the sheets it builds on whatever order the files load in.
   const selective = Object.keys(componentStyles).filter(name => !componentStyles[name].optIn);
-  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(selective)];
+  const optIn = Object.keys(componentStyles).filter(name => componentStyles[name].optIn);
+  const layers = ["preupgrade", "base", "utilities", ...resolveStyleDependencies(selective), ...optIn];
   return `@layer ${layers.map(layer => `mtrl.${layer}`).join(",")};`;
 }
 
