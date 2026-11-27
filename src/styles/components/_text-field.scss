@@ -75,6 +75,7 @@ $component: "#{base.$prefix}-text-field";
         color: t.color("on-surface-variant");
         transition:
             transform v.motion("duration-short4") v.motion("easing-emphasized"),
+            line-height v.motion("duration-short4") v.motion("easing-emphasized"),
             color v.motion("duration-short2") v.motion("easing-standard"),
             left v.motion("duration-short4") v.motion("easing-emphasized");
     }
@@ -451,19 +452,15 @@ $component: "#{base.$prefix}-text-field";
             }
         }
 
-        // Populated field (not empty) or focused field label position
+        // The floated line is Body Small. Divide out the label's scale, then
+        // animate the line height with the transform to keep the float smooth.
+        $floating-line-height: m.typography-value("body-small", "line-height", 16px);
         &:not(.#{$component}--empty) .#{$component}__label,
-        &.#{$component}--focused .#{$component}__label {
-            // Its line centred 16dp down, 8dp and half the 16dp line: from the
-            // field's centre, 12px up and half its own scaled height
-            transform: translateY(calc(-12px - 37.5%)) scale(0.75);
-        }
-
-        // Floated from the input's own state too: a value, or autofill before
-        // the script has seen it. The label precedes the input, so the root
-        // reads it.
+        &.#{$component}--focused .#{$component}__label,
         &:has(.#{$component}__input:is(:not(:placeholder-shown), :autofill, :-webkit-autofill)) .#{$component}__label {
-            transform: translateY(calc(-12px - 37.5%)) scale(0.75);
+            line-height: calc(#{$floating-line-height} / 0.75);
+            // Centre the scaled line 16dp down in the default field.
+            transform: translateY(calc(-12px - #{$floating-line-height} / 2)) scale(0.75);
         }
 
         // A prefix or suffix is on the text's line: under a label, 24dp down
@@ -825,7 +822,7 @@ $component: "#{base.$prefix}-text-field";
         .#{$component}__label {
             left: auto;
             right: var(--#{$component}-start, 16px);
-            transform-origin: right top;
+            transform-origin: var(--#{$component}-label-origin-x, right) top;
         }
 
         .#{$component}__prefix {
