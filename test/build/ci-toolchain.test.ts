@@ -1,6 +1,8 @@
 // test/build/ci-toolchain.test.ts
 import { describe, expect, test } from "bun:test";
-import { Glob, YAML } from "bun";
+import { Glob } from "bun";
+
+const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
 
 // Nothing CI runs on may move without a commit. A version that floats ("1.4",
 // `@v4`, `ubuntu-latest`) resolves to something new the day upstream releases,
