@@ -99,6 +99,12 @@ export const settle = async <T = void>(page: Page, options: SettleOptions<T> = {
         }
       };
       collect(root);
+      // The target may itself be a shadow host: its own root is not a
+      // descendant, and the element's transitions live in it.
+      if (root instanceof Element && root.shadowRoot) {
+        scopes.push(root.shadowRoot);
+        collect(root.shadowRoot);
+      }
       // A running animation with no end — an indeterminate progress bar, a
       // pulsing badge — never finishes, and a paused one is not moving, so
       // neither is awaited: only what will end is what "settled" means.

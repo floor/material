@@ -116,8 +116,11 @@ try {
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.down();
       await wave.waitFor({ state: "attached" });
-      await settle(page, { target: `${tag} .mtrl-ripple-wave.active:not(.fade-out)` });
-      const style = await wave.evaluate(el => {
+      const style = await wave.evaluate(async el => {
+        // The wave's own reveal: it lives in the button's shadow root, so it
+        // has no document selector to hand `settle`, and its animation is the
+        // press itself, which the pointer holds.
+        await Promise.all(el.getAnimations().map(a => a.finished.catch(() => {})));
         const wave = getComputedStyle(el), container = getComputedStyle(el.parentElement!);
         return { opacity: wave.opacity, position: wave.position, transform: wave.transform,
           container: [container.position, container.pointerEvents, container.overflow] };

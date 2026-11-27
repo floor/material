@@ -181,8 +181,15 @@ export async function checkToolbarItemShape(page: Page, check: (name: string) =>
   // the new radius, so let the button's animation finish before reading it).
   assert.equal(await radiusOf(page, "resized"), "28px", "the resized host starts at its size");
   await page.evaluate((id) => (document.getElementById(id) as HTMLElement).setAttribute("size", "xl"), "resized");
-  await settle(page, { target: "#resized" }); // the resize transition has ended
-  assert.equal(await radiusOf(page, "resized"), "68px", "a slotted host resized after insertion follows its new size");
+  // The morph is a rAF spring, which Web Animations cannot see: the helper is
+  // given the state it ends in (a radius that is no longer the old size's) and
+  // the radius as its reading, so the spring is followed to its rest.
+  const resized = await settle(page, {
+    target: "#resized",
+    until: async () => (await radiusOf(page, "resized")) !== "28px",
+    read: () => radiusOf(page, "resized"),
+  });
+  assert.equal(resized, "68px", "a slotted host resized after insertion follows its new size");
   check("toolbar shape: a slotted host re-reads its size after insertion");
 
   // The width variants on both channels: the box is no square, and the

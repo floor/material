@@ -5,6 +5,7 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import * as sass from "sass";
 import { baseStyles, componentStyles, resolveStyleDependencies } from "./style-manifest";
 import type createToolbar from "../src/components/toolbar";
@@ -25,7 +26,6 @@ import create from ${JSON.stringify(resolve("src/components/toolbar/index.ts"))}
 import {defineToolbar} from ${JSON.stringify(resolve("src/elements/toolbar.ts"))};
 import {defineButton} from ${JSON.stringify(resolve("src/elements/button.ts"))};
 import {registerStyles} from ${JSON.stringify(resolve("src/elements/styles.ts"))};
-import { settle } from "./browser-settle";
 registerStyles(${JSON.stringify(registry)}); defineToolbar(); defineButton();
 window.disabledTabstop = {create, destroy(){}};` }));
   } }],

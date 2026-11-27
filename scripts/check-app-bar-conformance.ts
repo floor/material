@@ -25,6 +25,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 
 import * as sass from "sass";
 
@@ -38,7 +39,6 @@ const compile = (source: string): string => sass.compileString(`@use "${source}"
 const entrySource = `
 import { createTopAppBar, createBottomAppBar, createToolbar, createNavigationBar, createIconButton } from ${JSON.stringify(resolve(repoRoot, "src/index.ts"))};
 import { defineAll, registerStyles } from ${JSON.stringify(resolve(repoRoot, "src/elements/index.ts"))};
-import { settle } from "./browser-settle";
 registerStyles({ "top-app-bar": ${JSON.stringify(compile("components/top-app-bar"))}, "bottom-app-bar": ${JSON.stringify(compile("components/bottom-app-bar"))} });
 defineAll();
 window.api = { createTopAppBar, createBottomAppBar, createToolbar, createNavigationBar, createIconButton };

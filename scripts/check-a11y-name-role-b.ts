@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
 
@@ -44,7 +45,6 @@ const entry = `import * as m from ${JSON.stringify(resolve(sourceRoot, "src/inde
 import {createTab} from ${JSON.stringify(resolve(sourceRoot, "src/components/tabs/index.ts"))};
 import {defineAll} from ${JSON.stringify(resolve(sourceRoot, "src/elements/index.ts"))};
 import {registerStyles} from ${JSON.stringify(resolve(sourceRoot, "src/elements/styles.ts"))};
-import { settle } from "./browser-settle";
 registerStyles(${JSON.stringify(styles)}); defineAll(); window.mtrl={...m,createTab}; window.ready=true;`;
 const bundle = await Bun.build({ entrypoints: ["a11y-b"], target: "browser", plugins: [{ name: "a11y-b", setup(build) {
   build.onResolve({ filter: /^a11y-b$/ }, () => ({ path: "a11y-b", namespace: "fixture" }));

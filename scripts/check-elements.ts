@@ -1276,7 +1276,6 @@ try {
     }
     return false;
   };
-  const settle = (): Promise<unknown> => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))));
   for (const dir of ["ltr", "rtl"] as const) {
     for (const [kind, tag] of [["fab", "m-fab"], ["extended-fab", "m-extended-fab"]] as const) {
       const label = (corner: string): string => (kind === "fab" ? `Fab ${corner}` : `Ext ${corner}`);
@@ -1302,7 +1301,7 @@ try {
               document.getElementById("factory")?.append(made.element);
             }
           }, { kind, corners: [...corners], icon: ICON });
-          await settle();
+          await settle(page);
         }
         for (const [index] of corners.entries()) {
           const id = ids[index]!;
@@ -1311,7 +1310,7 @@ try {
           const [left, top, width, height] = rest.box;
           const centre = { x: left + width / 2, y: top + height / 2 };
           await page.mouse.move(centre.x, centre.y);
-          await settle();
+          await settle(page);
           const hovered = await fabState(id);
           assert.deepEqual(hovered, rest, `${id} left its corner while hovered: ${JSON.stringify(hovered)}`);
           await page.mouse.move(450, 350);
@@ -2868,7 +2867,6 @@ try {
   );
   {
     await page.getByRole("tab", { name: "Flights", exact: true }).focus();
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const before = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { component: unknown };
       (window as unknown as Record<string, unknown>).__tabs = { component: t.component, focused: t.shadowRoot?.activeElement };
@@ -2882,7 +2880,7 @@ try {
       tabs[2].textContent = "Stays";
       tabs[2].setAttribute("disabled", "");
     });
-    await settle();
+    await settle(page);
     const after = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & {
         component: { getTabs: () => Array<{ getBadge: () => string }> };
@@ -2914,7 +2912,7 @@ try {
       t.insertBefore(tab, t.children[1]);
       t.children[3].remove();
     });
-    await settle();
+    await settle(page);
     const reordered = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { value: string };
       const buttons = [...(t.shadowRoot?.querySelectorAll('[role="tab"]') ?? [])] as HTMLElement[];
@@ -2974,7 +2972,6 @@ try {
   );
   {
     type Radios = HTMLElement & { value: string | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const group = page.getByRole("radiogroup", { name: "Size" });
     assert.equal(await group.count(), 1);
     const radios = group.getByRole("radio");
@@ -3097,7 +3094,7 @@ try {
       return null;
     });
     assert.equal(before, null);
-    await settle();
+    await settle(page);
     const updated = await page.evaluate(() => {
       const g = document.getElementById("g") as Radios;
       const inputs = [...(g.shadowRoot?.querySelectorAll("input") ?? [])];
@@ -3215,7 +3212,6 @@ try {
   );
   {
     type Group = HTMLElement & { value: string | string[] | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const alignment = page.getByRole("group", { name: "Alignment" });
     assert.equal(await alignment.count(), 1);
     for (const [name, pressed] of [["Left", false], ["Center", true], ["Right", false]] as const) {
@@ -3307,7 +3303,7 @@ try {
     await page.getByRole("group", { name: "Actions" }).getByRole("button", { name: "Paste" }).click({ force: true });
     assert.deepEqual(await events(), [], "a disabled button dispatches nothing");
     await page.evaluate(() => document.querySelector('#ac [value="paste"]')?.removeAttribute("disabled"));
-    await settle();
+    await settle(page);
     const reenabled = await page.evaluate(() => {
       const ac = document.getElementById("ac") as HTMLElement;
       const states = (): boolean[] => [...(ac.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
@@ -3769,7 +3765,6 @@ try {
   );
   {
     type Chips = HTMLElement & { value: string | string[] | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const filters = page.getByRole("grid", { name: "Filters" });
     assert.equal(await filters.count(), 1);
     for (const [name, selected] of [["Vegetarian", true], ["Fish", true], ["Gluten free", false], ["Unavailable", false]] as const) {
@@ -3859,10 +3854,10 @@ try {
 
     await filters.getByRole("gridcell", { name: "Unavailable" }).click({ force: true });
     await page.evaluate(() => document.querySelector('#ch [value="na"]')?.removeAttribute("disabled"));
-    await settle();
+    await settle(page);
     const enabled = await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled");
     await page.evaluate(() => document.querySelector('#ch [value="na"]')?.setAttribute("disabled", ""));
-    await settle();
+    await settle(page);
     assert.deepEqual({ events: await events(), enabled }, { events: [], enabled: "false" });
     assert.equal(await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled"), "true");
     check("chips: a disabled chip dispatches nothing; disabled updates in place");
@@ -3874,7 +3869,7 @@ try {
       const ada = document.querySelector('#to [value="ada"]') as HTMLElement;
       ada.textContent = "Ada L.";
     });
-    await settle();
+    await settle(page);
     const lingering = await page.evaluate(() => [...(document.getElementById("to")?.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent));
     assert.deepEqual(lingering, ["Ada L."], "a removed chip stays removed while its <m-chip> is there");
     await recipients.getByRole("button", { name: "Remove Ada L." }).focus();
@@ -4907,7 +4902,6 @@ try {
   );
   {
     type Rail = HTMLElement & { value: string | null; component: unknown; expanded: boolean };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const nav = page.getByRole("navigation", { name: "Main" });
     assert.equal(await nav.count(), 1);
     assert.equal(await nav.getByRole("button", { name: "Inbox", exact: true }).count(), 1);
@@ -4974,7 +4968,7 @@ try {
       added.textContent = "Archive";
       r.append(added);
     });
-    await settle();
+    await settle(page);
     const updated = await page.evaluate(() => {
       const r = document.getElementById("nr") as Rail;
       const items = [...(r.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
@@ -5008,7 +5002,7 @@ try {
       fab.textContent = "Compose";
       document.getElementById("nr")?.prepend(fab);
     });
-    await settle();
+    await settle(page);
     const header = await page.evaluate(() => {
       const r = document.getElementById("nr") as Rail;
       const slot = r.querySelector("button")?.assignedSlot;
@@ -5062,7 +5056,6 @@ try {
   );
   {
     type Drawer = HTMLElement & { value: string | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const nav = page.getByRole("navigation", { name: "Mail" });
     assert.equal(await nav.count(), 1);
     assert.equal(await nav.getByRole("button", { name: /^Inbox/ }).getAttribute("aria-current"), "page");
@@ -5152,7 +5145,7 @@ try {
       added.textContent = "Work";
       d.append(added);
     });
-    await settle();
+    await settle(page);
     const updated = await page.evaluate(() => {
       const d = document.getElementById("dr") as Drawer;
       const items = [...(d.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
@@ -5229,7 +5222,6 @@ try {
   );
   {
     type Bar = HTMLElement & { component: unknown; setScrollState: (scrolled: boolean) => unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const banner = page.getByRole("banner", { name: "Mail bar" });
     assert.equal(await banner.count(), 1);
     assert.equal(await page.getByRole("heading", { level: 1, name: "Inbox" }).count(), 1);
@@ -5250,7 +5242,7 @@ try {
       const bar = document.getElementById("tb") as Bar;
       for (const node of [...bar.childNodes]) if (node.nodeType === Node.TEXT_NODE) node.remove();
     });
-    await settle();
+    await settle(page);
     assert.equal(await page.getByRole("heading", { level: 1, name: "Fallback" }).count(), 1);
     await page.evaluate(() => document.getElementById("tb")?.setAttribute("headline", "Updated"));
     assert.equal(await page.getByRole("heading", { level: 1, name: "Updated" }).count(), 1);
@@ -5334,7 +5326,6 @@ try {
   );
   {
     type Bar = HTMLElement & { component: unknown; hide: () => unknown; show: () => unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const toolbar = page.getByRole("toolbar", { name: "Actions" });
     assert.equal(await toolbar.count(), 1);
     const regions = await page.evaluate(() => {
@@ -5351,7 +5342,7 @@ try {
     check("bottom app bar: a toolbar; actions and the FAB in their regions");
 
     await page.evaluate(() => document.querySelector("#bb m-fab")?.remove());
-    await settle();
+    await settle(page);
     const without = await page.evaluate(() => {
       const bar = document.getElementById("bb") as Bar;
       return (bar.shadowRoot?.firstElementChild as HTMLElement).className.includes("--with-fab");
@@ -5422,7 +5413,6 @@ try {
   );
   {
     type Tb = HTMLElement & { component: { overflowButton: HTMLElement | null } | null; hide: () => unknown; show: () => unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     assert.equal(await page.getByRole("toolbar", { name: "Formatting" }).count(), 1);
     // Where focus is: an item's host, the FAB's, or the overflow button inside the toolbar.
     const focused = (): Promise<string | null> =>
@@ -5431,7 +5421,7 @@ try {
         if (active?.id === "tb") return `overflow:${active.shadowRoot?.activeElement?.getAttribute("aria-label")}`;
         return active?.getAttribute("aria-label") ?? active?.id ?? null;
       });
-    await settle();
+    await settle(page);
 
     await page.focus("#before");
     await page.keyboard.press("Tab");
@@ -5480,10 +5470,10 @@ try {
       const menu = (document.getElementById("tb") as HTMLElement).querySelector("m-menu") as HTMLElement;
       return { focused: !!menu.shadowRoot?.activeElement?.closest('[role="menu"]'), open: menu.hasAttribute("open") };
     });
-    for (const end = Date.now() + 5000; Date.now() < end && !(await overflowMenu()).focused;) await settle();
+    for (const end = Date.now() + 5000; Date.now() < end && !(await overflowMenu()).focused;) await settle(page);
     assert.equal((await overflowMenu()).focused, true, "toolbar: the open overflow menu takes focus");
     await page.keyboard.press("Escape");
-    for (const end = Date.now() + 5000; Date.now() < end && (await overflowMenu()).open;) await settle();
+    for (const end = Date.now() + 5000; Date.now() < end && (await overflowMenu()).open;) await settle(page);
     assert.equal((await overflowMenu()).open, false, "toolbar: Escape closes the overflow menu");
     check("toolbar: slot=overflow's <m-menu> is anchored to the overflow button, opens from it and closes on Escape");
 
@@ -5636,7 +5626,6 @@ try {
   );
   {
     type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const fruits = page.getByRole("list", { name: "Fruits" });
     assert.equal(await fruits.count(), 1);
     assert.equal(await fruits.getByRole("listitem").count(), 3);
@@ -5777,7 +5766,7 @@ try {
     assert.equal(removed, null);
     check("list: removing the selected item clears it from the selection");
 
-    await settle();
+    await settle(page);
     const renamed = await page.evaluate(() => {
       const l = document.getElementById("l") as List;
       const before = l.component;
@@ -6926,7 +6915,6 @@ try {
     type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
     const markup = `<m-list id="x" aria-label="Dirty"><m-list-item value="a">Alpha</m-list-item>
       <m-list-item value="b">Beta</m-list-item><m-list-item value="c">Gamma</m-list-item></m-list>`;
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const live = (): Promise<string | null> => page.evaluate(() => (document.getElementById("x") as List).value);
     const attribute = (value: string): Promise<string | null> =>
       page.evaluate((v) => {
@@ -6939,7 +6927,7 @@ try {
         const x = document.getElementById("x") as HTMLElement;
         for (const item of x.querySelectorAll("m-list-item")) item.toggleAttribute("selected", item.getAttribute("value") === v);
       }, value);
-      await settle();
+      await settle(page);
       return live();
     };
 
@@ -6947,7 +6935,7 @@ try {
     assert.equal(await attribute("b"), "b");
     assert.equal(await selectItem("c"), "b", "the value attribute wins over an item's selected in a single list");
     await page.evaluate(() => document.getElementById("x")?.removeAttribute("value"));
-    await settle();
+    await settle(page);
     assert.equal(await selectItem("a"), "a", "a clean list follows its items' selected");
     check("list: before any interaction, the value attribute and the items' selected move the selection");
 
@@ -6990,7 +6978,6 @@ try {
   );
   {
     type Card = HTMLElement & { component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const regions = (id: string): Promise<Record<string, string | number>> =>
       page.evaluate((cardId) => {
         const root = (document.getElementById(cardId) as HTMLElement).shadowRoot as ShadowRoot;
@@ -7075,7 +7062,7 @@ try {
     check("card: aria-label replaces the headline's name in place, and its removal gives it back");
 
     await page.evaluate(() => document.getElementById("k")?.setAttribute("headline", "Open this"));
-    await settle();
+    await settle(page);
     assert.equal(await page.getByRole("button", { name: "Open this" }).count(), 1);
     check("card: the headline attribute is the slot's fallback text");
 
@@ -7119,9 +7106,7 @@ try {
   );
   {
     type Carousel = HTMLElement & { index: number; component: unknown };
-    const settle = (): Promise<unknown> =>
-      page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
-    await settle();
+    await settle(page);
     const photos = page.getByRole("region", { name: "Photos" });
     assert.equal(await photos.count(), 1);
     assert.equal(await photos.getAttribute("aria-roledescription"), "carousel");
@@ -7274,7 +7259,7 @@ try {
          ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"], ["e", "Epsilon"]].map(([v, l]) => slide(v, l)).join("")}
        </m-carousel></section><section id="factory" class="tall"></section>`
     );
-    await settle();
+    await settle(page);
     const parity = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createCarousel: (c: object) => { element: HTMLElement } } };
       const factory = w.mtrl.createCarousel({
@@ -7324,9 +7309,7 @@ try {
     // The wheel scroll runs on the carousel's own frames, which Web Animations
     // cannot see: wait for it to reach its end, then for rest.
     const scrollLeft = () => scroller.evaluate(el => el.scrollLeft);
-    const samples: number[] = [];
-    const scrolled = await settle(page, { until: async () => { const value = await scrollLeft(); samples.push(value); return value > 0; }, read: scrollLeft });
-    if ((scrolled ?? 0) <= 0) console.log("wheel debug:", JSON.stringify(samples), "settled:", scrolled);
+    const scrolled = await settle(page, { until: async () => (await scrollLeft()) > 0, read: scrollLeft });
     assert((scrolled ?? 0) > 0);
     assert.equal(await host.evaluate(el => {
       const host = el as HTMLElement & { component: unknown };
@@ -7514,12 +7497,12 @@ try {
       );
     const live = (spec: DefaultCase): Promise<Live> =>
       page.evaluate((property) => (document.getElementById("x") as HTMLElement & Record<string, Live>)[property], spec.property);
-    // The slider binds its handles a task after creation.
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+    // The slider binds its handles a task after creation; the helper's frame
+    // is a later task, so it covers the bind.
 
     for (const spec of cases) {
       await fresh(page, `<form id="df">${spec.markup}</form>`);
-      await settle();
+      await settle(page);
       assert.notEqual(await live(spec), spec.a);
       assert.equal(await attribute(spec, spec.a), spec.a, `${spec.name}: a clean element follows its attribute`);
       check(`${spec.name}: before any interaction, the ${spec.attribute} attribute moves the live state`);
@@ -7533,14 +7516,14 @@ try {
 
       if (!spec.noForm) {
         await page.evaluate(() => (document.getElementById("df") as HTMLFormElement).reset());
-        await settle();
+        await settle(page);
         assert.equal(await live(spec), spec.b, `${spec.name}: reset returns to the current attribute`);
         assert.equal(await attribute(spec, spec.c), spec.c, `${spec.name}: reset makes it clean again`);
         check(`${spec.name}: form.reset() returns to the ${spec.attribute} attribute and clears the dirty flag`);
       }
 
       await fresh(page, `<form id="df">${spec.markup}</form>`);
-      await settle();
+      await settle(page);
       await page.evaluate(
         ({ property, value }) => {
           (document.getElementById("x") as HTMLElement & Record<string, Live>)[property] = value;
@@ -7658,7 +7641,6 @@ try {
   // is the shadow host when focus is inside a shadow root. The rail and the
   // drawer carried their own key handlers for it; these run on the factories'.
   {
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const focusedIn = (id: string): Promise<string | null | undefined> =>
       page.evaluate((id) => {
         const active = document.getElementById(id)?.shadowRoot?.activeElement as HTMLElement | null | undefined;
@@ -7731,7 +7713,7 @@ try {
     await people.getByRole("gridcell", { name: "Ben" }).locator("button").first().focus();
     const beforeDelete = await focusedIn("kc");
     await page.keyboard.press("Delete");
-    await settle();
+    await settle(page);
     assert.deepEqual({ beforeDelete, afterDelete: await focusedIn("kc") }, { beforeDelete: "Ben", afterDelete: "Cy" });
     await page.getByRole("grid", { name: "Kinds" }).getByRole("gridcell", { name: "Ex" }).focus();
     await page.keyboard.press("ArrowRight");
@@ -7766,7 +7748,7 @@ try {
     assert.deepEqual(list, ["Beta", "Gamma", "Alpha"]);
     assert.deepEqual(((await events()) as { value: string }[]).map((e) => e.value), ["b", "c"]);
     await page.evaluate(() => document.querySelector('#kl [value="a"]')?.setAttribute("supporting-text", "First"));
-    await settle();
+    await settle(page);
     assert.equal(await rowName(), "Gamma", "the list renders again and keeps the focused row");
     check("focus in a shadow root: the list's arrows, Home and End move focus, Space and Enter select; a render keeps focus");
   }

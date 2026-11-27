@@ -91,7 +91,7 @@ try {
         }
         return !!spec.action;
       }, spec);
-      await settle();
+      await settle(page);
       if (process.env.PICKER_VISUAL_DIR && spec.kind === "date" && spec.id.startsWith("date-modal")) await page.locator("dialog").screenshot({ path: `${process.env.PICKER_VISUAL_DIR}/${spec.id}.png`, animations: "disabled" });
       const { nodes } = await cdp.send("Accessibility.getFullAXTree");
       const exposed = nodes.filter(n => !n.ignored);

@@ -8,6 +8,7 @@ import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { build } from "vite";
 import { type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import { createPackageFixture } from "./package-fixture";
 import { filledSmallRoundCss } from "./button-style-profile";
 import type createButton from "../src/components/button";
