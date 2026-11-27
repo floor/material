@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" data-theme="baseline" data-theme-mode="light">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound sliders</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--mtrl-sys-color-surface); color: var(--mtrl-sys-color-on-surface); font-family: var(--mtrl-ref-typeface-plain, sans-serif); }
+  #sound-panel { display: grid; gap: 16px; width: 360px; max-width: 100%; }
+  h1 { margin: 0; font-size: 22px; line-height: 28px; }
+</style>
+<main id="sound-panel">
+  <h1>Sound</h1>
+</main>
+<script type="module">
+  import { createSlider } from "../../../../dist/index.js";
+
+  const panel = document.querySelector("#sound-panel");
+  if (new URLSearchParams(location.search).get("dir") === "rtl") panel.dir = "rtl";
+  for (const [id, label, value] of [["media-slider", "Media volume", 25], ["alarm-slider", "Alarm volume", 20]]) {
+    const slider = createSlider({ label, ariaLabel: label, value, showValue: true });
+    slider.element.id = id;
+    panel.append(slider.element);
+  }
+</script>
+</html>
