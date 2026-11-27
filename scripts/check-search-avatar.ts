@@ -217,7 +217,8 @@ const centerOf = async (page: Page, which: string, part: "avatar" | "trailing" =
   }, { which, part });
 
 /** The settled reading: the shared helper, with this check's reading. */
-const settleOn = <T>(page: Page, read: () => Promise<T>): Promise<T | undefined> => settle(page, { read });
+// A reading is always returned when one is asked for: the helper throws instead.
+const settleOn = async <T>(page: Page, read: () => Promise<T>): Promise<T> => (await settle(page, { read })) as T;
 
 const focusByKey = async (page: Page, which: string): Promise<boolean> => {
   // A key press first makes the next focus a keyboard one, so :focus-visible

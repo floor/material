@@ -105,8 +105,9 @@ const read = async (page: Page): Promise<Reading> =>
   });
 
 /** The settled reading: the shared helper, with this check's reading. */
-const settled = (page: Page): Promise<Reading | undefined> =>
-  settle(page, { target: ".mtrl-card", read: () => read(page) });
+// A reading is always returned when one is asked for: the helper throws instead.
+const settled = async (page: Page): Promise<Reading> =>
+  (await settle(page, { target: ".mtrl-card", read: () => read(page) })) as Reading;
 
 const mount = async (page: Page, variant: string, draggable = false): Promise<void> => {
   await page.mouse.move(0, 0);

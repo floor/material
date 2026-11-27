@@ -10265,7 +10265,7 @@ try {
       await restorePage.goto(`http://127.0.0.1:${server.port}/restore-select`);
       await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
       await restorePage.locator("#rs").click();
-      await settle(restorePage);
+      // The option click waits for the menu to be actionable; no timer does.
       await restorePage.getByRole("option", { name: "Beta", exact: true }).click();
       await restorePage.click("#go");
       await restorePage.waitForURL(/\/away$/);
