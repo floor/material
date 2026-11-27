@@ -46,6 +46,9 @@ import * as sass from "sass";
 import { chromium, webkit, type Browser, type BrowserType, type Page } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "../build-styles";
+import { THEME_ROLES } from "../../src/core/theme/tokens";
+import { matrixSeed, parseColour, type ThemePalettes } from "./matrix-colours";
+import { pascal, shapeOverrides, typographyRoles, type TypographyDetails } from "./matrix-metrics";
 
 const root = resolve(import.meta.dir, "..", "..");
 
@@ -134,6 +137,17 @@ export type CaseResult = {
   density: number;
   zoom: number;
   parts: Record<string, PartResult | null>;
+  themes?: {
+    palettes: ThemePalettes;
+    light: CaseResult["parts"];
+    dark: CaseResult["parts"];
+    seed: CaseResult["parts"];
+  };
+  metrics?: {
+    compact: CaseResult["parts"];
+    shapeProfile: CaseResult["parts"];
+    typography: Record<string, TypographyDetails>;
+  };
 };
 
 export type Harness = {
@@ -226,7 +240,7 @@ const PAGE = `<!doctype html><html data-theme="baseline"><head>
   window.__ready = true;
 </script></body></html>`;
 
-const serve = () =>
+const serve = (entryCode: string, themeCode: string | undefined) =>
   Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -234,11 +248,10 @@ const serve = () =>
       const path = new URL(request.url).pathname;
       if (path === "/__styles.css") return new Response(loadStyles(), { headers: { "Content-Type": "text/css" } });
       if (path === "/__component.js") return new Response(entryCode, { headers: { "Content-Type": "text/javascript" } });
+      if (path === "/__theme.js" && themeCode) return new Response(themeCode, { headers: { "Content-Type": "text/javascript" } });
       return new Response(PAGE, { headers: { "Content-Type": "text/html" } });
     },
   });
-
-let entryCode = "";
 
 const applyState = async (page: Page, selector: string, state: State, focusTarget?: string) => {
   if (state === "hover") await page.hover(selector);
@@ -284,8 +297,19 @@ const releaseState = async (page: Page, state: State) => {
  */
 export const createConformanceHarness = async (options: HarnessOptions): Promise<Harness> => {
   const entry = await loadEntry(options);
-  entryCode = entry.code;
-  const server = serve();
+  const selectedCases = (flag: string) => {
+    const arg = process.argv.find(arg => arg.startsWith(flag));
+    return new Set<string>(arg ? JSON.parse(arg.slice(flag.length)) : []);
+  };
+  const themeCases = selectedCases("--theme-cases=");
+  const metricCases = selectedCases("--metric-cases=");
+  let themeCode: string | undefined;
+  if (themeCases.size) {
+    const bundle = await Bun.build({ entrypoints: [join(root, "dist", "theme", "index.js")], target: "browser", format: "esm" });
+    if (!bundle.success) throw new Error(`bundling the runtime theme: ${bundle.logs.join("\n")}`);
+    themeCode = await bundle.outputs[0]!.text();
+  }
+  const server = serve(entry.code, themeCode);
   const url = `http://127.0.0.1:${server.port}`;
   const engines: BrowserType[] = (options.engines ?? [options.engine ?? "chromium"]).map((engine) =>
     engine === "webkit" ? webkit : chromium,
@@ -301,7 +325,7 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     pages.push(page);
   }
 
-  const measureOn = async (page: Page, cases: Case[]): Promise<CaseResult[]> => {
+  const measureOn = async (page: Page, cases: Case[], scheme?: "light" | "dark", densityOverride?: number): Promise<CaseResult[]> => {
     const rows: CaseResult[] = [];
     const defaultViewport = page.viewportSize()!;
     for (const testCase of cases) {
@@ -335,9 +359,9 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         {
           mountSource: testCase.mount.toString(),
           mountConfig: testCase.config ?? null,
-          density: testCase.density ?? null,
+          density: densityOverride ?? testCase.density ?? null,
           zoom: testCase.zoom ?? 1,
-          scheme: testCase.scheme ?? "light",
+          scheme: scheme ?? testCase.scheme ?? "light",
         },
       );
       // A fixture's own mount delay: a menu opening on a timer, a dialog's
@@ -451,13 +475,91 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     return rows;
   };
 
+  async function readTheme(
+    browser: Browser, viewport: { width: number; height: number }, cases: Case[],
+    theme: "dark" | "seed" | "compact" | "shapeProfile",
+  ) {
+    const page = await browser.newPage({ viewport });
+    try {
+      await page.goto(url);
+      await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+      const palette = async () => {
+        const values = await page.evaluate(roles => {
+          const style = getComputedStyle(document.documentElement);
+          return roles.map(role => style.getPropertyValue(`--mtrl-sys-color-${role}`).trim());
+        }, THEME_ROLES);
+        return Object.fromEntries(THEME_ROLES.map((key, index) => [
+          pascal(key),
+          parseColour(values[index]!).hex,
+        ]));
+      };
+      const light = await palette();
+      if (theme === "seed") {
+        await page.evaluate(async seed => {
+          const path = "/__theme.js";
+          const { applyScheme, createScheme } = await import(path);
+          applyScheme(createScheme(seed), document.documentElement);
+        }, matrixSeed);
+      } else if (theme === "shapeProfile") {
+        await page.evaluate(overrides => {
+          for (const [property, value] of Object.entries(overrides)) document.documentElement.style.setProperty(property, value);
+        }, shapeOverrides);
+      }
+      const rows = await measureOn(page, cases, theme === "dark" ? "dark" : "light", theme === "compact" ? -2 : undefined);
+      const typography = theme === "compact" ? await page.evaluate(roles => {
+        const style = getComputedStyle(document.documentElement);
+        return roles.map(role => {
+          const value = (key: string) => style.getPropertyValue(`--mtrl-sys-typescale-${role}-${key}`).trim();
+          return { size: value("font-size"), weight: value("font-weight"), lineHeight: value("line-height"), tracking: value("letter-spacing") };
+        });
+      }, typographyRoles) : [];
+      return {
+        light, palette: await palette(), rows,
+        typography: Object.fromEntries(typography.map((metrics, i) => [pascal(typographyRoles[i]!), metrics])),
+      };
+    } finally {
+      await page.close();
+    }
+  }
+
   return {
     source: entry.source,
     url,
     page: pages[0]!,
     measure: async (cases: Case[]): Promise<CaseResult[]> => {
       const all: CaseResult[] = [];
-      for (const page of pages) all.push(...(await measureOn(page, cases)));
+      const selected = cases.filter(testCase => themeCases.has(testCase.id));
+      const metrics = selected.filter(testCase => metricCases.has(testCase.id));
+      for (const [index, page] of pages.entries()) {
+        if (!selected.length) {
+          all.push(...await measureOn(page, cases));
+          continue;
+        }
+        if (selected.some(testCase => testCase.scheme === "dark")) {
+          throw new Error("Three-theme cases must start in the baseline light theme");
+        }
+        const viewport = page.viewportSize()!;
+        const browser = browsers[index]!;
+        const [rows, dark, seed, compact, shape] = await Promise.all([
+          measureOn(page, cases),
+          readTheme(browser, viewport, selected, "dark"),
+          readTheme(browser, viewport, selected, "seed"),
+          metrics.length ? readTheme(browser, viewport, metrics, "compact") : undefined,
+          metrics.length ? readTheme(browser, viewport, metrics, "shapeProfile") : undefined,
+        ]);
+        const palettes = { light: dark.light, dark: dark.palette, seed: seed.palette };
+        const byId = new Map(rows.map(row => [row.id, row]));
+        for (const [i, testCase] of selected.entries()) {
+          const row = byId.get(testCase.id)!;
+          row.themes = { palettes, light: row.parts, dark: dark.rows[i]!.parts, seed: seed.rows[i]!.parts };
+        }
+        if (compact && shape) for (const [i, testCase] of metrics.entries()) {
+          byId.get(testCase.id)!.metrics = {
+            compact: compact.rows[i]!.parts, shapeProfile: shape.rows[i]!.parts, typography: compact.typography,
+          };
+        }
+        all.push(...rows);
+      }
       return all;
     },
     close: async () => {

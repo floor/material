@@ -347,7 +347,8 @@ export const bindings: FixtureBinding[] = [
     ["pressed-opacity/size-m", "Press ripple opacity", "colour", "filled/m/pressed (ripple wave)", css("ripple wave", "opacity"), "StateTokens.PressedStateLayerOpacity", "filled, size m"],
   ]),
   fixture("switch", "Switch", [
-    ["track-colour/unselected/disabled", "Disabled unselected track tone", "colour", "unselected/disabled", colour("track")],
+    ["track-colour/unselected/disabled", "Disabled unselected track tone", "colour", "unselected/disabled", colour("track"), "SwitchTokens.DisabledUnselectedTrackColor"],
+    ["track-opacity/unselected/disabled", "Disabled unselected track opacity", "colour", "unselected/disabled", opacity("track"), "SwitchTokens.DisabledTrackOpacity"],
     ["track-width", "Track width", "size", "unselected/rest", width("track"), "SwitchTokens.TrackWidth"],
     ["track-height", "Track height", "size", "unselected/rest", height("track"), "SwitchTokens.TrackHeight"],
     ["selected-handle-width", "Selected handle width", "size", "selected/rest", width("thumb"), "SwitchTokens.SelectedHandleWidth"],
