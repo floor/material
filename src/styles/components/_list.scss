@@ -229,11 +229,13 @@ $component: "#{base.$prefix}-list";
     .#{$component}__action::before { background: t.color("on-secondary-container"); }
     &[role="option"]::before { background: t.color("on-secondary-container"); }
     // Selected rest stays on-secondary-container. Hover, focus and press take
-    // the icons to on-surface (md.comp.list.list-item.selected.{hover,focus,pressed}
+    // this row's own icon slots to on-surface. A list nested in the row keeps
+    // the rest colour, and only this row's own action counts as its focus
+    // (md.comp.list.list-item.selected.{hover,focus,pressed}
     // .{leading,trailing}-icon.color). Specs read 2026-11-27.
-    &:not(.#{$component}__item--disabled):is(:hover, :active, :focus-visible, :has(.#{$component}__action:focus-visible)) {
-      .#{$component}__leading,
-      .#{$component}__trailing { color: t.color("on-surface"); }
+    &:not(.#{$component}__item--disabled):is(:hover, :active, :focus-visible, :has(> .#{$component}__action:focus-visible)) {
+      > .#{$component}__leading,
+      > .#{$component}__trailing { color: t.color("on-surface"); }
     }
   }
   &__item--disabled {

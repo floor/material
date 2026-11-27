@@ -89,7 +89,19 @@ const mount = () => {
   outer.element.id = "outer";
   const host = outer.element.querySelector("[data-id='outer']");
   if (host) host.append(nested.element);
-  document.body.append(standard.element, segmented.element, dense.element, outer.element);
+  const inside = createList({
+    ariaLabel: "Inside selected",
+    items: [row("inside", {})],
+  });
+  const held = createList({
+    ariaLabel: "Selected with a nested list",
+    items: [row("held", { selected: true })],
+  });
+  inside.element.id = "inside";
+  held.element.id = "held";
+  const heldRow = held.element.querySelector("[data-id='held']");
+  if (heldRow) heldRow.append(inside.element);
+  document.body.append(standard.element, segmented.element, dense.element, outer.element, held.element);
 };
 
 const snapshot = (page: Page) => page.evaluate(() => {
@@ -145,6 +157,10 @@ const snapshot = (page: Page) => page.evaluate(() => {
     trailingOuter: widthOf(item("outer", "outer").querySelector(".mtrl-list__trailing") as Element),
     selectedLeading: paint(selected, "leading"),
     selectedTrailing: paint(selected, "trailing"),
+    heldLeading: paint(item("held", "held"), "leading"),
+    heldTrailing: paint(item("held", "held"), "trailing"),
+    insideLeading: paint(item("inside", "inside"), "leading"),
+    insideTrailing: paint(item("inside", "inside"), "trailing"),
   };
 });
 
@@ -203,6 +219,19 @@ const run = async (page: Page, engine: string) => {
   const hovered = await snapshot(page);
   assert.equal(hovered.selectedLeading, "OnSurface", `${engine}: list/leading-icon-colour/standard/selected-hover`);
   assert.equal(hovered.selectedTrailing, "OnSurface", `${engine}: list/trailing-icon-colour/standard/selected-hover`);
+
+  await remount();
+  await page.hover("#held [data-id='held'] .mtrl-list__action");
+  assert.equal(
+    await page.evaluate(() => document.querySelector("#held [data-id='held']")?.classList.contains("mtrl-list__item--selected") ?? false),
+    true,
+    `${engine}: the nested reading hovered a row that was no longer selected`,
+  );
+  const nestedHover = await snapshot(page);
+  assert.equal(nestedHover.heldLeading, "OnSurface", `${engine}: the selected row's own leading icon is OnSurface while hovered`);
+  assert.equal(nestedHover.heldTrailing, "OnSurface", `${engine}: the selected row's own trailing icon is OnSurface while hovered`);
+  assert.equal(nestedHover.insideLeading, "OnSecondaryContainer", `${engine}: a nested unselected leading icon stays OnSecondaryContainer while its selected parent is hovered`);
+  assert.equal(nestedHover.insideTrailing, "OnSecondaryContainer", `${engine}: a nested unselected trailing icon stays OnSecondaryContainer while its selected parent is hovered`);
 
   await remount();
   await page.hover(action);
