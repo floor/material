@@ -2,8 +2,8 @@
 import {
   createComponentConfig,
   createElementConfig,
-  keepDefaults,
 } from "../../core/config/component";
+import { keepDefaults } from "../../core/config/keep-defaults";
 import { TooltipConfig } from "./types";
 import { TOOLTIP_DEFAULTS } from "./constants";
 import type { LifecycleComponent } from "../../core/compose/features/lifecycle";

@@ -2,8 +2,8 @@
 import {
   createComponentConfig,
   createElementConfig,
-  keepDefaults,
 } from "../../core/config/component";
+import { keepDefaults } from "../../core/config/keep-defaults";
 import { ExtendedFabConfig, ExtendedFabComponent } from "./types";
 import { EXTENDED_FAB_CLASSES } from "./constants";
 
