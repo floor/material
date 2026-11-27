@@ -51,8 +51,10 @@ $component: "#{base.$prefix}-select";
             height: 24px;
             vertical-align: middle;
             color: inherit;
-            transition: v.motion("duration-medium1")
-                v.motion("easing-emphasized"); // Add transition for the SVG itself
+            // The span eases the colour and the svg inherits it. A second
+            // colour transition here makes WebKit finish the arrow later.
+            // Only the open-state rotation is the svg's own transition.
+            transition: transform v.motion("duration-medium1") v.motion("easing-emphasized");
         }
     }
 

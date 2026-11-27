@@ -21,7 +21,12 @@ import assert from "node:assert/strict";
 import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { webkit, type Browser, type Page } from "playwright";
+import * as sass from "sass";
+
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
+import { directionArmsPrelude, sassOptions } from "./build-styles";
 import type createSelect from "../src/components/select";
 
 const root = resolve(import.meta.dir, "..");
@@ -153,6 +158,122 @@ const OPTIONS = [
   { id: "banana", text: "Banana" },
   { id: "cherry", text: "Cherry" },
 ];
+
+const iconCss = sass.compileString(
+  directionArmsPrelude() + readFileSync(join(root, "src/styles/main.scss"), "utf8"),
+  sassOptions(),
+).css;
+
+const channels = (color: string): string => {
+  const match = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/.exec(color);
+  if (!match) return color.replace(/\s/g, "");
+  return match.slice(1, 4).map((part) => String(Math.round(Number(part)))).join(",");
+};
+
+/**
+ * Focus eases the trailing icon's colour on the span. The svg inherits it, so
+ * the two colours match on every frame. Sampling runs in the page: settle
+ * would wait out the transition and hide a second ease. WebKit tabs with
+ * Alt+Tab. Opening still runs a transform transition on the svg.
+ */
+const checkIconColour = async (page: Page, engine: string): Promise<void> => {
+  await page.emulateMedia({ colorScheme: "light", reducedMotion: "no-preference" });
+  await page.addStyleTag({ content: iconCss });
+  await page.evaluate((options) => {
+    document.documentElement.dataset.theme = "baseline";
+    const state = window as unknown as SelectWindow;
+    document.body.replaceChildren();
+    const before = document.createElement("button");
+    before.id = "before-select";
+    before.textContent = "Before";
+    document.body.append(before);
+    const select = state.createSelect({ label: "Fruit", options, variant: "outlined" });
+    state.select = select;
+    document.body.append(select.element);
+  }, OPTIONS);
+  await settle(page);
+  await page.locator("#before-select").focus();
+  await page.keyboard.press(engine === "webkit" ? "Alt+Tab" : "Tab");
+  const samples = await page.evaluate(() => new Promise<Array<{ span: string; svg: string }>>((resolve) => {
+    const span = document.querySelector<HTMLElement>(".mtrl-text-field__trailing-icon");
+    const svg = span?.querySelector("svg");
+    if (!span || !svg) {
+      resolve([]);
+      return;
+    }
+    const taken: Array<{ span: string; svg: string }> = [];
+    const started = performance.now();
+    const tick = () => {
+      taken.push({ span: getComputedStyle(span).color, svg: getComputedStyle(svg).color });
+      if (performance.now() - started < 600) requestAnimationFrame(tick);
+      else resolve(taken);
+    };
+    tick();
+  }));
+  assert(samples.length > 2, `${engine}: the icon colour was not sampled`);
+  const mismatched = samples.filter((sample) => channels(sample.span) !== channels(sample.svg));
+  assert.equal(
+    mismatched.length,
+    0,
+    `${engine}: the arrow's colour left the span's on ${mismatched.length} of ${samples.length} frames`,
+  );
+  assert.notEqual(
+    channels(samples[0]!.span),
+    channels(samples[samples.length - 1]!.span),
+    `${engine}: focus did not change the icon colour`,
+  );
+
+  await page.evaluate((options) => {
+    const state = window as unknown as SelectWindow;
+    document.body.replaceChildren();
+    const select = state.createSelect({ label: "Fruit", options, variant: "outlined" });
+    state.select = select;
+    document.body.append(select.element);
+  }, OPTIONS);
+  await settle(page);
+  const rotation = await page.evaluate(() => new Promise<{ property: string; duration: string; seen: string[]; running: string[]; open: boolean }>((resolve) => {
+    const svg = document.querySelector<SVGElement>(".mtrl-text-field__trailing-icon svg")!;
+    const seen: string[] = [];
+    svg.addEventListener("transitionrun", (event) => {
+      if (event.target === svg) seen.push(event.propertyName);
+    });
+    document.querySelector("input")!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const style = getComputedStyle(svg);
+      const running = svg.getAnimations().flatMap((animation) => {
+        const property = (animation as CSSTransition).transitionProperty;
+        return property ? [property] : [];
+      });
+      resolve({
+        property: style.transitionProperty,
+        duration: style.transitionDuration,
+        seen,
+        running,
+        open: document.querySelector(".mtrl-select")!.classList.contains("mtrl-select--open"),
+      });
+    }));
+  }));
+  assert.equal(rotation.open, true, `${engine}: ArrowDown did not open the select`);
+  assert.equal(rotation.property, "transform", `${engine}: the svg transitions transform only, measured ${rotation.property}`);
+  const durations = rotation.duration.split(",").map((part) => {
+    const trimmed = part.trim();
+    const value = parseFloat(trimmed);
+    return trimmed.endsWith("ms") ? value : value * 1000;
+  });
+  assert(
+    durations.length > 0 && durations.every((ms) => Math.abs(ms - 250) < 1),
+    `${engine}: the rotation uses duration-medium1 (250ms), measured ${rotation.duration}`,
+  );
+  assert(
+    rotation.seen.includes("transform") || rotation.running.includes("transform"),
+    `${engine}: opening did not run a transform transition on the svg`,
+  );
+  await settle(page, {
+    target: ".mtrl-text-field__trailing-icon svg",
+    read: () => page.evaluate(() => getComputedStyle(document.querySelector(".mtrl-text-field__trailing-icon svg")!).transform),
+  });
+  await page.close();
+};
 
 const browser = await launchChromium({ headless: true });
 try {
@@ -466,6 +587,26 @@ try {
       "the real menu replaces the stand-in's placeholder id and reports itself expanded"
     );
     await page.close();
+  }
+
+  await checkIconColour(await open(), "chromium");
+  // components-b installs Chromium only. A missing WebKit skips; Chromium
+  // still sampled the icon above.
+  let webkitBrowser: Browser | null = null;
+  try {
+    webkitBrowser = await webkit.launch({ headless: true });
+  } catch {
+    console.log("select icon colour: WebKit is not installed here, skipped");
+  }
+  if (webkitBrowser) {
+    try {
+      const page = await webkitBrowser.newPage();
+      await page.goto(url);
+      await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+      await checkIconColour(page, "webkit");
+    } finally {
+      await webkitBrowser.close();
+    }
   }
 
   console.log("Select menu-on-demand check passed.");
