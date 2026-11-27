@@ -7294,7 +7294,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "The measured value could not be assigned a unique role.",
+          "note": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token. The measured value could not be assigned a unique role.",
           "issue": null
         },
         {
@@ -8157,7 +8157,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "",
+          "note": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token.",
           "issue": null
         },
         {
@@ -9871,7 +9871,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "",
+          "note": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token.",
           "issue": null
         },
         {
@@ -11620,7 +11620,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "",
+          "note": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token.",
           "issue": null
         },
         {
@@ -12360,7 +12360,7 @@
             "spec": "drift",
             "compose": "match"
           },
-          "note": "",
+          "note": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token.",
           "issue": null
         }
       ]

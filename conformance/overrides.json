@@ -1301,6 +1301,15 @@
       "read": "2026-11-26"
     }
   },
+  "menu/active-container-radius/segmented/active": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
+  "menu/group-padding/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
+  "menu/label-typography/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
   "menu/selected-colour/baseline": {
     "reason": "The baseline Compose menu item has no selected state.",
     "compose": {
@@ -1310,6 +1319,12 @@
       "line": 34,
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/MenuTokens.kt#L34"
     }
+  },
+  "menu/supporting-typography/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
+  },
+  "menu/trailing-typography/segmented/rest": {
+    "reason": "Reference conflict resolved with no change under rule 1 because the measured value matches the pinned Compose design token."
   },
   "navigation-bar/focus-ring/horizontal/focus": {
     "reason": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
