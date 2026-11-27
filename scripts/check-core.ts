@@ -23,7 +23,7 @@ import { checkTimePicker } from "./check-timepicker-browser";
 import { checkInputBEM } from "./check-input-bem-browser";
 import { checkMenuOpenerPlacement, checkMenuOpeners } from "./check-menu-opener-browser";
 import { checkDialogAriaHiddenFocus, checkDialogFocusReach, checkDialogForcedColorsBorder, checkDialogMount } from "./check-dialog-browser";
-import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion } from "./check-text-field-browser";
+import { checkTextField, checkTextFieldTokens, checkTextFieldAnatomy, checkTextFieldPlaceholder, checkTextFieldA11y, checkTextFieldLatePlacement, checkTextFieldLayout, checkTextFieldSearchCancel, checkTextFieldReducedMotion, checkTextFieldLabelGeometry } from "./check-text-field-browser";
 import { checkControls, checkRadioFocusWithoutRipple } from "./check-controls-browser";
 import { checkRadiosLayout } from "./check-radios-layout";
 import { checkMenu, checkMenuDisabledColors, checkMenuForcedColorsBorder, checkMenuHiddenItems, checkMenuItemFocusRing, checkMenuSubmenuSetItems, checkMenuVerticalSelectedCheck, captureMenuDefaultComparisons } from "./check-menu-browser";
@@ -62,6 +62,7 @@ try {
   await page.addStyleTag({ content: await readFile(join(fixture.installed, "dist/styles.css"), "utf8") });
   await checkThemeContrast(page);
   await page.addScriptTag({ content: await bundle.outputs[0].text() });
+  await checkTextFieldLabelGeometry(page);
   await checkDialogMount(page);
   await checkDialogForcedColorsBorder(page);
   await checkDialogFocusReach(page);
@@ -138,13 +139,13 @@ try {
   await checkMenuOpeners(page);
   await checkMenuOpenerPlacement(page);
   await checkControls(page);
-  // The radio focus cases above ran in Chromium. WebKit uses Alt+Tab. components-a
-  // installs Chromium only, so a missing WebKit skips and that shard stays green.
+  // These checks also run in WebKit in CI. A local install may have only Chromium.
   let webkitBrowser: Browser | null = null;
   try {
     webkitBrowser = await webkit.launch({ headless: true });
-  } catch {
-    console.log("core: WebKit is not installed here, radio focus skipped");
+  } catch (error) {
+    if (process.env.CI === "true") throw error;
+    console.log("core: WebKit is not installed here, text field label geometry and radio focus skipped");
   }
   if (webkitBrowser) {
     try {
@@ -152,6 +153,7 @@ try {
       await webkitPage.setContent("<!doctype html><html><body></body></html>");
       await webkitPage.addStyleTag({ content: await readFile(join(fixture.installed, "dist/styles.css"), "utf8") });
       await webkitPage.addScriptTag({ content: await bundle.outputs[0].text() });
+      await checkTextFieldLabelGeometry(webkitPage);
       await checkRadioFocusWithoutRipple(webkitPage);
     } finally {
       await webkitBrowser.close();

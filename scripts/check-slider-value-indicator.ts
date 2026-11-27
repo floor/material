@@ -59,6 +59,8 @@ interface Frame {
   scale: number;
   translateY: number;
   clipPath: string;
+  visible: boolean;
+  visibility: string;
 }
 
 interface MotionSamples {
@@ -87,6 +89,8 @@ const sampleEntry = async (page: Page, onTrack: boolean) => {
         scale: transform.a,
         translateY: transform.f,
         clipPath: style.clipPath,
+        visible: indicator.classList.contains("mtrl-slider__value--visible"),
+        visibility: style.visibility,
       };
     };
     const motion: MotionSamples = { start: read(), frames: [], recording: true };
@@ -125,6 +129,7 @@ const sampleEntry = async (page: Page, onTrack: boolean) => {
   const hidden = exit.at(-1);
   assert(hidden && hidden.opacity <= 0.01, "indicator did not finish exiting");
 
+  const midExit = exit.filter(frame => !frame.visible && frame.visibility === "visible" && frame.scale > 0.2 && frame.scale < 0.8);
   const allFrames = [...entry.frames, ...exit];
   const worst = (difference: (frame: Frame) => number) => Math.max(...allFrames.map(frame => Math.abs(difference(frame))));
   return {
@@ -139,6 +144,7 @@ const sampleEntry = async (page: Page, onTrack: boolean) => {
     unclipped: allFrames.every(frame => frame.clipPath === "none"),
     entering: entry.frames.some(frame => frame.scale > 0.1 && frame.scale < 0.9 && frame.translateY > 0.5),
     exiting: exit.some(frame => frame.scale > 0.1 && frame.scale < 0.9 && frame.translateY > 0.5),
+    visibleExit: midExit.some(frame => frame.opacity > 0.5 && frame.translateY > 0.5),
   };
 };
 
@@ -217,6 +223,7 @@ try {
         check(close(start.scale, 0) && close(rest.scale, 1) && close(hidden.scale, 0), `${id}: scale did not grow and shrink from its base`);
         check(close(start.translateY, 5) && close(rest.translateY, 0) && close(hidden.translateY, 5), `${id}: translateY did not rise and return`);
         check(result.entering && result.exiting, `${id}: never saw scale and translation moving together`);
+        check(result.visibleExit, `${id}: the pill faded before the middle of its shrink`);
       }
       for (const mode of ["plain", "dialog", "scroll", "rtl"] as const) {
         await mount(page, mode === "rtl");
