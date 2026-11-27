@@ -283,12 +283,14 @@ Install the stable release with `npm install material`.
 
    The size tables are a pre-fill, not the gate. Release CI measures the same
    tree and fails the pull request with `The committed release size tables
-   differ from this run's measurement` when a committed value differs. When
-   that happens, take the measured `SIZES.md`, `README.md` and `npm-readme.md`
-   from the run's `package-sizes` artifact (`analysis/release-sizes/`) into a
-   follow-up commit on the release branch and push again; do not edit a number
-   by hand. Record the packed total and change since the previous release in
-   the release report.
+   differ from this run's measurement` when a committed value differs — a
+   local run is not byte-identical to CI in every row, so expect this. The
+   failure lists each file and each row to replace. Commit the measured
+   `SIZES.md`, `README.md` and `npm-readme.md` from the failing run's
+   `package-sizes` artifact (`analysis/release-sizes/`) once, exactly as they
+   are, and push again. Do not re-measure locally and do not edit a number by
+   hand. Record the packed total and change since the previous release in the
+   release report.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash
