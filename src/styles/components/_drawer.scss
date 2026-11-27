@@ -144,6 +144,20 @@ $default-width: 360px;
             align-self: flex-end;
         }
 
+        // The sheet's border sits on the edge facing the page, outside the
+        // content box the divider is laid out in; the divider takes the last
+        // 1px of its margin on that side, so both insets read 28dp from the
+        // container's own edges, as the spec draws them.
+        &.#{$component}--start .#{$component}__divider {
+            width: calc(100% - 55px);
+            margin-inline-end: 27px;
+        }
+
+        &.#{$component}--end .#{$component}__divider {
+            width: calc(100% - 55px);
+            margin-inline-start: 27px;
+        }
+
         &.#{$component}--end .#{$component}__sheet {
             align-self: flex-start;
         }
@@ -666,10 +680,14 @@ $default-width: 360px;
     // DIVIDER
     // ========================================================================
 
+    // 16dp between the divider and the rows around it, and 28dp on each side
+    // (md.comp.navigation-drawer divider padding; m3 navigation drawer specs,
+    // Measurements, read 2026-11-27). Compose's HorizontalDivider is a bare
+    // rule with neither, so the spec governs.
     &__divider {
         width: calc(100% - 56px);
         height: 1px;
-        margin: 8px 28px;
+        margin: 16px 28px;
         border: none;
         background-color: t.color("outline-variant");
     }
