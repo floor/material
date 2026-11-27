@@ -144,7 +144,7 @@
   scenario(edges, {
     title: "A shortcut beside the check or the arrow",
     lookFor: "a selected item and a submenu item, each with a shortcut at the end.",
-    expected: "the shortcut ends 12dp before the check or the arrow, and the label keeps the spec's width beside a supporting line at 240px: 150dp with the check, 144dp with the arrow.",
+    expected: "the shortcut ends 12dp before the check or the arrow (24dp in RTL); the label takes the rest of the row.",
     mount: (body) => {
       window.__shortcut = menuOf(body, {
         variant: "baseline",
