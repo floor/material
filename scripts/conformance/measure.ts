@@ -379,42 +379,10 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       } catch {
         // A part that cannot take the state is read at rest.
       }
-      // Settle running animations/transitions, scrollers, and the measured parts
-      // across consecutive frames, then wait one animation frame before the final
-      // read. A child with `color: inherit` and its own `transition` (such as
-      // `.mtrl-select .mtrl-text-field__trailing-icon svg`) starts and retargets
-      // its transition on later frames as its parent transitions, after a single
-      // initial `getAnimations()` snapshot has already looked. `until` therefore
-      // waits until a post-rAF `getAnimations()` check across the document and
-      // open shadow roots sees zero running finite animations. Indefinite loading
-      // indicators redraw their canvas on every frame and are excluded from the
-      // frame-to-frame bitmap stability poll.
-      const animationsFinished = () =>
-        page.evaluate(
-          () =>
-            new Promise<boolean>((done) =>
-              requestAnimationFrame(() => {
-                const scopes: Array<Document | ShadowRoot> = [document];
-                const collect = (scope: Document | ShadowRoot): void => {
-                  for (const element of scope.querySelectorAll("*")) {
-                    if (!element.shadowRoot) continue;
-                    scopes.push(element.shadowRoot);
-                    collect(element.shadowRoot);
-                  }
-                };
-                collect(document);
-                done(
-                  scopes
-                    .flatMap((scope) => scope.getAnimations())
-                    .every(
-                      (animation) =>
-                        animation.playState !== "running" ||
-                        !Number.isFinite(animation.effect?.getComputedTiming().iterations ?? 0),
-                    ),
-                );
-              }),
-            ),
-        );
+      // Settle running animations, including a colour transition that starts on
+      // a later frame, then the scrollers and the measured parts. Indefinite
+      // loading indicators redraw their canvas on every frame and are excluded
+      // from the frame-to-frame bitmap stability poll.
       const readParts = (excludeIndefinite = false) => page.evaluate(
         ({ parts, properties, excludeIndefinite }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
@@ -503,11 +471,10 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       );
       const isIndefiniteLoading = options.component === "loading-indicator" && testCase.id.includes("indeterminate");
       if (!isIndefiniteLoading) {
-        await settle(page, { until: animationsFinished, read: () => readParts(true) });
+        await settle(page, { read: () => readParts(true) });
       } else {
-        await settle(page, { until: animationsFinished });
+        await settle(page);
       }
-      await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => done())));
       const parts = await readParts(false);
       await releaseState(page, state);
       rows.push({
