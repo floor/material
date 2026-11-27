@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>list</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createList } from "../../../../dist/components/list/index.js";
+await initPage({ name: "list", toolbar: { density: true } });
+const main = document.getElementById("tp-main");
+
+const ICON = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2 4 20h16z"/></svg>';
+const icon = { type: "icon", content: ICON };
+
+const token = (name) => {
+  const probe = document.createElement("span");
+  probe.style.color = `var(--mtrl-sys-color-${name})`;
+  document.body.append(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return color;
+};
+const roleOf = (color) => {
+  if (color === token("on-surface")) return "OnSurface";
+  if (color === token("on-secondary-container")) return "OnSecondaryContainer";
+  if (color === token("on-surface-variant")) return "OnSurfaceVariant";
+  return color;
+};
+const item = (root, id) => root.querySelector(`[data-id="${id}"]`);
+const gapOf = (row) => {
+  const leading = row.querySelector(".mtrl-list__leading");
+  const text = row.querySelector(".mtrl-list__text");
+  const a = leading.getBoundingClientRect();
+  const b = text.getBoundingClientRect();
+  const gap = a.right <= b.left + 0.5 ? b.left - a.right : a.left - b.right;
+  return Math.round(gap);
+};
+const widthOf = (el) => Math.round(el.getBoundingClientRect().width);
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Standard and segmented icons",
+  lookFor: "a 24 px icon on the standard row and 20 px icons on the segmented row; the segmented trailing icon in on-surface",
+  expected: "segmented icons are the expressive 20 dp size, and the unselected trailing icon is on-surface",
+  measure: () => {
+    const standard = item(document.getElementById("list-standard"), "standard");
+    const segmented = item(document.getElementById("list-segmented"), "segmented");
+    if (!standard || !segmented) return "no list";
+    const leading = widthOf(segmented.querySelector(".mtrl-list__leading > *"));
+    const trailing = widthOf(segmented.querySelector(".mtrl-list__trailing"));
+    const standardIcon = widthOf(standard.querySelector(".mtrl-list__leading > *"));
+    const colour = roleOf(getComputedStyle(segmented.querySelector(".mtrl-list__trailing")).color);
+    return `standard ${standardIcon} px · segmented leading ${leading} px · trailing ${trailing} px ${colour}`;
+  },
+  mount: (body) => {
+    const standard = createList({
+      ariaLabel: "Standard",
+      items: [{ id: "standard", headline: "Standard", leading: icon, trailing: icon }],
+    });
+    const segmented = createList({
+      ariaLabel: "Segmented",
+      variant: "segmented",
+      items: [{ id: "segmented", headline: "Segmented", leading: icon, trailing: icon }],
+    });
+    standard.element.id = "list-standard";
+    segmented.element.id = "list-segmented";
+    body.append(standard.element, segmented.element);
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Selected icon colour",
+  lookFor: "the selected icons at rest, then while the pointer is on the row, the row is focused, or the row is pressed",
+  expected: "rest is on-secondary-container; hover, focus and press are on-surface",
+  measure: () => {
+    const row = item(document.getElementById("list-states"), "selected");
+    if (!row) return "no list";
+    const action = row.querySelector(".mtrl-list__action");
+    const state = action?.matches(":focus-visible") || row.matches(":focus-visible")
+      ? "focus"
+      : row.matches(":active")
+        ? "pressed"
+        : row.matches(":hover")
+          ? "hover"
+          : "rest";
+    const leading = roleOf(getComputedStyle(row.querySelector(".mtrl-list__leading")).color);
+    const trailing = roleOf(getComputedStyle(row.querySelector(".mtrl-list__trailing")).color);
+    return `${state} · leading ${leading} · trailing ${trailing}`;
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "States",
+      items: [{ id: "selected", headline: "Selected", selected: true, leading: icon, trailing: icon }],
+    });
+    list.element.id = "list-states";
+    body.append(list.element);
+  },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Space between the icon and the text",
+  lookFor: "the gap from the leading icon to the label",
+  expected: "12 px, the spec between-space",
+  measure: () => {
+    const row = item(document.getElementById("list-gap"), "one");
+    return row ? `${gapOf(row)} px` : "no list";
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "Gap",
+      items: [{ id: "one", headline: "One line", leading: icon, trailing: icon }],
+    });
+    list.element.id = "list-gap";
+    body.append(list.element);
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "Lines, a checkbox, a switch, and density",
+  lookFor: "two-line and three-line rows, a checkbox, a switch, and the density control",
+  expected: "the gap stays 12 px. Row heights stay 72 and 88, and a control keeps its own size. Density changes the row height, not the gap",
+  measure: () => {
+    const root = document.getElementById("list-edge");
+    if (!root) return "no list";
+    const height = (id) => Math.round(item(root, id).getBoundingClientRect().height);
+    const box = item(root, "box").querySelector("input");
+    const sw = item(root, "sw").querySelector("[role=switch]");
+    const text = item(root, "sw").querySelector(".mtrl-list__text").getBoundingClientRect();
+    const trail = item(root, "sw").querySelector(".mtrl-list__trailing").getBoundingClientRect();
+    const switchGap = Math.round(text.right <= trail.left + 0.5 ? trail.left - text.right : text.left - trail.right);
+    const density = getComputedStyle(document.documentElement).getPropertyValue("--mtrl-density").trim() || "0";
+    return [
+      `two ${gapOf(item(root, "two"))} px / ${height("two")} px`,
+      `three ${gapOf(item(root, "three"))} px / ${height("three")} px`,
+      `checkbox gap ${gapOf(item(root, "box"))} px, box ${Math.round(box.getBoundingClientRect().width)} px`,
+      `switch gap ${switchGap} px, switch ${Math.round(sw.getBoundingClientRect().width)} px`,
+      `density ${density}`,
+    ].join(" · ");
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "Edge",
+      items: [
+        { id: "two", headline: "Two lines", supportingText: "Supporting", leading: icon },
+        { id: "three", headline: "Three lines", overline: "Overline", supportingText: "Supporting", leading: icon },
+        { id: "box", headline: "Checkbox", leading: { type: "control", content: '<input type="checkbox" aria-label="Pick">' } },
+        { id: "sw", headline: "Switch", trailing: { type: "control", content: '<span role="switch" aria-checked="false" aria-label="Alert" style="display:inline-block;width:52px;height:32px"></span>' } },
+      ],
+    });
+    list.element.id = "list-edge";
+    body.append(list.element);
+  },
+});
+</script>
+</body>
+</html>
