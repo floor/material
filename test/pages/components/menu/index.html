@@ -67,7 +67,7 @@
       return json({
         baselineItem: height(window.__baseline),
         baselineEndPadding: getComputedStyle(baseline).paddingInlineEnd,
-        verticalItem: verticalItem
+        verticalItem: window.__vertical.element.classList.contains("mtrl-menu--visible") && verticalItem
           ? { height: height(window.__vertical), padding: getComputedStyle(verticalItem).paddingInlineEnd, reserved: getComputedStyle(verticalItem.querySelector(".mtrl-menu__item-content")).paddingInlineEnd }
           : "menu closed - press its Show",
       });
@@ -196,7 +196,7 @@
         direction: rtl ? "rtl" : "ltr",
         padding: getComputedStyle(item).paddingInlineEnd,
         boxToEnd: Math.round(boxToEnd),
-        submenuReserve: items[1] ? getComputedStyle(items[1].querySelector(".mtrl-menu__item-text")).paddingInlineEnd : null,
+        submenuReserve: items[1] ? getComputedStyle(items[1].querySelector(".mtrl-menu__item-content")).paddingInlineEnd : null,
       });
     },
   });
