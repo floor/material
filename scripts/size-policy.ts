@@ -20,7 +20,7 @@ export function sizeFailures(base: readonly SizeRow[], head: readonly SizeRow[],
 export function renderSizeDeltas(base: readonly SizeRow[], head: readonly SizeRow[]): string {
   const before = new Map(base.map(row => [row.name, row.bytes]));
   const after = new Map(head.map(row => [row.name, row.bytes]));
-  const rows = ["| Measurement | Base | Head | Delta |", "| --- | ---: | ---: | ---: | ---: |"];
+  const rows = ["| Measurement | Base | Head | Delta |", "| --- | ---: | ---: | ---: |"];
   const format = (bytes: number) => `${bytes.toLocaleString("en-US")} B`;
   for (const name of new Set([...after.keys(), ...before.keys()])) {
     const from = before.get(name) ?? 0;

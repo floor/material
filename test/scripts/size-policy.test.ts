@@ -19,6 +19,12 @@ describe("growth since the previous release", () => {
     expect(renderSizeDeltas(baseline, head)).toContain("| Package unpacked | 5,264,682 B | 5,265,516 B | +834 B |");
   });
 
+  test("uses the same number of Markdown columns in headings, delimiter and data", () => {
+    const report = renderSizeDeltas(baseline, candidate(213, 834));
+    const columns = report.split("\n").map(row => row.split("|").slice(1, -1).length);
+    expect(columns).toEqual([4, 4, 4, 4, 4]);
+  });
+
   test("passes both thresholds exactly; unpacked growth is informational", () => {
     expect(sizeFailures(baseline, candidate(2_048, 30_000, 1_024), "")).toEqual([]);
   });
