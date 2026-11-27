@@ -103,17 +103,21 @@ const vanishingMount = (mtrl: Record<string, unknown>, host: HTMLElement) => {
   opener.focus();
   const marker = document.createElement("span");
   marker.setAttribute("data-vanish", "now");
-  marker.style.transition = "opacity 300ms";
   host.append(marker);
-  // The marker exists for the wait. A finite animation keeps the settle busy
-  // while the marker is removed, so it is gone by the final read.
-  requestAnimationFrame(() => { marker.style.opacity = "0.5"; });
-  setTimeout(() => marker.remove(), 150);
+  // The marker is there when the wait lands on it, and its own finite
+  // animation removes it on completion: no timer and no inherited delay, so
+  // the settle is what carries the animation to its end and the read after
+  // it must report the state as vanished.
+  marker.animate([{ opacity: "1" }, { opacity: "0.5" }], { duration: 600, fill: "forwards" })
+    .finished.then(() => marker.remove()).catch(() => undefined);
 };
 const vanishingCase: Case = {
   ...focusCase,
   id: "baseline/light/unselected/focus-vanishing",
   mount: vanishingMount as unknown as Case["mount"],
+  // No inherited pre-key delay: the marker must be in place when the wait
+  // reads, and go away only when its animation finishes during the settle.
+  before: 0,
   parts: [
     { name: "item", selector: item, document: true },
     { name: "verifiedState", selector: "[data-vanish='now']", document: true },
@@ -152,15 +156,18 @@ for (const engine of ["webkit", "chromium"] as const) {
       `${engine}: a missing verified state must throw, naming the case, selector and theme`,
     );
     // A state that lands and then vanishes during the settle reads as no state.
+    // The assertion names the specific read, not any error: a wait that never
+    // found the marker is a different defect and must not pass as this one.
     await assert.rejects(
       () => harness.measure([vanishingCase]),
       (error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
-        return message.includes(vanishingCase.id)
+        return message.includes("the verified state vanished before the read")
+          && message.includes(vanishingCase.id)
           && message.includes("data-vanish='now'")
           && /\((?:light|dark|seed)\)/.test(message);
       },
-      `${engine}: a verified state that vanishes during the settle must throw`,
+      `${engine}: a verified state that vanishes during the settle must throw "vanished before the read" naming the case, selector and theme`,
     );
     console.log(`ok ${engine}: ${RUNS} seed-theme reads are the solid Secondary ring; a missing or vanished state throws naming case, selector and theme`);
   } finally {
