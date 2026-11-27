@@ -51,8 +51,8 @@ export async function checkTextField(page: Page): Promise<void> {
   });
   assert.equal(measured.stillEmpty, true, "the case needs a value the script did not see");
   // Floated: the filled label rises into the container's top, the outlined one onto the outline.
-  assert.ok(measured.filledRose > 8, `filled label should float, rose ${measured.filledRose}px`);
-  assert.ok(measured.filledTop >= 0 && measured.filledTop < 16, `filled floated label top ${measured.filledTop}px`);
+  assert.ok(Math.abs(measured.filledRose - 8) <= 0.5, `filled label should rise 8px, rose ${measured.filledRose}px`);
+  assert.ok(Math.abs(measured.filledTop - 8) <= 0.5, `filled floated label top ${measured.filledTop}px`);
   assert.ok(measured.outlinedRose > 16, `outlined label should float, rose ${measured.outlinedRose}px`);
   assert.ok(measured.outlinedTop < 0, `outlined floated label sits on the outline, top ${measured.outlinedTop}px`);
   assert.equal(measured.outlinedOpacity, "1");
