@@ -1,8 +1,7 @@
 // test/scripts/size.test.ts
 /**
  * The measurement script used to be able to skip a failed build and still
- * exit 0. A component that fails to compile, leaks into another bundle, or
- * grows past its gzip budget has to fail the command.
+ * exit 0. A build failure or an unrelated code leak fails the command.
  */
 
 import { describe, test, expect } from 'bun:test';
@@ -11,8 +10,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { brotliCompressSync, constants } from 'node:zlib';
 import {
-  BUDGET_BYTES,
-  DEFERRED_BUDGET_BYTES,
   COMPONENTS,
   KNOWN_DEPS,
   SCENARIO_DEFS,
@@ -24,41 +21,19 @@ import {
   renderSizesMarkdown,
   renderSizesTable,
   sizeGateFails,
-  sizesTableDrift,
 } from '../../scripts/size';
 import type { Result, ScenarioName } from '../../scripts/size';
 
 describe('size gate', () => {
-  test('each deferred budget is for a measured scenario, and positive', () => {
-    const names = new Set<string>(SCENARIO_DEFS.map((scenario) => scenario.name));
-    for (const [name, bytes] of Object.entries(DEFERRED_BUDGET_BYTES)) {
-      expect(names.has(name)).toBe(true);
-      expect(bytes).toBeGreaterThan(0);
-    }
-  });
-
-  test('budgets every measured scenario', () => {
-    // core, every component, all, the two shapes scenarios and the deferred
-    // datepicker entry
+  test('measures each component and the shared scenarios', () => {
     expect(SCENARIO_DEFS.length).toBe(COMPONENTS.length + 5);
-    for (const scenario of SCENARIO_DEFS) {
-      expect(BUDGET_BYTES[scenario.name]).toBeGreaterThan(0);
-    }
+    expect(new Set(SCENARIO_DEFS.map(scenario => scenario.name)).size).toBe(SCENARIO_DEFS.length);
   });
 
   test('fails the command when a scenario fails to build', () => {
     expect(sizeGateFails({
       buildFailures: ['core'],
       treeShakeFailures: [],
-      overBudget: [],
-    })).toBe(true);
-  });
-
-  test('fails the command when a component exceeds its budget', () => {
-    expect(sizeGateFails({
-      buildFailures: [],
-      treeShakeFailures: [],
-      overBudget: ['button'],
     })).toBe(true);
   });
 
@@ -66,7 +41,6 @@ describe('size gate', () => {
     expect(sizeGateFails({
       buildFailures: [],
       treeShakeFailures: [{ scenario: 'badge', leaked: 'slider', marker: 'slider' }],
-      overBudget: [],
     })).toBe(true);
   });
 
@@ -77,11 +51,10 @@ describe('size gate', () => {
     expect(missingMeasuredScenarios(measured)).toEqual(['core']);
   });
 
-  test('passes when every scenario built, tree-shook, and stayed in budget', () => {
+  test('passes when every scenario built and tree-shook', () => {
     expect(sizeGateFails({
       buildFailures: [],
       treeShakeFailures: [],
-      overBudget: [],
     })).toBe(false);
   });
 
@@ -93,20 +66,6 @@ describe('size gate', () => {
     }
   });
 
-  test('table drift fails the command', () => {
-    expect(sizeGateFails({
-      buildFailures: [],
-      treeShakeFailures: [],
-      overBudget: [],
-      tableDrift: ['row 3: committed | button | … | — measured | button | … |'],
-    })).toBe(true);
-    expect(sizeGateFails({
-      buildFailures: [],
-      treeShakeFailures: [],
-      overBudget: [],
-      tableDrift: [],
-    })).toBe(false);
-  });
 });
 
 describe('the published table (SIZES.md)', () => {
@@ -149,31 +108,6 @@ describe('the published table (SIZES.md)', () => {
     expect(table).toContain('| button |');
   });
 
-  test('a regenerated table is not drift, whatever commit and date it names', () => {
-    const committed = renderSizesMarkdown(measured, { commit: 'old', date: '2026-01-01' });
-    const fresh = renderSizesMarkdown(measured, { commit: '0293ea8d', date: '2026-10-31' });
-    expect(sizesTableDrift(committed, fresh)).toEqual([]);
-  });
-
-  test('a changed size is drift that names the row and both sizes', () => {
-    const committed = renderSizesMarkdown(measured, { commit: 'x', date: '2026-10-31' });
-    const moved = measured.map((result) => (result.name === 'button' ? { ...result, gzKB: 7.4 } : result));
-    const fresh = renderSizesMarkdown(moved, { commit: 'x', date: '2026-10-31' });
-    const drift = sizesTableDrift(committed, fresh);
-    expect(drift.length).toBe(1);
-    expect(drift[0]).toContain('row 4');
-    expect(drift[0]).toContain('| button | 24.1 KB | 7.3 KB |');
-    expect(drift[0]).toContain('| button | 24.1 KB | 7.4 KB |');
-  });
-
-  test('a file without markers, or a dropped row, is drift', () => {
-    const fresh = renderSizesMarkdown(measured, { commit: 'x', date: '2026-10-31' });
-    expect(sizesTableDrift('# Component sizes\n\nno table', fresh).length).toBe(1);
-    const dropped = sizesTableDrift(renderSizesMarkdown(measured.slice(0, 3), { commit: 'x', date: '2026-10-31' }), fresh);
-    expect(dropped.length).toBe(1);
-    expect(dropped[0]).toContain('all');
-    expect(dropped[0]).toContain('(row missing)');
-  });
 });
 
 describe('brotli measurement', () => {

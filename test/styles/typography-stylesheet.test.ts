@@ -111,7 +111,16 @@ describe("material/styles/typography", () => {
     const snapshot = JSON.parse(readFileSync("test/styles/full-stylesheet.snapshot.json", "utf8")) as {
       selectors: string[]; properties: string[];
     };
-    expect(census(css)).toEqual(snapshot);
+    const measured = census(css);
+    if (!Bun.deepEquals(measured, snapshot)) {
+      for (const key of ["selectors", "properties"] as const) {
+        const previous = new Set(snapshot[key]);
+        const actual = new Set(measured[key]);
+        console.error(`${key}: add ${JSON.stringify(measured[key].filter(value => !previous.has(value)))}`);
+        console.error(`${key}: remove ${JSON.stringify(snapshot[key].filter(value => !actual.has(value)))}`);
+      }
+    }
+    expect(measured).toEqual(snapshot);
   });
 
   test("component and element stylesheets do not read a typescale token or type class", () => {
