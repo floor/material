@@ -2,6 +2,7 @@
 import { launchChromium } from "./browser-profile";
 import { settle } from "./browser-settle";
 import assert from 'node:assert/strict';
+import { webkit, type Page } from 'playwright';
 import { checkRailHeaderFab } from './check-rail-header-fab';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -74,6 +75,51 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   document.querySelector('#outside').onclick=()=>window.rail.expand();
   </script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
     } });
+async function checkModalHitWidth(page: Page, url: string, engine: string): Promise<string[]> {
+    const failures: string[] = [];
+    await page.goto(url);
+    await page.waitForFunction(() => !!window.mountRail);
+    for (const viewport of [900, 300]) {
+        await page.setViewportSize({ width: viewport, height: 720 });
+        for (const dir of ['ltr', 'rtl']) {
+            await page.evaluate(direction => {
+                document.documentElement.dir = direction;
+                window.mountRail({ layout: 'modal', expanded: true });
+            }, dir);
+            const dialog = page.locator('dialog[open]');
+            await dialog.waitFor();
+            await settle(page, { target: 'dialog[open]' });
+            const rail = await dialog.boundingBox();
+            const inbox = await dialog.locator('[data-id="inbox"]').boundingBox();
+            const sent = await dialog.locator('[data-id="sent"]').boundingBox();
+            const indicator = await dialog.locator('[data-id="inbox"] .mtrl-navigation-rail__indicator').boundingBox();
+            assert(rail && inbox && sent && indicator);
+
+            const expectedWidth = Math.min(280, viewport - 56);
+            const padding = await dialog.evaluate(el => {
+                const style = getComputedStyle(el);
+                return [style.paddingLeft, style.paddingRight].join('/');
+            });
+            const geometry = `${rail.width}/${inbox.width}/${sent.width}, padding ${padding}`;
+            const expected = `${expectedWidth}/${expectedWidth}/${expectedWidth}, padding 0px/0px`;
+            const label = `${engine} ${viewport}px ${dir}`;
+            if (geometry !== expected || inbox.x !== rail.x || sent.x !== rail.x)
+                failures.push(`${label}: expected full-width items (${expected}), measured ${geometry}`);
+            if (indicator.x - rail.x !== 34 || indicator.width !== expectedWidth - 68 || indicator.height !== 56)
+                failures.push(`${label}: indicator should keep its 34px inset and 56px height`);
+
+            await page.mouse.click(rail.x + 8, sent.y + sent.height / 2);
+            const leftSelects = await page.evaluate(() => window.rail.getActive() === 'sent');
+            await page.mouse.click(rail.x + rail.width - 8, inbox.y + inbox.height / 2);
+            const rightSelects = await page.evaluate(() => window.rail.getActive() === 'inbox');
+            if (!leftSelects || !rightSelects)
+                failures.push(`${label}: clicks at both rail edges should select their destination`);
+        }
+    }
+    if (failures.length === 0) console.log(`${engine}: modal rail destinations span 280px and 244px in LTR and RTL with unchanged indicators`);
+    return failures;
+}
+
 const browser = await launchChromium();
 try {
     // One page for both stylesheets: two pages rasterise text differently on
@@ -82,6 +128,18 @@ try {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     const urls = [`http://127.0.0.1:${server.port}/`, `http://127.0.0.1:${server.port}/?selective`];
+    const modalFailures: string[] = [];
+    const webkitBrowser = await webkit.launch({ headless: true });
+    try {
+        const webkitPage = await webkitBrowser.newPage({ reducedMotion: 'reduce' });
+        for (const url of urls) {
+            modalFailures.push(...await checkModalHitWidth(page, url, 'chromium'));
+            modalFailures.push(...await checkModalHitWidth(webkitPage, url, 'webkit'));
+        }
+    } finally {
+        await webkitBrowser.close();
+    }
+    assert.deepEqual(modalFailures, []);
     let count = 0;
     for (const expanded of [false, true])
         for (const direction of ['ltr', 'rtl'])
