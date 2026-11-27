@@ -173,18 +173,19 @@ $default-width: 360px;
             transition: m.spring(width, default-spatial);
         }
 
-        // Border on the end edge (standard variant visual separator)
+        // Border on the edge facing the page (standard variant visual
+        // separator). It is logical, so a direction toggled at runtime on a
+        // live element host moves it with the divider's margin instead of
+        // leaving it on the side the sheet was mounted under.
         &.#{$component}--start {
             .#{$component}__sheet {
-                border-right: 1px solid t.color("outline-variant");
+                border-inline-end: 1px solid t.color("outline-variant");
                 border-top-right-radius: 0;
                 border-bottom-right-radius: 0;
             }
 
             @include m.rtl {
                 .#{$component}__sheet {
-                    border-right: none;
-                    border-left: 1px solid t.color("outline-variant");
                     border-top-left-radius: 0;
                     border-bottom-left-radius: 0;
                 }
@@ -193,15 +194,13 @@ $default-width: 360px;
 
         &.#{$component}--end {
             .#{$component}__sheet {
-                border-left: 1px solid t.color("outline-variant");
+                border-inline-start: 1px solid t.color("outline-variant");
                 border-top-left-radius: 0;
                 border-bottom-left-radius: 0;
             }
 
             @include m.rtl {
                 .#{$component}__sheet {
-                    border-left: none;
-                    border-right: 1px solid t.color("outline-variant");
                     border-top-right-radius: 0;
                     border-bottom-right-radius: 0;
                 }
