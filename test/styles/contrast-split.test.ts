@@ -369,14 +369,12 @@ describe("explicit contrast levels are opt-in", () => {
     // OnSurfaceVariant itself, so supplied content keeps its own colour, and
     // it draws no second outline (styles/components/_search.scss). A search
     // bar with no shown trailing action ends its text 16dp from the edge, and
-    // an empty value's clear button takes no room (+92 B; same file). A
-    // vibrant menu's leading icon turns tertiary on hover, focus and press,
-    // and a baseline item keeps 12dp end padding with the content row
-    // reserving the check's or arrow's room once (styles/components/_menu.scss).
+    // an empty value's clear button takes no room (+92 B; same file).
+    // The slider pill contracts at full opacity before hiding (-153 B).
     const measured = { sha256: createHash("sha256").update(css).digest("hex"), length: css.length };
     expect(measured, `Replacement stylesheet pin ${JSON.stringify(measured)}`).toEqual({
-      sha256: "aa9119ca5d60a40722dbc920475c3920c22e7f10489b8aa65647ce9e8857fd61",
-      length: 556826,
+      sha256: "958509d910a0a2065a87cc63059af5f7aba56969fe69d81b57bb7b7bdb063991",
+      length: 555962,
     });
   });
 

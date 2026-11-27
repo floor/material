@@ -17,7 +17,10 @@
 // The pill grows and moves away from the handle as in the Material slider demo.
 // Its position along the track is applied separately with the translate property.
 $bubble-duration: v.motion('duration-medium1');
-$bubble-transition: transform $bubble-duration v.motion('easing-emphasized'), m.spring(opacity, fast-effects);
+$bubble-enter: transform $bubble-duration v.motion('easing-emphasized'), m.spring(opacity, fast-effects), visibility 0s;
+// Keep the pill visible through the contraction, then hide it at the handle.
+$bubble-exit: transform $bubble-duration v.motion('easing-emphasized-accelerate'),
+  opacity 0s linear $bubble-duration, visibility 0s linear $bubble-duration;
 
 $component: '#{base.$prefix}-slider';
 
@@ -266,7 +269,7 @@ $component: '#{base.$prefix}-slider';
     z-index: 5;
     visibility: hidden;
     opacity: 0;
-    transition: $bubble-transition, visibility 0s linear $bubble-duration;
+    transition: $bubble-exit;
     pointer-events: none;
     
     // Show value when interacting
@@ -274,7 +277,7 @@ $component: '#{base.$prefix}-slider';
       visibility: visible;
       opacity: 1;
       transform: translate(0, 0) scale(1);
-      transition: $bubble-transition, visibility 0s;
+      transition: $bubble-enter;
     }
   }
 
@@ -288,7 +291,7 @@ $component: '#{base.$prefix}-slider';
     // each piece's inner edge animates with the value change and never restarts
     // the piece's own position or length.
     .#{$component}__segment { transition: $settle-position, $settle-length, m.spring(box-shadow, default-spatial); }
-    .#{$component}__value--visible { transition: $settle-position, $bubble-transition, visibility 0s; }
+    .#{$component}__value--visible { transition: $settle-position, $bubble-enter; }
   }
 
   // Vertical: the same parts turned a quarter. withTracks and the
