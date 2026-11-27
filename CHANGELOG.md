@@ -17,6 +17,20 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.9] - 2026-11-27
+
+Slider value indicator, text field label and notch geometry, and coverage of the Compose tokens.
+
+### Fixed
+
+- **A radio with the press ripple turned off keeps its keyboard focus ring and its focus layer.**
+- **The select's trailing arrow inherits its colour from the icon span, so WebKit no longer eases that colour a second time, and the open rotation still animates.**
+- **Slider value indicator.** The whole pill grows and rises from above the handle, then shrinks and returns along the same path when dismissed.
+- **Slider value indicator.** The pill stays visible as it shrinks and drops back toward the handle after release.
+- **Slider value indicator.** The value appears directly above its handle without sliding into place, and stays visible over an adjacent slider's handle when they overlap.
+- **Filled text field labels float to an 8 dp top inset. Outlined text field notches leave 4 dp on each side, including when the label has a fractional width.**
+- **Extended FAB and tooltip defaults.** Options set to `undefined` now use a defined component-wide default or fall back to the built-in value. This keeps the extended FAB's default variant and width classes and gives tooltips the same variant as when the option is omitted.
+
 ## [3.16.8] - 2026-11-27
 
 Search bars leave 16 px at the end when they have no trailing action, and cards use the correct focus elevation and state-layer opacities.
@@ -7496,7 +7510,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.8...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.9...HEAD
+[3.16.9]: https://github.com/floor/material/compare/v3.16.8...v3.16.9
 [3.16.8]: https://github.com/floor/material/compare/v3.16.7...v3.16.8
 [3.16.7]: https://github.com/floor/material/compare/v3.16.6...v3.16.7
 [3.16.6]: https://github.com/floor/material/compare/v3.16.5...v3.16.6
