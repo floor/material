@@ -71,12 +71,15 @@ assert<Equals<TextFieldProps["maxlength"], number | undefined>>();
 // The virtual keyboard hints: the native attribute spellings, typed as strings.
 assert<Equals<TextFieldProps["inputmode"], string | undefined>>();
 assert<Equals<TextFieldProps["enterkeyhint"], string | undefined>>();
-assert<Equals<keyof ElementEvents<TextFieldSpec>, "input" | "change" | "trailing">>();
+assert<Equals<keyof ElementEvents<TextFieldSpec>, "input" | "change" | "trailing" | "add" | "remove">>();
 assert<Equals<ElementEvents<TextFieldSpec>["input"], CustomEvent<{ value: string }>>>();
 declare const field: TextFieldElement;
 field.select();
 field.setError(true, "Required");
 field.value = "text";
+// The committed chips, when `chips` is set.
+assert<Equals<TextFieldProps["values"], string[] | undefined>>();
+field.values = ["alice@example.com"];
 
 // The toolbar's collapse state joins its show/hide: all four bridge to the
 // host and none carries a payload.
