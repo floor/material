@@ -44,6 +44,7 @@ import * as sass from "sass";
 import { chromium, webkit, type Browser, type BrowserType, type Page } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "../build-styles";
+import { settle } from "../browser-settle";
 import { THEME_ROLES } from "../../src/core/theme/tokens";
 import { matrixSeed, parseColour, type ThemePalettes } from "./matrix-colours";
 import { pascal, shapeOverrides, typographyRoles, type TypographyDetails } from "./matrix-metrics";
@@ -373,17 +374,12 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       } catch {
         // A part that cannot take the state is read at rest.
       }
-      // A state that runs a spring settles before it is read: the conformance
-      // value is the resting one, not a frame of the transition.
-      await page.waitForTimeout(500);
-      if (testCase.settleTransitions) {
-        await page.locator(testCase.parts[0]!.selector).first().evaluate(async element => {
-          const transitions = element.getAnimations({ subtree: true }).filter(animation => animation instanceof CSSTransition);
-          await Promise.allSettled(transitions.map(transition => transition.finished));
-        });
-      }
-      const parts = await page.evaluate(
-        ({ parts, properties }) => {
+      // Settle running animations/transitions, scrollers, and the measured parts
+      // across consecutive frames, then wait one animation frame before the final
+      // read. Indefinite loading indicators redraw their canvas on every frame and
+      // are excluded from the frame-to-frame bitmap stability poll.
+      const readParts = (excludeIndefinite = false) => page.evaluate(
+        ({ parts, properties, excludeIndefinite }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
           // `a >>> b` enters a's shadow root for b, then b's for the next.
           const resolve = (selector: string, documentScope = false): HTMLElement | null => {
@@ -460,13 +456,22 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
             for (const property of properties) {
               style[property] = computed.getPropertyValue(property) || computed[property as keyof CSSStyleDeclaration]?.toString() || "";
             }
-            const bitmap = part.bitmap && element instanceof HTMLCanvasElement ? readBitmap(element, rect) : undefined;
+            const isIndefinite = excludeIndefinite && !!element.closest(".mtrl-loading-indicator:not(.mtrl-loading-indicator--determinate)");
+            const bitmap = !isIndefinite && part.bitmap && element instanceof HTMLCanvasElement ? readBitmap(element, rect) : undefined;
             result[part.name] = { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, style, bitmap };
           }
           return result;
         },
-        { parts: testCase.parts, properties: testCase.properties ?? [...CONFORMANCE_PROPERTIES] as string[] },
+        { parts: testCase.parts, properties: testCase.properties ?? [...CONFORMANCE_PROPERTIES] as string[], excludeIndefinite },
       );
+      const isIndefiniteLoading = options.component === "loading-indicator" && testCase.id.includes("indeterminate");
+      if (!isIndefiniteLoading) {
+        await settle(page, { read: () => readParts(true) });
+      } else {
+        await settle(page);
+      }
+      await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => done())));
+      const parts = await readParts(false);
       await releaseState(page, state);
       rows.push({
         id: testCase.id,
