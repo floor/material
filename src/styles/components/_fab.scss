@@ -43,8 +43,7 @@ $component: '#{base.$prefix}-fab';
   }
   
   &:focus-visible {
-    outline: 2px solid t.color('outline');
-    outline-offset: 2px;
+    @include m.focus-ring($wrap: false);
   }
   
   // Default FAB size (56dp)

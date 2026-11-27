@@ -269,7 +269,7 @@ export async function checkSelectHiddenOptions(page: Page): Promise<void> {
       return !!state.select.element.querySelector(".mtrl-select__menu")?.classList.contains("mtrl-menu--visible");
     });
     // The active option is placed after the opening frame.
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(250); // stays: the active option is placed in the menu's opening task, a timer
     // A consumer hides an option with display: none.
     const hiddenDisplay = await page.evaluate((hidden) => {
       const state = window as unknown as { select: Combobox };
@@ -288,21 +288,21 @@ export async function checkSelectHiddenOptions(page: Page): Promise<void> {
     if (name === "selected") {
       // Close, and open again on the selected option, which is now hidden.
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(400); // stays: the active option is placed in the menu's opening task, a timer
       await page.keyboard.press("ArrowDown");
-      await page.waitForTimeout(250);
+      await page.waitForTimeout(250); // stays: the active option is placed in the menu's opening task, a timer
     }
     const opened = await read();
     assert.equal(opened, name === "selected" ? null : value,
       `select, ${name} option hidden: opening marks ${name === "selected" ? "no option" : `the shown selected option ${value}`} (${opened})`);
     for (const [key, expected] of keys) {
       await page.keyboard.press(key);
-      await page.waitForTimeout(120);
+      await page.waitForTimeout(120); // stays: the active option is placed in the menu's opening task, a timer
       const active = await read();
       assert.equal(active, expected, `select, ${name} option hidden: after ${key === "f" || key === "d" ? `typing ${key}` : key} the active option is ${expected} (${active})`);
     }
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(180);
+    await page.waitForTimeout(180); // stays: the active option is placed in the menu's opening task, a timer
     const after = await page.evaluate(() => {
       const state = window as unknown as { select: Combobox; changes: string[] };
       return { changes: state.changes.splice(0), value: state.select.getValue() };

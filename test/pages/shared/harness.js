@@ -2,7 +2,7 @@
 // page: an md3.io-style shell built from the library's own elements — a
 // navigation rail, a components drawer, and a top app bar carrying the
 // shared switches — with the page's scenarios in the content column.
-// Pages import it as /shared/harness.js, served from this file.
+// Pages import it relatively (../../shared/harness.js from a component page).
 
 /**
  * @typedef {Object} Scenario
@@ -66,7 +66,7 @@ const armSlowMotion = (root) => {
 /** @type {() => void} A re-render hook the factory/element switches call. */
 let rerender = () => {};
 
-const railLink = (page) => `/components/${page}/`;
+const railLink = (page) => `/test/pages/components/${page}/`;
 
 const buildShell = (options, commit) => {
   const bar = document.createElement("m-app-bar");
@@ -226,12 +226,12 @@ const buildShell = (options, commit) => {
 };
 
 export async function initPage(options) {
-  await import("/dist/elements/css/drawer.js");
-  await import("/dist/elements/css/navigation-rail.js");
-  await import("/dist/elements/css/top-app-bar.js");
-  await import("/dist/elements/css/switch.js");
-  await import("/dist/elements/css/button.js");
-  const { defineDrawer, defineNavigationRail, defineAppBar, defineSwitch, defineButton } = await import("/dist/elements/index.js");
+  await import("../../../dist/elements/css/drawer.js");
+  await import("../../../dist/elements/css/navigation-rail.js");
+  await import("../../../dist/elements/css/top-app-bar.js");
+  await import("../../../dist/elements/css/switch.js");
+  await import("../../../dist/elements/css/button.js");
+  const { defineDrawer, defineNavigationRail, defineAppBar, defineSwitch, defineButton } = await import("../../../dist/elements/index.js");
   defineDrawer();
   defineNavigationRail();
   defineAppBar();

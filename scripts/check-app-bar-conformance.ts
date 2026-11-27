@@ -25,6 +25,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 
 import * as sass from "sass";
 
@@ -94,7 +95,7 @@ try {
         return { shadow, level2: getComputedStyle(reference.element).boxShadow };
       });
       // The bar transitions its shadow: read it once the transition has run.
-      await page.waitForFunction(() => document.getAnimations().length === 0 || document.getAnimations().every((animation) => animation.playState === "finished"));
+      await settle(page);
       const scrolled = await page.evaluate(() =>
         getComputedStyle(document.querySelector<HTMLElement>(".mtrl-top-app-bar")!).boxShadow);
       assert.equal(resting.shadow, "none", `P1: the resting bar has an elevation: ${resting.shadow}`);

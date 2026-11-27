@@ -38,6 +38,9 @@ export function createBottomAppBarToolbar(config: BottomAppBarConfig = {}): Bott
   let previous = window.scrollY;
   const setVisible = (next: boolean) => {
     root.classList.toggle(`${block}--hidden`, !next);
+    // Off screen, the bar leaves the keyboard order, the same as the legacy bar.
+    if (next) root.removeAttribute("inert");
+    else root.setAttribute("inert", "");
     const changed = visible !== next;
     visible = next;
     // State is settled before a callback can re-enter the facade.

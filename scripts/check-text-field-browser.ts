@@ -10,6 +10,7 @@
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createTextField from "../src/components/text-field";
+import { settle } from "./browser-settle";
 
 type FieldWindow = Window & {
   inputs: { createTextField: typeof createTextField };
@@ -109,7 +110,7 @@ export async function checkTextFieldTokens(page: Page): Promise<void> {
     const style = (name: string, selector: string, pseudo?: string) => getComputedStyle(q(name, selector), pseudo);
     return new Function("probes", "role", "q", "style", code)(probes, role, q, style);
   }, script);
-  const hover = async (name: string) => page.locator(`.mtrl-text-field >> nth=${await page.evaluate((n) => [...document.querySelectorAll(".mtrl-text-field")].indexOf((window as unknown as { probes: Record<string, Probe> }).probes[n].element), name)}`).hover().then(() => page.waitForTimeout(400)); // past the colour transitions
+  const hover = async (name: string) => page.locator(`.mtrl-text-field >> nth=${await page.evaluate((n) => [...document.querySelectorAll(".mtrl-text-field")].indexOf((window as unknown as { probes: Record<string, Probe> }).probes[n].element), name)}`).hover().then(() => settle(page)); // the colour transitions have ended
 
   const rest = await read(`return {
     indicator: style("filled", "input").borderBottomColor === role("on-surface-variant"),

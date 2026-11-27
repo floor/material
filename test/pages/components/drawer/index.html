@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <title>navigation-drawer</title>
-<link rel="stylesheet" href="/dist/styles.css">
-<link rel="stylesheet" href="/shared/harness.css">
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
 </head>
 <body>
 <script type="module">
-import { initPage, section, scenario } from "/shared/harness.js";
-import { createDrawer } from "/dist/components/drawer/index.js";
-import { defineDrawer } from "/dist/elements/index.js";
-import "/dist/elements/css/drawer.js";
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createDrawer } from "../../../../dist/components/drawer/index.js";
+import { defineDrawer } from "../../../../dist/elements/index.js";
+import "../../../../dist/elements/css/drawer.js";
 defineDrawer();
 
 // Both forms, one per scenario: the toolbar's Factory / Element switch repaints
@@ -67,7 +67,7 @@ const mountMenu = (container) => {
   button.id = "menu-opener";
   button.textContent = "Open the menu";
   container.append(button);
-  import("/dist/components/menu/index.js").then(({ createMenu }) => {
+  import("../../../../dist/components/menu/index.js").then(({ createMenu }) => {
     createMenu({ opener: "#menu-opener", items: [
       { id: "a", text: "Alpha" }, { id: "b", text: "Beta" }, { id: "c", text: "Gamma" },
     ] });
@@ -301,7 +301,7 @@ scenario(interaction, {
     opener.id = "menu-opener";
     opener.textContent = "Open the menu";
     menuBox.append(opener);
-    import("/dist/components/menu/index.js").then(({ createMenu }) => {
+    import("../../../../dist/components/menu/index.js").then(({ createMenu }) => {
       menu = createMenu({ opener: "#menu-opener", items: [
         { id: "a", text: "Alpha" }, { id: "b", text: "Beta" }, { id: "c", text: "Gamma" },
       ] });

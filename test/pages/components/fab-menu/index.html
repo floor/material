@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <title>fab-menu</title>
-<link rel="stylesheet" href="/dist/styles.css">
-<link rel="stylesheet" href="/shared/harness.css">
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
 </head>
 <body>
 <script type="module">
-import { initPage, section, scenario } from "/shared/harness.js";
-import { createFabMenu } from "/dist/components/fab-menu/index.js";
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createFabMenu } from "../../../../dist/components/fab-menu/index.js";
 await initPage({ name: "fab-menu", toolbar: { density: true } });
 const main = document.getElementById("tp-main");
 

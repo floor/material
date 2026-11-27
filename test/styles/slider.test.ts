@@ -85,18 +85,17 @@ describe('slider motion', () => {
     }
   });
 
-  test('under --settling the handle, the track and the indicator move on the default spatial spring', () => {
+  test('under --settling the handle, the track and the visible indicator move on the default spatial spring', () => {
     expect(value(`${root}--settling ${root}__handle`, 'transition')).toMatch(spring);
     expect(value(`${root}--settling ${root}__segment`, 'transition')).toMatch(/^left 450ms linear\(.*\), width 450ms linear\(/);
-    expect(value(`${root}--settling ${root}__value`, 'transition')).toMatch(spring);
     expect(value(`${root}--settling ${root}__value--visible`, 'transition')).toMatch(spring);
+    expect(value(`${root}--settling ${root}__value`, 'transition')).toBeUndefined();
   });
 
-  test('the value indicator grows from the handle: in 400ms decelerate, out 150ms accelerate', () => {
-    expect(value(`${root}__value`, 'scale')).toBe('0');
-    expect(value(`${root}__value`, 'transform-origin')).toBe('50% 100%');
-    expect(value(`${root}__value`, 'transition')).toMatch(/^scale 150ms cubic-bezier\(0\.3, 0, 0\.8, 0\.15\)/);
-    expect(value(`${root}__value--visible`, 'scale')).toBe('1');
-    expect(value(`${root}__value--visible`, 'transition')).toMatch(/^scale 400ms cubic-bezier\(0\.05, 0\.7, 0\.1, 1\)/);
+  test('the value indicator reveals from the handle: in 400ms decelerate, out 150ms accelerate', () => {
+    expect(value(`${root}__value`, 'clip-path')).toBe('var(--mtrl-slider-value-hidden-clip, inset(100% 0 0))');
+    expect(value(`${root}__value`, 'transition')).toMatch(/^clip-path 150ms cubic-bezier\(0\.3, 0, 0\.8, 0\.15\)/);
+    expect(value(`${root}__value--visible`, 'clip-path')).toBe('inset(0)');
+    expect(value(`${root}__value--visible`, 'transition')).toMatch(/^clip-path 400ms cubic-bezier\(0\.05, 0\.7, 0\.1, 1\)/);
   });
 });

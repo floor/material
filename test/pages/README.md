@@ -10,15 +10,15 @@ exists.
 
 ```sh
 bun run build        # dist/ must exist: the pages load the factories from it
-bun run test:pages   # serves dist/ + test/pages on http://127.0.0.1:<port>
+bun run test:pages   # serves /dist/ and /test/pages/ on http://127.0.0.1:<port>
 ```
 
-Then open `http://127.0.0.1:<port>/` — index links every page. Pages load the
-component factories from `dist/components/<name>/index.js` and the sheet from
-`dist/styles.css`, so what they show is always the current build. Serve with
-`bun run test:pages` specifically: it maps `/shared/` to the harness and
-`/dist/` to the build; a repo-root `python3 -m http.server` has neither
-mapping, and `file://` blocks ESM modules.
+Then open `http://127.0.0.1:<port>/` — it redirects to `/test/pages/`, and that
+index links every page. A component page loads the sheet and its factory with
+the same relative path the Sound slider uses (`../../../../dist/…` from
+`test/pages/components/<name>/`), so what it shows is always the current build.
+`/dist/` is the build and `/test/pages/` is this folder; `file://` blocks ESM
+modules.
 
 ## Pages
 
@@ -28,7 +28,7 @@ mapping, and `file://` blocks ESM modules.
 - `components/bottom-sheet/` — standard and modal; drag and settle with the state/offset readout.
 - `components/drawer/` — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu (5x slow motion).
 - `components/progress/` — buffer colour candidates; value scrubbing.
-- `components/slider/` — the handle on the tick scale, pressed handle, ends readout.
+- `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.
 
 ## Harness
 

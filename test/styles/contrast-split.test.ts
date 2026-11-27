@@ -352,9 +352,28 @@ describe("explicit contrast levels are opt-in", () => {
     // The slider's pressed handle joins the 2px width rule (+38 B;
     // styles/components/_slider.scss), and the container's own press narrows
     // the handle from the first frame (+400 B; same file).
-    expect({ sha256: createHash("sha256").update(css).digest("hex"), length: css.length }).toEqual({
-      sha256: "8f88299e8735983068752807086c606616fdc50cfb8fce2d09f3a5624512b7d3",
-      length: 553435,
+    // A time picker holding seconds takes its row's width, and below 488px
+    // the row shrinks rather than clips (+375 B;
+    // styles/components/_timepicker.scss).
+    // A dialog taller than a small window scrolls its content with the
+    // headline in view (+240 B; styles/components/_dialog.scss).
+    // A card paints the hover layer in every variant and the dragged layer in
+    // all three, and its focus ring no longer draws an elevation-1 shadow
+    // (+1,397 B; styles/components/_card.scss).
+    // The keyboard focus ring is 3px in Secondary, 2px outside or 3px inside
+    // where the control is clipped. The snackbar close stays 2px in
+    // inverse-on-surface (styles/abstract/_mixins.scss and the component
+    // sheets; styles/components/_snackbar.scss). A clickable search avatar
+    // joins the trailing buttons' rule, so a button in either tree is reset
+    // and takes that 3px ring and their layers; its layer names
+    // OnSurfaceVariant itself, so supplied content keeps its own colour, and
+    // it draws no second outline (styles/components/_search.scss). A search
+    // bar with no shown trailing action ends its text 16dp from the edge, and
+    // an empty value's clear button takes no room (+92 B; same file).
+    const measured = { sha256: createHash("sha256").update(css).digest("hex"), length: css.length };
+    expect(measured, `Replacement stylesheet pin ${JSON.stringify(measured)}`).toEqual({
+      sha256: "d3842d48a5c5ab116feedcad186a845b091ac9d895852c76bf0295b320d708c3",
+      length: 555600,
     });
   });
 

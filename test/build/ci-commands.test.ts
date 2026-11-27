@@ -12,7 +12,7 @@ const COMMANDS = [
   "bun test",
   // build, and the checks that read the built package
   "build", "dist-modules:check", "syntax:check", "typescale-defaults:check", "elements-css:check", "tokens:catalogue:check", "tooling:check", "classes:check", "ssr-comments:check", "ssr-consumer:check", "declaration-docs:check", "declaration-exports:check", "size:check", "readme:check", "notice:check", "docs-imports:check", "styles-package:check", "size",
-  "adapters:size",
+  "adapters:size", "size:report",
   // the catalogue identity gate builds the merge base beside this tree, so
   // `build` runs a second time there (the step no-ops before it reaches the
   // build when no catalogue input changed)
@@ -26,7 +26,7 @@ const COMMANDS = [
   "solid-ssr:floor", "vue-ssr:floor",
   "react-types:check", "vue-types:check", "solid-types:check", "svelte-types:check",
   "react-types:floor", "vue-types:floor", "solid-types:floor", "svelte-types:floor",
-  "consumer:check", "menu-deferred:check", "menu-item-checked:check", "fab-menu-ripple:check", "fab-menu-position:check", "fab-menu-items:check", "divider-sheet-conformance:check", "list-conformance:check", "app-bar-conformance:check", "top-app-bar:check", "closed-surfaces:check", "button-profile:check", "bottom-app-bar-toolbar:check", "listbox:check", "tabs:check", "slider:check", "tooltip:check", "tooltip-menu:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check", "split-button:check", "select:check", "datepicker-deferred:check", "progress:check", "dialog-afteropen:check", "dialog-reduced-motion:check", "bottom-sheet:check",
+  "consumer:check", "menu-deferred:check", "menu-container-space:check", "menu-item-checked:check", "fab-menu-ripple:check", "fab-menu-position:check", "fab-menu-items:check", "divider-sheet-conformance:check", "list-conformance:check", "search-trailing-space:check", "app-bar-conformance:check", "top-app-bar:check", "conformance", "closed-surfaces:check", "button-profile:check", "bottom-app-bar-toolbar:check", "listbox:check", "card-state-layers:check", "browser-settle:check", "tabs:check", "slider:check", "tooltip:check", "tooltip-menu:check", "drawer:check", "navigation-bar:check", "navigation-rail:check", "carousel:check", "toolbar-card:check", "split-button:check", "select:check", "datepicker-deferred:check", "progress:check", "dialog-afteropen:check", "dialog-reduced-motion:check", "dialog-small-viewport:check", "bottom-sheet:check",
   "core:check", "a11y-svg:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "tokens:catalogue-browser:check", "contrast-emit:check", "theme-root-scope:check", "theme-runtime:check", "theme-roles:check", "theme-origins:check", "spring-tokens:check", "base-lite:check", "base-elements:check", "typescale-consumers:check", "component-sheets:check", "density:check", "ssr:check:a", "ssr:check:b",
 ];
 
@@ -35,13 +35,18 @@ interface Job {
   needs?: string | string[];
   if?: string;
   "continue-on-error"?: unknown;
+  outputs?: Record<string, string>;
   steps: Step[];
   strategy?: { matrix?: { include?: Record<string, string>[] } };
+}
+interface Workflow {
+  jobs: Record<string, Job>;
+  concurrency?: { group?: string; "cancel-in-progress"?: string };
 }
 
 // Bun parses YAML; the installed @types/bun does not declare it yet.
 const { YAML } = Bun as unknown as { YAML: { parse(text: string): unknown } };
-const workflow = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as { jobs: Record<string, Job> };
+const workflow = YAML.parse(await Bun.file(".github/workflows/ci.yml").text()) as Workflow;
 const manifest = await Bun.file("package.json").json() as { scripts: Record<string, string>; peerDependencies: Record<string, string> };
 const { scripts, peerDependencies: peers } = manifest;
 
@@ -100,14 +105,17 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(scripts["core:check"]).toContain("bun run scripts/check-keyboard-focus.ts");
   });
 
-  // A command that may be skipped, or may fail without failing its job, still
-  // appears in the list above and no longer checks anything.
+  // Browser groups and comparators are the jobs a docs-only or tooling-only
+  // diff skips. Their commands still fail the job when the job runs. Every
+  // other command stays unconditional.
   test("runs them unconditionally, and their failure fails the job", () => {
+    const pathFilter = "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')";
     const loose: string[] = [];
     for (const [name, job] of Object.entries(workflow.jobs)) {
       const steps = job.steps.filter(step => commandsOf(job, step).length);
       if (!steps.length) continue;
-      if (job.if !== undefined) loose.push(`${name}: if`);
+      const filtered = (name === "browser" || name === "comparators") && job.if === pathFilter;
+      if (job.if !== undefined && !filtered) loose.push(`${name}: if`);
       if (job["continue-on-error"] !== undefined) loose.push(`${name}: continue-on-error`);
       for (const step of steps) {
         const command = commandsOf(job, step).join(" ");
@@ -139,10 +147,45 @@ describe("CI (.github/workflows/ci.yml)", () => {
     expect(unbounded).toEqual([]);
   });
 
-  test("gates the required `check` status on every other job", () => {
-    const { check, ...jobs } = workflow.jobs;
-    expect([check.needs].flat().sort()).toEqual(Object.keys(jobs).sort());
-    const gate = check.steps.map(step => step.run ?? "").join("\n");
-    for (const job of Object.keys(jobs)) expect(gate).toContain(`[ '\${{ needs.${job}.result }}' = success ]`);
+  test("gates ci-ok on every other job, and a skipped job still passes", () => {
+    const gate = workflow.jobs["ci-ok"];
+    const check = workflow.jobs.check;
+    const jobs = Object.keys(workflow.jobs).filter(name => name !== "ci-ok" && name !== "check").sort();
+    expect([gate.needs].flat().sort()).toEqual(jobs);
+    expect(gate.if).toBe("always()");
+    const body = gate.steps.map(step => step.run ?? "").join("\n");
+    expect(body).toContain("success|skipped");
+    for (const job of jobs) expect(body).toContain(`needs.${job}.result`);
+    expect([check.needs].flat()).toEqual(["ci-ok"]);
+    expect(check.if).toBe("always()");
+    const mirror = check.steps.map(step => step.run ?? "").join("\n");
+    expect(mirror).toContain("[ '${{ needs.ci-ok.result }}' = success ]");
+  });
+
+  test("classifies a pull request before skipping browser jobs and comparators", () => {
+    const changes = workflow.jobs.changes;
+    expect(changes.outputs?.library).toBe("${{ steps.classify.outputs.library }}");
+    expect(changes.outputs?.checks).toBe("${{ steps.classify.outputs.checks }}");
+    expect(changes.outputs?.docs_only).toBe("${{ steps.classify.outputs.docs_only }}");
+    expect(changes.outputs?.run_all).toBe("${{ steps.classify.outputs.run_all }}");
+    const script = changes.steps.map(step => step.run ?? "").join("\n");
+    expect(script).toContain("README.md|npm-readme.md");
+    expect(script).toContain('git diff -M --name-status "$BASE_SHA...HEAD"');
+    expect(script).toContain("if ! git fetch --quiet --depth=1 origin");
+    expect(script).toContain("jq -r '.version // empty'");
+    expect(script).not.toContain("PR_TITLE");
+    expect(script).not.toContain("release:");
+    expect(workflow.jobs.browser.needs).toEqual(["build", "changes"]);
+    expect(workflow.jobs.comparators.needs).toEqual(["build", "changes"]);
+    expect(workflow.jobs.static.if).toBeUndefined();
+    expect(workflow.jobs.tests.if).toBeUndefined();
+  });
+
+  test("cancels a superseded pull request run and never a run on main", () => {
+    expect(workflow.concurrency?.["cancel-in-progress"]).toBe("${{ github.event_name == 'pull_request' }}");
+    const group = workflow.concurrency?.group ?? "";
+    expect(group).toContain("github.run_id");
+    expect(group).toContain("github.event.pull_request.number");
+    expect(group).not.toContain("github.ref");
   });
 });

@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import type { NavigationBarComponent, NavigationBarConfig } from "../src/components/navigation-bar/types";
 
 declare global {
@@ -129,8 +130,7 @@ try {
 
     // Vertical, the compact bar: 6 + 32 + 4 + 16 + 6 = 64
     await page.evaluate(() => window.mountBar({}, "400px"));
-    await page.waitForTimeout(400);
-    let m = await measure(page);
+    await settle(page);let m = await measure(page);
     assert.deepEqual(m.landmark, ["NAV", "Primary navigation"], `${stylesheet}: a named nav landmark`);
     near(m.bar.height, 64, `${stylesheet}: the bar is 64dp (ContainerHeight)`);
     assert.equal(m.background, m.surfaceContainer, `${stylesheet}: surface container`);
@@ -160,8 +160,7 @@ try {
 
     // 'auto' at 800px: the bar's own width crosses 600, so items lie horizontally and centred
     await page.evaluate(() => window.mountBar({}, "800px"));
-    await page.waitForTimeout(400);
-    m = await measure(page);
+    await settle(page);m = await measure(page);
     near(m.bar.height, 64, `${stylesheet}: horizontal bar height`);
     const h = m.items[0]!;
     near(h.indicator.height, 40, `${stylesheet}: horizontal indicator (ActiveIndicatorHeight 40)`);
@@ -175,11 +174,9 @@ try {
 
     // The same width in a narrow container stays vertical; a forced layout wins either way
     await page.evaluate(() => window.mountBar({ itemLayout: "vertical" }, "800px"));
-    await page.waitForTimeout(200);
-    near((await measure(page)).items[0]!.indicator.height, 32, `${stylesheet}: vertical forced at 800px`);
+    await settle(page);near((await measure(page)).items[0]!.indicator.height, 32, `${stylesheet}: vertical forced at 800px`);
     await page.evaluate(() => window.mountBar({ itemLayout: "horizontal" }, "400px"));
-    await page.waitForTimeout(200);
-    near((await measure(page)).items[0]!.indicator.height, 40, `${stylesheet}: horizontal forced at 400px`);
+    await settle(page);near((await measure(page)).items[0]!.indicator.height, 40, `${stylesheet}: horizontal forced at 400px`);
     await page.close();
   }
 
@@ -230,8 +227,7 @@ try {
     { id: "dotlabel", label: "Dotlabel", icon, badge: true, badgeLabel: "New messages" },
     { id: "link", label: "Link", icon, badge: 5, href: "/x" },
   ] }, "400px"), itemIcon);
-  await page.waitForTimeout(200);
-  assert.deepEqual(await namesOf(page), ["Count, 8", "Thousand, 1000", "Tenthousand, 999+", "Dot, New notification", "Dotlabel, New messages", "Link, 5"], "the badge's displayed label is in the name, capped as the badge caps it, the dot announcing New notification");
+  await settle(page);assert.deepEqual(await namesOf(page), ["Count, 8", "Thousand, 1000", "Tenthousand, 999+", "Dot, New notification", "Dotlabel, New messages", "Link, 5"], "the badge's displayed label is in the name, capped as the badge caps it, the dot announcing New notification");
   const capBox = await page.evaluate(() => {
     const badge = document.querySelector(".mtrl-navigation-bar__item[data-id='tenthousand'] .mtrl-navigation-bar__badge")!;
     return { text: badge.textContent, width: badge.getBoundingClientRect().width };
@@ -255,11 +251,9 @@ try {
   elementPage.on("pageerror", (error) => elementErrors.push(error.message));
   await elementPage.goto(`${server.url.href}element`);
   await elementPage.waitForFunction(() => (window as unknown as { navigationElementsReady?: boolean }).navigationElementsReady === true);
-  await elementPage.waitForTimeout(80);
-  assert.deepEqual(await namesOf(elementPage), ["Home", "Trips, 8", "Saved, New notification", "Alerts", "Spam, 1000"], "a declared badge names its item through the shadow root; the dot announces New notification; a zero clears");
+  await settle(elementPage);assert.deepEqual(await namesOf(elementPage), ["Home", "Trips, 8", "Saved, New notification", "Alerts", "Spam, 1000"], "a declared badge names its item through the shadow root; the dot announces New notification; a zero clears");
   await elementPage.evaluate(() => document.querySelector("m-navigation-bar-item[value='spam']")!.setAttribute("badge", "10000"));
-  await elementPage.waitForTimeout(120);
-  assert.deepEqual(await namesOf(elementPage), ["Home", "Trips, 8", "Saved, New notification", "Alerts", "Spam, 999+"], "an attribute change updates the capped name in place");
+  await settle(elementPage);assert.deepEqual(await namesOf(elementPage), ["Home", "Trips, 8", "Saved, New notification", "Alerts", "Spam, 999+"], "an attribute change updates the capped name in place");
   assert.deepEqual(elementErrors, []);
   await elementPage.close();
 
@@ -292,8 +286,7 @@ try {
       const now = await state();
       if (ready(now)) return;
       if (Date.now() > end) throw new Error(`${step}: still waiting after 5s for ${what}; found ${JSON.stringify(now)}`);
-      await page.waitForTimeout(20);
-    }
+      await settle(page);}
   };
   assert.deepEqual(await scrolled(50), { arrived: true, y: 50 }, "the first scroll arrived");
   assert.deepEqual(await scrolled(400), { arrived: true, y: 400 }, "and the second");
@@ -320,8 +313,7 @@ try {
   await page.evaluate(() => { window.bar.destroy(); window.scrollTo(0, 0); window.scrollTo(0, 800); });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.waitForTimeout(100);
-  assert.deepEqual(errors, []);
+  await settle(page);assert.deepEqual(errors, []);
   await page.close();
   console.log("Passed navigation bar: ShortNavigationBar geometry and colours with full and selective CSS, badges that say what they show (name, 999+ cap, empty and zero cleared, New notification dot, shadow root), the container query and forced layouts, the keyboard in both directions, hide on scroll with and without reduced motion, teardown.");
 } finally {

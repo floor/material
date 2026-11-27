@@ -337,6 +337,23 @@ export const withTracks =
       if (cmp(part[0], A0) === 0 && cmp(part[1], px(inset)) <= 0) part[1] = part[0];
       else if (cmp(part[1], A1) === 0 && cmp(part[0], ap(1, -inset)) >= 0) part[1] = part[0];
     });
+    // A pressed handle narrows to 2dp, and the track's gap is measured from the
+    // handle's edge (SliderTokens.ThumbTrackGapSize, ActiveHandleLeadingSpace
+    // 6dp): the piece beside it grows 1px toward the handle while the press
+    // lasts. The growth is painted as a 1px box-shadow on the inner edge, not
+    // written into left/width, so the pieces' settle spring for the value
+    // change is not restarted — restarting it a frame after the handle's own
+    // is the click desync #462 fixed.
+    const pressedHandle = state.pressed
+      ? state.activeHandle === "second"
+        ? config.range && state.secondValue !== null ? second : null
+        : state.activeHandle === "first" ? first : null
+      : null;
+    const pressedGap = state.activeHandle === "second" ? secondGap : firstGap;
+    const shadowFor = (side: string, colour: string): string => ({
+      left: `-1px 0 0 0 ${colour}`, right: `1px 0 0 0 ${colour}`,
+      top: `0 -1px 0 0 ${colour}`, bottom: `0 1px 0 0 ${colour}`,
+    })[side] ?? "";
     segments.forEach((segment, index) => {
       const [start, end, active] = parts[index] ?? [A0, A0, false];
       const len = sub(end, start);
@@ -344,6 +361,17 @@ export const withTracks =
       at(segment, alongCss(start));
       segment.style[axis.size] = alongCss(drawn);
       segment.style.borderRadius = radiusOf(start, end);
+      // The piece ending where the pressed gap begins grows toward its end; the
+      // piece starting where it ends grows toward its start.
+      const colour = active ? `var(--${PREFIX}-slider-track-color)` : `var(--${PREFIX}-slider-inactive-track-color)`;
+      const hasLength = cmp(end, start) > 0;
+      const growEnd = hasLength && pressedHandle !== null && cmp(end, sub(pressedHandle, pressedGap)) === 0;
+      const growStart = hasLength && pressedHandle !== null && cmp(start, add(pressedHandle, pressedGap)) === 0;
+      segment.style.boxShadow = growEnd
+        ? shadowFor(opposite[axis.start], colour)
+        : growStart
+          ? shadowFor(axis.start, colour)
+          : "";
       segment.classList.toggle(component.getClass("slider__segment--active"), active);
     });
     // A stop indicator ends each inactive piece that is drawn. With ticks the ends are
@@ -728,18 +756,14 @@ export const withController =
     }
   };
 
-  /**
-   * Shows or hides value bubble
-   * Controls visibility for value indicators
-   */
+  const valueVisibleClass = component.getClass("slider__value--visible");
   const showValueBubble = (
-    bubbleElement: HTMLElement | null,
+    bubbleElement: HTMLElement | null | undefined,
     show: boolean,
   ): void => {
     if (!bubbleElement || !config.showValue) return;
 
-    const bubbleClass = component.getClass("slider__value");
-    bubbleElement.classList[show ? "add" : "remove"](`${bubbleClass}--visible`);
+    bubbleElement.classList.toggle(valueVisibleClass, show);
   };
 
   /**
@@ -753,12 +777,13 @@ export const withController =
   const SETTLE_MS = 450; // spring-default-spatial-duration
   let rendered: { value: number; secondValue: number | null } | null = null;
   let settleTimer: ReturnType<typeof setTimeout> | null = null;
-  const settle = () => {
+  const settle = (entering: boolean) => {
     const settling = component.getClass("slider--settling");
     const changed = rendered !== null &&
       (rendered.value !== state.value || rendered.secondValue !== state.secondValue);
     rendered = { value: state.value, secondValue: state.secondValue };
-    if (state.dragging) {
+    // Both positions must reach the new value before a hidden indicator enters.
+    if (state.dragging || entering) {
       if (settleTimer !== null) clearTimeout(settleTimer);
       settleTimer = null;
       component.element.classList.remove(settling);
@@ -773,9 +798,9 @@ export const withController =
     }, SETTLE_MS);
   };
 
-  const render = () => {
+  const render = (entering = false) => {
     try {
-      settle();
+      settle(entering);
       updateHandlePositions();
       updateValueBubbles();
 
@@ -841,8 +866,14 @@ export const withController =
   };
 
   const showActiveBubble = (bubble: HTMLElement | null) => {
-    hideAllBubbles();
-    if (bubble && config.showValue) showValueBubble(bubble, true);
+    clearBubbleHideTimer();
+    if (valueBubble !== bubble) showValueBubble(valueBubble, false);
+    if (secondValueBubble !== bubble) showValueBubble(secondValueBubble, false);
+    if (!bubble || !config.showValue) return false;
+
+    const entering = !bubble.classList.contains(valueVisibleClass);
+    showValueBubble(bubble, true);
+    return entering;
   };
 
   const hideActiveBubble = (bubble: HTMLElement | null, delay = 0) => {
@@ -938,7 +969,6 @@ export const withController =
     }
     e.stopPropagation();
 
-    hideAllBubbles();
     clearKeyboardFocus();
 
     // Capture initial position
@@ -952,12 +982,12 @@ export const withController =
     state.activeBubble = bubbleFor(isSecondHandle);
 
     // Show bubble immediately
-    showActiveBubble(state.activeBubble);
+    const entering = showActiveBubble(state.activeBubble);
 
     // Add global event listeners
     followPointer();
 
-    render();
+    render(entering);
     emitEvent(SLIDER_EVENTS.START, e);
   };
 
@@ -974,7 +1004,6 @@ export const withController =
     if (e.type === "mousedown") {
       e.preventDefault();
     }
-    hideAllBubbles();
     clearKeyboardFocus();
 
     // Determine which handle to move
@@ -1003,8 +1032,8 @@ export const withController =
         state.value = newValue;
       }
 
-      // Update UI and trigger events
-      render();
+      // Keep a newly revealed indicator and its handle at the destination.
+      render(showActiveBubble(bubbleFor(isSecondHandle)));
       emitEvent(SLIDER_EVENTS.INPUT, e);
     } catch (error) {
       console.warn("Error handling track click:", error);
@@ -1019,9 +1048,6 @@ export const withController =
 
     // For centered sliders, delay starting drag to allow animation
     if (config.centered && !config.range) {
-      // Show bubble
-      showActiveBubble(state.activeBubble);
-
       // Add event listeners but don't start dragging yet
       followPointer();
 
@@ -1037,9 +1063,6 @@ export const withController =
       state.dragging = false;
       state.pressed = true;
       hasActualDragStarted = false;
-
-      // Show bubble
-      showActiveBubble(state.activeBubble);
 
       // Add event listeners
       followPointer();
@@ -1176,7 +1199,7 @@ export const withController =
     state.activeBubble = bubbleFor(isSecondHandle);
 
     // Show value bubble during keyboard interaction
-    showActiveBubble(state.activeBubble);
+    const entering = showActiveBubble(state.activeBubble);
 
     // Update the value
     if (isSecondHandle) {
@@ -1186,7 +1209,7 @@ export const withController =
     }
 
     // Update UI and trigger events
-    render();
+    render(entering);
     emitEvent(SLIDER_EVENTS.INPUT, e);
     emitEvent(SLIDER_EVENTS.CHANGE, e);
   };
@@ -1212,10 +1235,9 @@ export const withController =
     currentHandle.classList.add(
       `${component.getClass("slider__handle")}--focused`,
     );
-    showActiveBubble(bubbleFor(isSecondHandle));
     state.activeBubble = bubbleFor(isSecondHandle);
     // A focused handle narrows to 2dp and the track's gap follows it.
-    render();
+    render(showActiveBubble(state.activeBubble));
 
     emitEvent(SLIDER_EVENTS.FOCUS, e);
   };

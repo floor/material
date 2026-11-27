@@ -5,10 +5,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { launchChromium } from "./browser-profile";
-import { gzipSync } from "node:zlib";
-import { SLIDER_INLINE_GZIP } from "./budgets";
+import { measureSlider } from "./size-fixtures";
 import type { SliderConfig, SliderComponent } from "../src/components/slider/types";
 import { checkSliderNames } from "./fixtures/slider-names";
+import { settle } from "./browser-settle";
 
 declare global {
   interface Window {
@@ -22,23 +22,7 @@ declare global {
 const reference = process.argv.find(arg => arg.startsWith("--reference="))?.slice(12);
 const artifacts = resolve("analysis/slider-dom");
 await mkdir(artifacts, { recursive: true });
-const bundle = await Bun.build({ entrypoints: [resolve("src/components/slider/index.ts")], minify: true, target: "browser" });
-assert(bundle.success, String(bundle.logs));
-const js = await bundle.outputs[0].text();
-const size = { raw: Buffer.byteLength(js), gzip: gzipSync(js, { level: 9 }).length };
-// The package budget for the slider (check-package-size.ts) moved to 11,500 when the URL
-// allowlist reached every bundle; this copy stayed at 11,000, 17 bytes above the slider
-// (10,983), until linking a label to its input (#67) added 19 and crossed it at 11,002.
-// It follows check-package-size.ts again at 12,600 for M3 conformance,
-// which took this build from 11,410 to 12,308; the breakdown is in that fixture.
-// Range limits, keys and RTL took it to 12,604; both copies move to 12,900.
-// Track, stops and the inset icon as a percentage of the value took it
-// to 13,151. The ceiling keeps about 150 bytes of room.
-// The nearest-boundary direction module took this build to 13,233; measured
-// +1% (13,365.33) rounded to the next 50 is 13,400, the same rule as the
-// package fixture's slider row.
-// 13,040 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-assert(size.gzip < SLIDER_INLINE_GZIP, `Slider JS exceeds ${SLIDER_INLINE_GZIP.toLocaleString("en-US")} gzip bytes: ${size.gzip}`);
+const { js, size } = await measureSlider();
 const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
   const url = new URL(request.url);
   if (url.pathname === "/slider.js") return new Response(js, { headers: { "Content-Type": "text/javascript" } });
@@ -92,7 +76,7 @@ try {
     const theme = width === 96 ? "ocean" : "baseline", mode = width === 96 ? "dark" : "light";
     for (const target of [page, ...(old ? [old] : [])]) {
       await target.evaluate(({ config, width, theme, mode }) => window.mount(JSON.parse(config), width, theme, mode), { config: JSON.stringify({ ...scenario, size, label: "Volume" }), width, theme, mode });
-      await target.waitForTimeout(35);
+      await settle(target);
     }
     assert.equal(await page.locator("canvas").count(), 0);
     const handles = page.getByRole("slider");
@@ -126,7 +110,7 @@ try {
   }
   // Real API, keyboard, pointer, resizing and lifecycle checks.
   await page.evaluate(() => window.mount({ value: 20, step: 10, label: "Volume" }, 320, "baseline", "light"));
-  await page.waitForTimeout(30);
+  await settle(page);
   const handle = page.getByRole("slider");
   await handle.focus(); await page.keyboard.press("ArrowRight");
   assert.equal(await handle.getAttribute("aria-valuenow"), "30");
@@ -138,7 +122,7 @@ try {
   await page.evaluate(() => { const s = window.slider; s.setColor("secondary"); s.setSize("XL"); s.showTicks(true); s.setStep(5); });
   assert(await page.locator(".mtrl-slider__ticks").first().isVisible());
   await page.evaluate(() => { (document.querySelector("#host") as HTMLElement).style.width = "96px"; });
-  await page.waitForTimeout(50);
+  await settle(page);
   const resized = await handle.boundingBox(); assert(resized);
   assert(Math.abs(resized.x + resized.width / 2 - (24 + 48)) < 1, "Handle lost alignment after resize");
   await page.evaluate(() => { const s = window.slider; s.disable(); });
@@ -155,7 +139,7 @@ try {
       window.mount(JSON.parse(config), 320, "baseline", "light");
       (document.querySelector("#host") as HTMLElement).style.height = height ? `${height}px` : "";
     }, { config: JSON.stringify(config), height });
-    await page.waitForTimeout(40);
+    await settle(page);
     return page.evaluate(() => {
       const trackElement = document.querySelector<HTMLElement>(".mtrl-slider__track")!;
       const track = trackElement.getBoundingClientRect();
@@ -295,15 +279,15 @@ try {
     near(placed.labelLeft, placed.trackLeft, `${labelPosition} label aligned with the track`);
   }
 
-  // Motion, with the slider's own transitions: a tap settles on the default spatial
+  // Motion without an indicator: a tap settles on the default spatial
   // spring (peaks about 270ms in, about 1.5% over, settled by 450ms), which the M3 sliders
   // video approaches (about 300ms, 3-5%); nothing moves on the first render or in a drag.
   const moving = await browser.browser()!.newPage({ viewport: { width: 600, height: 250 } });
   moving.on("pageerror", error => errors.push(error.message));
   await moving.goto(`http://127.0.0.1:${server.port}/?motion`);
   await moving.waitForFunction(() => window.ready);
-  await moving.evaluate(() => window.mount({ value: 50, label: "Volume" }, 320, "baseline", "light"));
-  await moving.waitForTimeout(60);
+  await moving.evaluate(() => window.mount({ value: 50, label: "Volume", showValue: false }, 320, "baseline", "light"));
+  await moving.waitForTimeout(60); // stays: the first render and the spring are under test
   assert(!(await moving.locator(".mtrl-slider--settling").count()), "the first render settles");
   const track = (await moving.locator(".mtrl-slider__container").boundingBox())!;
   await moving.evaluate(() => {
@@ -319,7 +303,7 @@ try {
     requestAnimationFrame(frame);
   });
   await moving.mouse.click(track.x + track.width * 0.8, track.y + track.height / 2);
-  await moving.waitForTimeout(1000);
+  await moving.waitForTimeout(1000); // stays: the first render and the spring are under test
   const samples = await moving.evaluate(() => (window as unknown as { samples: [number, number][] }).samples);
   const from = samples[0]![1], to = samples[samples.length - 1]![1];
   const began = samples.find(([, x]) => Math.abs(x - from) > 0.5)![0];
@@ -437,7 +421,7 @@ try {
             dir,
             mode,
           });
-          await page.waitForTimeout(35);
+          await settle(page);
           const preview = (size === "XS" || size === "L") && dir === "ltr"
             ? `${artifacts}/end-${size.toLowerCase()}-${mode}-${end}.png`
             : undefined;
@@ -499,7 +483,7 @@ try {
     elementPage.on("pageerror", error => elementErrors.push(error.message));
     await elementPage.goto(`http://127.0.0.1:${server.port}/element?dir=${dir}`);
     await elementPage.waitForFunction(() => window.elementReady);
-    await elementPage.waitForTimeout(200);
+    await settle(elementPage);
     const boxes = await elementPage.evaluate(() => {
       const host = document.querySelector("m-slider") as HTMLElement;
       const root = host.shadowRoot!;

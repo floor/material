@@ -288,18 +288,18 @@ export async function checkMenuHiddenItems(page: Page): Promise<void> {
     // not the first item declared, a tree that treated the hidden item as a
     // stop leaves focus outside the menu, so wait on the event's own budget
     // rather than on that focus.
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(250); // stays: the menu places focus and runs typeahead on its own timers
     const focused = (): Promise<string | null> => page.evaluate(() => document.activeElement?.getAttribute("data-id") ?? document.activeElement?.id ?? null);
     const at = await focused();
     assert.equal(at, opened, `menu, ${name} item hidden: opening puts focus on ${opened}, the first item shown (${at})`);
     for (const [key, expected] of keys) {
       await page.keyboard.press(key);
-      await page.waitForTimeout(120);
+      await page.waitForTimeout(120); // stays: the menu places focus and runs typeahead on its own timers
       const active = await focused();
       assert.equal(active, expected, `menu, ${name} item hidden: after ${key === "t" ? "typing t" : key} focus is on ${expected} (${active})`);
     }
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(150); // stays: the menu places focus and runs typeahead on its own timers
     const selected = await page.evaluate(() => (window as unknown as MenuWindow & { chosen: string | null }).chosen);
     assert.equal(selected, chosen, `menu, ${name} item hidden: Enter chooses ${chosen}, the focused item (${selected})`);
     await page.evaluate(() => (window as unknown as MenuWindow).menu.destroy());

@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <title>carousel</title>
-<link rel="stylesheet" href="/dist/styles.css">
-<link rel="stylesheet" href="/shared/harness.css">
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
 </head>
 <body>
 <header id="tp-header"></header>
 <div id="tp-toolbar"></div>
 <main id="tp-main"></main>
 <script type="module">
-import { initPage, section, scenario } from "/shared/harness.js";
-import { createCarousel } from "/dist/components/carousel/index.js";
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createCarousel } from "../../../../dist/components/carousel/index.js";
 await initPage({ name: "carousel" });
 const main = document.getElementById("tp-main");
 
@@ -20,7 +20,7 @@ const main = document.getElementById("tp-main");
 // not an allowed navigable one (core/utils/url.ts), and a `data:` image is
 // stripped — which left every slide blank.
 const slides = Array.from({ length: 6 }, (_, i) => ({
-  image: `/components/carousel/slides/slide-${i + 1}.svg`,
+  image: `slides/slide-${i + 1}.svg`,
   alt: `Slide ${i + 1}`,
 }));
 
