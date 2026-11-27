@@ -90,3 +90,15 @@ afterAll(() => {
   }
   dom.window.close();
 });
+
+test("a host attribute the spec does not declare never recreates the component", async () => {
+  const { element } = mountList();
+  const component = (element as HTMLElement & { component: unknown }).component;
+  element.setAttribute("data-extra", "1");
+  await settle();
+  expect((element as HTMLElement & { component: unknown }).component).toBe(component);
+  // A declared attribute without an update still rebuilds, as the spec says.
+  element.setAttribute("mode", "compact");
+  await settle();
+  expect((element as HTMLElement & { component: unknown }).component).not.toBe(component);
+});

@@ -714,7 +714,11 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
         // A definition in <head> runs before the parser reaches the template.
         // Watch even elements with no slot, or with a slot already populated.
         // Content arriving later than creation needs a container the factory builds.
-        this.#observer = new MutationObserver(() => {
+        this.#observer = new MutationObserver((records) => {
+          // A host attribute is not a child. The declared ones run through
+          // attributeChangedCallback; an undeclared one (a page's data-*) must
+          // not recreate the component, which would drop its input and focus.
+          if (records.every((record) => record.type === "attributes" && record.target === this)) return;
           removeDeclarativeTemplates(this);
           const observe = spec.observeChildren;
           // Declarations changing is not the user: what the update makes the
