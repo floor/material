@@ -372,8 +372,8 @@ describe("explicit contrast levels are opt-in", () => {
     // an empty value's clear button takes no room (+92 B; same file).
     const measured = { sha256: createHash("sha256").update(css).digest("hex"), length: css.length };
     expect(measured, `Replacement stylesheet pin ${JSON.stringify(measured)}`).toEqual({
-      sha256: "d3842d48a5c5ab116feedcad186a845b091ac9d895852c76bf0295b320d708c3",
-      length: 555600,
+      sha256: "df81c744f74d1b419ab9d5198742e9ab7f81fc372a54a830e87b3fe7c92f4344",
+      length: 555621,
     });
   });
 
