@@ -123,10 +123,12 @@ $component: "#{$prefix}-menu";
 
         position: relative;
         min-height: 48px;
-        // 12dp each side (m3.material.io menu specs, "Measurements"), with
-        // room at the end for a trailing mark
+        // 12dp each side (m3.material.io menus specs, "Baseline menu padding
+        // and size measurements": left/right padding 12dp, with-icon too).
+        // The trailing marks sit in that end padding; the label reserves their
+        // room plus the 12dp between elements, so the item's own padding stays
+        // 12dp on every item.
         padding: 12px;
-        padding-inline-end: 40px;
         cursor: pointer;
         user-select: none;
         color: t.color("on-surface");
@@ -177,9 +179,13 @@ $component: "#{$prefix}-menu";
             @include m.state-layer(t.color("on-surface"), "pressed");
         }
 
-        // Submenu indicator
+        // Submenu: the label reserves the arrow (24dp at the 12dp end padding)
+        // and the 12dp between elements.
         &--submenu {
-            padding-right: 48px;
+            .#{$component}__item-text,
+            .#{$component}__item-label {
+                padding-inline-end: 36px;
+            }
 
             &::after {
                 content: "";
@@ -239,6 +245,15 @@ $component: "#{$prefix}-menu";
         &--selected {
             background-color: t.color("secondary-container");
             color: t.color("on-secondary-container");
+
+            // The check is an 18dp mark at the 12dp end padding: the label
+            // reserves it and the 12dp between elements.
+            &:not(.#{$component}__item--submenu) {
+                .#{$component}__item-text,
+                .#{$component}__item-label {
+                    padding-inline-end: 30px;
+                }
+            }
 
             &:hover {
                 @include m.state-layer(t.color("on-secondary-container"), "hover");
@@ -418,6 +433,19 @@ $component: "#{$prefix}-menu";
             // No container token for the vibrant selected disabled state: the
             // container is the enabled selection's, at full opacity
             --#{$prefix}-menu-selected-disabled-container: var(--#{$prefix}-menu-selected-container);
+
+            // The vibrant leading icon is Tertiary as the item is hovered,
+            // focused or pressed (owner decision 2026-11-27; the vibrant
+            // mapping is tertiary-based, m3.material.io/components/menus/specs).
+            // A selected item keeps the selection's own colours.
+            .#{$component}__item:not(.#{$component}__item--selected) {
+                &:hover .#{$component}__item-icon,
+                &:focus-visible .#{$component}__item-icon,
+                &.#{$component}__item--active .#{$component}__item-icon,
+                &:active .#{$component}__item-icon {
+                    color: t.color("tertiary");
+                }
+            }
         }
 
         .#{$component}__list {
@@ -743,12 +771,10 @@ $component: "#{$prefix}-menu";
 
     @include mirrored {
         .#{$component}__item--submenu {
-            padding-right: 16px;
-            padding-left: 48px;
-
+            // The item's own ends stay 12dp; the label reserves the arrow.
             &::after {
                 right: auto;
-                left: 16px;
+                left: 12px;
                 transform: translateY(-50%) rotate(180deg);
             }
         }
