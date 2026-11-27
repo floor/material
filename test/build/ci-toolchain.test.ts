@@ -1,6 +1,6 @@
 // test/build/ci-toolchain.test.ts
 import { describe, expect, test } from "bun:test";
-import { Glob } from "bun";
+import { Glob, YAML } from "bun";
 
 // Nothing CI runs on may move without a commit. A version that floats ("1.4",
 // `@v4`, `ubuntu-latest`) resolves to something new the day upstream releases,
@@ -41,9 +41,18 @@ describe("the CI toolchain is pinned", () => {
     });
   }
 
-  test("the browser container uses the same Bun version as the host jobs", () => {
-    const installs = [...files[".github/workflows/ci.yml"].matchAll(/@oven\/bun-linux-x64@(\S+)/g)];
-    expect(installs.map(match => match[1])).toEqual([values("bun-version")[0][1]]);
+  test("every CI container uses the pinned Bun version", () => {
+    const workflow = YAML.parse(files[".github/workflows/ci.yml"]) as {
+      jobs: Record<string, { container?: unknown; steps: { run?: string }[] }>;
+    };
+    const containers = Object.entries(workflow.jobs).filter(([, job]) => job.container);
+    const version = values("bun-version")[0][1];
+    expect(containers.length).toBeGreaterThanOrEqual(2);
+    for (const [name, job] of containers) {
+      const installs = job.steps.flatMap(step => [...(step.run ?? "").matchAll(/@oven\/bun-linux-x64@(\S+)/g)]);
+      expect(installs.length, name).toBeGreaterThan(0);
+      for (const install of installs) expect(install[1], name).toBe(version);
+    }
   });
 
   test("every action is a commit, with its version in a comment", () => {
