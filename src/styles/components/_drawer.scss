@@ -144,6 +144,20 @@ $default-width: 360px;
             align-self: flex-end;
         }
 
+        // The sheet's border sits on the edge facing the page, outside the
+        // content box the divider is laid out in; the divider takes the last
+        // 1px of its margin on that side, so both insets read 28dp from the
+        // container's own edges, as the spec draws them.
+        &.#{$component}--start .#{$component}__divider {
+            width: calc(100% - 55px);
+            margin-inline-end: 27px;
+        }
+
+        &.#{$component}--end .#{$component}__divider {
+            width: calc(100% - 55px);
+            margin-inline-start: 27px;
+        }
+
         &.#{$component}--end .#{$component}__sheet {
             align-self: flex-start;
         }
@@ -159,18 +173,19 @@ $default-width: 360px;
             transition: m.spring(width, default-spatial);
         }
 
-        // Border on the end edge (standard variant visual separator)
+        // Border on the edge facing the page (standard variant visual
+        // separator). It is logical, so a direction toggled at runtime on a
+        // live element host moves it with the divider's margin instead of
+        // leaving it on the side the sheet was mounted under.
         &.#{$component}--start {
             .#{$component}__sheet {
-                border-right: 1px solid t.color("outline-variant");
+                border-inline-end: 1px solid t.color("outline-variant");
                 border-top-right-radius: 0;
                 border-bottom-right-radius: 0;
             }
 
             @include m.rtl {
                 .#{$component}__sheet {
-                    border-right: none;
-                    border-left: 1px solid t.color("outline-variant");
                     border-top-left-radius: 0;
                     border-bottom-left-radius: 0;
                 }
@@ -179,15 +194,13 @@ $default-width: 360px;
 
         &.#{$component}--end {
             .#{$component}__sheet {
-                border-left: 1px solid t.color("outline-variant");
+                border-inline-start: 1px solid t.color("outline-variant");
                 border-top-left-radius: 0;
                 border-bottom-left-radius: 0;
             }
 
             @include m.rtl {
                 .#{$component}__sheet {
-                    border-left: none;
-                    border-right: 1px solid t.color("outline-variant");
                     border-top-right-radius: 0;
                     border-bottom-right-radius: 0;
                 }
@@ -666,10 +679,14 @@ $default-width: 360px;
     // DIVIDER
     // ========================================================================
 
+    // 16dp between the divider and the rows around it, and 28dp on each side
+    // (md.comp.navigation-drawer divider padding; m3 navigation drawer specs,
+    // Measurements, read 2026-11-27). Compose's HorizontalDivider is a bare
+    // rule with neither, so the spec governs.
     &__divider {
         width: calc(100% - 56px);
         height: 1px;
-        margin: 8px 28px;
+        margin: 16px 28px;
         border: none;
         background-color: t.color("outline-variant");
     }

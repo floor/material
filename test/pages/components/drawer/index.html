@@ -129,6 +129,60 @@ scenario(variants, {
   },
 });
 
+// The divider takes its own mount in both forms: the shared items carry no
+// divider, and the element draws one from `<m-drawer-item type="divider">`.
+const dividerBox = document.createElement("div");
+const mountDivider = () => {
+  dividerBox.replaceChildren();
+  if (form === "element") {
+    const host = document.createElement("m-drawer");
+    host.setAttribute("open", "");
+    host.setAttribute("value", "one");
+    host.innerHTML = `
+      <m-drawer-item value="one">One</m-drawer-item>
+      <m-drawer-item type="divider"></m-drawer-item>
+      <m-drawer-item value="two">Two</m-drawer-item>`;
+    dividerBox.append(host);
+    return;
+  }
+  const drawer = createDrawer({
+    headline: "Divider",
+    variant: "standard",
+    open: true,
+    items: [
+      { id: "one", label: "One" },
+      { type: "divider" },
+      { id: "two", label: "Two" },
+    ],
+  });
+  dividerBox.append(drawer.element);
+};
+scenario(variants, {
+  title: "Divider gap and side insets",
+  lookFor: "the divider between two rows: the space above and below it, and its distance from the sheet's edges",
+  expected: "16 px between the divider and each row, and 28 px from each sheet edge (m3 navigation drawer specs)",
+  measure: () => {
+    const shadow = dividerBox.querySelector("m-drawer")?.shadowRoot ?? dividerBox;
+    const sheet = shadow.querySelector(".mtrl-drawer__sheet");
+    const divider = shadow.querySelector(".mtrl-drawer__divider");
+    const before = shadow.querySelector('[data-id="one"]');
+    const after = shadow.querySelector('[data-id="two"]');
+    if (!sheet || !divider || !before || !after) return "no drawer";
+    const s = sheet.getBoundingClientRect();
+    const d = divider.getBoundingClientRect();
+    const b = before.getBoundingClientRect();
+    const a = after.getBoundingClientRect();
+    const round = (value) => Math.round(value * 10) / 10;
+    return `gap ${round(d.top - b.bottom)} / ${round(a.top - d.bottom)} px · inset ${round(d.left - s.left)} / ${round(s.right - d.right)} px`;
+  },
+  mount: (body) => {
+    body.append(dividerBox);
+    const paint = () => mountDivider();
+    painters.add(paint);
+    paint();
+  },
+});
+
 const states = section(host(), "States");
 const stateBox = document.createElement("div");
 scenario(states, {
@@ -398,6 +452,7 @@ scenario(edge, {
     paint();
   },
 });
+
 </script>
 </body>
 </html>
