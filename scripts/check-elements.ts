@@ -35,7 +35,7 @@ import { checkSheetVariant } from "./check-sheet-variant-browser";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkFocusVisibility } from "./check-focus-visibility";
-import { checkStalledMenuFocus } from "./check-menu-opening-focus";
+import { checkMenuConsumerFocus, checkStalledMenuFocus } from "./check-menu-opening-focus";
 import { checkCardActions } from "./check-card-actions-browser";
 import { checkShapeCorners } from "./check-shape-corners";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
@@ -186,6 +186,15 @@ try {
 
   if (selected("a")) await checkDeclarativeUpgrade(browser.browser()!);
   const defaultViewport = { width: 900, height: 700 };
+  if (selected("menu-opening-focus")) {
+    const consumerPage = await browser.browser()!.newPage({ viewport: defaultViewport });
+    try {
+      await consumerPage.goto(`http://127.0.0.1:${server.port}`);
+      await checkMenuConsumerFocus(consumerPage, !!webkitBrowser, check);
+    } finally {
+      await consumerPage.close();
+    }
+  }
   const page = await browser.browser()!.newPage({ viewport: defaultViewport });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -9248,12 +9257,6 @@ try {
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
     check("FAB menu: presentation=menu loads the baseline menu into its shadow root, fits the viewport, and keeps a 4px gap");
 
-    const menuFab = page.getByRole("button", { name: "New" });
-    await checkStalledMenuFocus(page, "#fm2", menuFab, "doc", "FAB menu");
-    await page.keyboard.press("Escape");
-    await page.locator("#fm2[open]").waitFor({ state: "detached", timeout: 5000 });
-    check("FAB menu: the menu presentation focuses the first item after an opening stall");
-
     // `open` by attribute or property is applied in the attribute
     // callback and dispatches nothing; show() and hide() dispatch one event
     // each, and the state and the attribute are there when they return. In the
@@ -9984,25 +9987,6 @@ try {
     await page.keyboard.press("Escape");
     await settle();
     check("menu: the anchor property takes an element; an anchor id resolves in the menu's own root first");
-
-    // Submenu options use the factory's menu-button path.
-    await fresh(page, '<div id="submenu-select" style="width: 280px"></div>');
-    await page.evaluate(() => {
-      const { createSelect } = (window as unknown as { mtrl: { createSelect: (config: object) => { element: HTMLElement } } }).mtrl;
-      const select = createSelect({
-        label: "Fruit",
-        options: [
-          { id: "apple", text: "Apple" },
-          { id: "citrus", text: "Citrus", hasSubmenu: true, submenu: [{ id: "lemon", text: "Lemon" }] },
-        ],
-      });
-      document.getElementById("submenu-select")!.append(select.element);
-    });
-    const submenuSelect = page.locator("#submenu-select input");
-    await checkStalledMenuFocus(page, "#submenu-select", submenuSelect, "apple", "select with submenu options");
-    await page.keyboard.press("Escape");
-    await page.locator("#submenu-select .mtrl-menu--visible").waitFor({ state: "detached", timeout: 5000 });
-    check("select: submenu options give the first item focus after an opening stall");
 
     // ------------------------------------------------------------ <m-select>
     await fresh(
