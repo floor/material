@@ -1,6 +1,8 @@
 // src/components/text-field/types.ts
 import type { EventCallback } from "../../core/state/emitter";
 import type { TextFieldTrailingPayload } from "./features/trailing-icon";
+import type { ChipComponent } from "../chips";
+import type { TextFieldChipEventPayload, TextFieldChipItem } from "./chip-types";
 
 export type { TextFieldTrailingPayload };
 
@@ -164,6 +166,14 @@ export interface TextFieldConfig {
   /** Suffix text to display after the input */
   suffixText?: string;
 
+  /**
+   * Input chips inside the field (m3.material.io chips), enabled by the value
+   * `textFieldChips()` returns from `material/components/text-field-chips`:
+   * the function carries the chip code, so a field created without it is
+   * unchanged and its bundle does not grow.
+   */
+  chips?: TextFieldChipsEnhancer;
+
   /** Additional CSS classes */
   class?: string;
 
@@ -173,6 +183,9 @@ export interface TextFieldConfig {
   /** Component name */
   componentName?: string;
 }
+
+/** Enables chips on a field; `textFieldChips()` builds one (opt-in module). */
+export type TextFieldChipsEnhancer = <C extends import("../../core/compose/component").ElementComponent>(component: C, config: object) => C & { chips?: import("./features/chips").ChipsFeature };
 
 /** Payload emitted by native input/change and autofill detection. */
 export interface TextFieldValuePayload {
@@ -194,6 +207,10 @@ export interface TextFieldEvents {
   change: (payload: TextFieldValuePayload) => void;
   focus: (payload: TextFieldFocusPayload) => void;
   blur: (payload: TextFieldFocusPayload) => void;
+  /** Draft text became a committed chip */
+  add: (payload: TextFieldChipEventPayload) => void;
+  /** A committed chip was removed */
+  remove: (payload: TextFieldChipEventPayload) => void;
 }
 
 /**
@@ -308,6 +325,21 @@ export interface TextFieldComponent {
 
   /** Gets the current density setting */
   getDensity: () => string;
+
+  /** Gets the committed chip values (`[]` when chips are not enabled) */
+  getValues: () => string[];
+
+  /** Replaces the committed chips; silent unless `triggerEvent` */
+  setValues: (values: readonly TextFieldChipItem[], triggerEvent?: boolean) => TextFieldComponent;
+
+  /** Gets the live chip instances */
+  getChips: () => ChipComponent[];
+
+  /** Adds a chip, subject to `maxChips`, `allowDuplicates` and `validate` */
+  addChip: (chip: TextFieldChipItem, triggerEvent?: boolean) => ChipComponent | null;
+
+  /** Removes a chip by instance, index or text */
+  removeChip: (chip: ChipComponent | number | string, triggerEvent?: boolean) => TextFieldComponent;
 
   /** Subscribes to input state events; keyboard events use input.addEventListener. */
   on: <K extends keyof TextFieldEvents>(event: K, handler: TextFieldEvents[K]) => TextFieldComponent;

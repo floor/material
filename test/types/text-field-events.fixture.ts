@@ -12,7 +12,7 @@ type Equals<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
 const field = createTextField();
-export const eventNames: Equals<keyof TextFieldEvents, "input" | "change" | "focus" | "blur" | "trailing"> = true;
+export const eventNames: Equals<keyof TextFieldEvents, "input" | "change" | "focus" | "blur" | "trailing" | "add" | "remove"> = true;
 // The trailing icon button carries the value, as the house's events do, and the click
 export const trailingShape: Equals<TextFieldTrailingPayload, { value: string; event: MouseEvent }> = true;
 export const trailingPayload: Equals<Parameters<Parameters<typeof field.on<"trailing">>[1]>[0], TextFieldTrailingPayload> = true;
@@ -22,6 +22,9 @@ export const inputPayload: Equals<Parameters<Parameters<typeof field.on<"input">
 export const changePayload: Equals<Parameters<Parameters<typeof field.on<"change">>[1]>[0], TextFieldValuePayload> = true;
 export const focusPayload: Equals<Parameters<Parameters<typeof field.on<"focus">>[1]>[0], TextFieldFocusPayload> = true;
 export const blurPayload: Equals<Parameters<Parameters<typeof field.on<"blur">>[1]>[0], TextFieldFocusPayload> = true;
+// A chip's addition and removal carry the values and the chip that changed.
+import type { TextFieldChipEventPayload } from "../../src/components/text-field/chip-types";
+export const addPayload: Equals<Parameters<Parameters<typeof field.on<"add">>[1]>[0], TextFieldChipEventPayload> = true;
 
 const onValue: TextFieldEvents["input"] = ({ value, isEmpty, isAutofilled }) => {
   const text: string = value;

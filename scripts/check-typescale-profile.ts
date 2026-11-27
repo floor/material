@@ -10,6 +10,7 @@ import * as sass from "sass";
 import { type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
 import { createPackageFixture } from "./package-fixture";
+import { styleNames } from "../src/elements/define";
 
 const fixture = await createPackageFixture();
 const scratch = await mkdtemp(resolve(".typescale-packed-"));
@@ -53,7 +54,7 @@ try {
   const keys = [...new Set(["ripple", ...family.flatMap(name => {
     const definition = Object.values(elements).find(element => element.spec.name === name);
     assert(definition, `missing public element definition ${name}`);
-    return [...definition.spec.styles] as string[];
+    return styleNames(definition.spec.styles);
   })])];
   const compileApp = (source: string, selected: boolean, prefix = "m", arms = false) => sass.compileString(
     `@use "material/src/styles/config" with ($typescale-tokens: ${selected}, $tag-prefix: "${prefix}", $direction-arms: ${arms});\n` + source,

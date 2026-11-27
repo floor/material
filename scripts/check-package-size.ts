@@ -10,6 +10,7 @@ import ts from "typescript";
 import { createPackageFixture, run } from "./package-fixture";
 import { internalIdRefs } from "./internal-ids";
 import { measureConsumerSizes, measureSlider } from "./size-fixtures";
+import { NON_COMPONENT_ENTRIES } from "./component-exports";
 import type { SizeRow } from "./size-policy";
 
 const fixture = await createPackageFixture();
@@ -143,8 +144,15 @@ try {
   // counted another way: every "./components/<name>" key. Which keys those must
   // be is test/component-exports.test.ts's check, so the number is read, not written here.
   const exportKeys = Object.keys(JSON.parse(await Bun.file("package.json").text()).exports);
-  const componentKeys = exportKeys.filter(k => k.startsWith("./components/") && k.split("/").length === 3 && !k.endsWith("constants"));
-  const componentEntryCount = exportKeys.filter(k => /^\.\/components\/[^/]+$/.test(k)).length;
+  // CI uses this same script on older releases. The measured checkout declares
+  // the feature; the packed manifest is what the probe has to verify.
+  const expectTextFieldChips = exportKeys.includes("./components/text-field-chips");
+  // An opt-in entry ships a sheet and an enhancer, not a factory: it is
+  // imported by name below, and it is not one of the factory entries this
+  // count compares.
+  const isComponentKey = (k: string) => k.split("/").length === 3 && !k.endsWith("constants") && !NON_COMPONENT_ENTRIES.has(k.slice("./components/".length));
+  const componentKeys = exportKeys.filter(k => k.startsWith("./components/") && isComponentKey(k));
+  const componentEntryCount = exportKeys.filter(k => /^\.\/components\/[^/]+$/.test(k) && isComponentKey(k)).length;
   assert(componentEntryCount > 0, "package.json exports no component entry");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
@@ -214,6 +222,15 @@ try {
     const field = createTextField({ label: 'Name' });
     field.setValue('Ada');
     assert.equal(field.getValue(), 'Ada');
+    if (${expectTextFieldChips}) {
+      const { textFieldChips } = await import('material/components/text-field-chips');
+      assert.equal(typeof textFieldChips, 'function', 'material/components/text-field-chips must export textFieldChips');
+      assert.equal(esm.textFieldChips, undefined, 'the opt-in entry must not be on the root');
+      await import('material/elements/css/text-field-chips');
+      const chipped = createTextField({ label: 'Chips', chips: textFieldChips({ items: ['qa'] }) });
+      assert.deepEqual(chipped.getValues(), ['qa'], 'the packed enhancer installs the chips');
+      chipped.destroy();
+    }
     const loading = button({ text: 'Upload', progress: { indeterminate: false } });
     document.body.append(loading.element);
     await loading.showProgress();

@@ -9,14 +9,14 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServer } from "vite";
 import { elements } from "../src/elements";
-import { hostStyleText } from "../src/elements/define";
+import { hostStyleText, styleNames } from "../src/elements/define";
 import { cascadeLayerOrder, styleIdentifier } from "./build-styles";
 import { assertRollbackBeats, repeatedAttributeBytes, specificityText, type Specificity } from "./preupgrade-specificity";
 import { preupgradeRollback } from "../src/elements/styles";
 import { componentStyles, resolveStyleDependencies, typographyDependencies } from "./style-manifest";
 
 const dir = "dist/elements/css";
-const names = ["ripple", ...resolveStyleDependencies(Object.values(elements).flatMap(element => [...element.spec.styles]))];
+const names = ["ripple", ...resolveStyleDependencies(Object.values(elements).flatMap(element => styleNames(element.spec.styles)))];
 const files = await readdir(dir);
 assert.deepEqual(
   files.filter(file => file.endsWith(".js") && file !== "index.js").sort(),

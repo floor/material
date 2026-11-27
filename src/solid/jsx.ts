@@ -109,12 +109,13 @@ declare module "solid-js" {
       "collapse": Ev<"collapse">;
       "expand": Ev<"expand">;
       "input": Ev<"input">;
+      "add": Ev<"add">;
+      "remove": Ev<"remove">;
       "trailing": Ev<"trailing">;
       "visibility": Ev<"visibility">;
       "open": Ev<"open">;
       "close": Ev<"close">;
       "action": Ev<"action">;
-      "remove": Ev<"remove">;
       "activate": Ev<"activate">;
       "select": Ev<"select">;
       "show": Ev<"show">;

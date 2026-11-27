@@ -15,6 +15,7 @@ import { chromium, firefox, webkit } from "playwright";
 import { parseHTML } from "linkedom";
 import { renderElement } from "../dist/ssr/index.js";
 import { elements, SHADOW_BASE_STYLES } from "../dist/elements/index.js";
+import { stylesFor } from "../dist/elements/define.js";
 import { cases } from "./fixtures/preupgrade-cases";
 const engine = process.argv.find(arg => arg.startsWith("--engine="))?.split("=")[1] ?? "chromium";
 assert(engine === "chromium" || engine === "firefox" || engine === "webkit");
@@ -35,7 +36,7 @@ for (const fixture of fixtures) {
     // The inline sheet's own sources, in renderStyles order: host, shadow base, the spec's styles.
     full: [
       await text(`dist/elements/css/hosts/${fixture.element}.css`),
-      ...(await Promise.all([...SHADOW_BASE_STYLES, ...specs.get(fixture.element)!.styles]
+      ...(await Promise.all([...SHADOW_BASE_STYLES, ...stylesFor(specs.get(fixture.element)!.styles, host as unknown as HTMLElement)]
         .map(name => text(`dist/elements/css/${name}.css`)))),
     ].join("\n"),
   });

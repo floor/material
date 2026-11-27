@@ -6,6 +6,8 @@ import type {
   TextFieldVariant,
   TextFieldEvents,
 } from "./types";
+import type { ChipComponent } from "../chips";
+import type { TextFieldChipItem } from "./chip-types";
 import { warnDev } from "../../core/utils/warn";
 
 /**
@@ -26,6 +28,15 @@ type ComponentWithDensity = BaseComponent & {
   setTrailingIcon?: (html: string, label?: string) => void;
   setRequired?: (required: boolean) => void;
   isRequired?: () => boolean;
+  /** The input-chips feature, when the field was created with `chips` */
+  chips?: {
+    getValues: () => string[];
+    setValues: (values: readonly TextFieldChipItem[], triggerEvent?: boolean) => void;
+    getChips: () => ChipComponent[];
+    addChip: (chip: TextFieldChipItem, triggerEvent?: boolean) => ChipComponent | null;
+    removeChip: (chip: ChipComponent | number | string, triggerEvent?: boolean) => void;
+    sync: () => void;
+  };
 };
 
 /**
@@ -281,6 +292,29 @@ export const withAPI =
 
       isError(): boolean {
         return component.isError?.() || false;
+      },
+
+      // Input chips: the feature behind `withChips`, absent when chips are off
+      getValues(): string[] {
+        return component.chips?.getValues() ?? [];
+      },
+
+      setValues(values: readonly TextFieldChipItem[], triggerEvent = false): TextFieldComponent {
+        component.chips?.setValues(values, triggerEvent);
+        return this;
+      },
+
+      getChips(): ChipComponent[] {
+        return component.chips?.getChips() ?? [];
+      },
+
+      addChip(chip: TextFieldChipItem, triggerEvent = true): ChipComponent | null {
+        return component.chips?.addChip(chip, triggerEvent) ?? null;
+      },
+
+      removeChip(chip: ChipComponent | number | string, triggerEvent = true): TextFieldComponent {
+        component.chips?.removeChip(chip, triggerEvent);
+        return this;
       },
 
       // Density management

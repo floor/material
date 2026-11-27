@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { elements, declarations } from "../src/elements";
+import { styleNames } from "../src/elements/define";
 
 const index = readFileSync(resolve(import.meta.dir, "../src/elements/index.ts"), "utf8");
 const moduleOf = new Map<string, string>();
@@ -29,7 +30,7 @@ export const camel = (name: string): string => pascal(name).replace(/^[A-Z]/, (c
 export const elementModules = Object.entries(elements).map(([name, element]) => ({
   name,
   module: find(`${camel(name)}Element`),
-  styles: [...element.spec.styles],
+  styles: styleNames(element.spec.styles),
 }));
 
 /** Each declaration child: its registry name and its module in src/elements. */

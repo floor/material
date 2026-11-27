@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { textFieldElement } from "../../src/elements/text-field";
+import { styleNames, stylesFor } from "../../src/elements/define";
 
 // `trailing-icon-label` is the factory's `trailingIconLabel`, kebab-cased as
 // `leading-icon` and `trailing-icon` are. A change updates the existing icon
@@ -24,5 +25,25 @@ describe("<m-text-field>: the virtual keyboard hint attributes", () => {
     expect(attributes.enterkeyhint).toMatchObject({ type: "string", config: "enterKeyHint" });
     expect(typeof attributes.inputmode.update).toBe("function");
     expect(typeof attributes.enterkeyhint.update).toBe("function");
+  });
+});
+
+test("<m-text-field> declares the chip sheets on the chips attribute", () => {
+  // The predicate reads the host's attribute; nothing else about it is used.
+  let chips = false;
+  const host = { hasAttribute: (name: string) => name === "chips" && chips } as HTMLElement;
+  expect(styleNames(textFieldElement.spec.styles)).toEqual(["text-field", "chips", "text-field-chips"]);
+  expect(stylesFor(textFieldElement.spec.styles, host)).toEqual(["text-field"]);
+  chips = true;
+  expect(stylesFor(textFieldElement.spec.styles, host)).toEqual(["text-field", "chips", "text-field-chips"]);
+  // A change rebuilds: the sheets and the chips follow the attribute.
+  expect(textFieldElement.spec.attributes?.chips).toEqual({ type: "boolean" });
+});
+
+// The declared <m-chip> children are the values' default, as m-list's items
+// are: a clean rebuild reads them again instead of carrying the old array.
+describe("<m-text-field>: the values' default", () => {
+  test("`values` is a default-backed property", () => {
+    expect(textFieldElement.spec.defaults).toEqual(["values"]);
   });
 });

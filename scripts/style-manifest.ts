@@ -67,6 +67,9 @@ export const componentStyles: Record<
   // It claims the root-menu registry slot so a popup and a menu never share the
   // page, but it imports that leaf only: the menu sheet stays out of its CSS.
   listbox: { source: "components/listbox", dependencies: [], optIn: true, sharedLeaves: ["menu/features/registry"] },
+  // Input chips inside a text field: `material/styles/text-field-chips` is the
+  // only sheet that carries the row; a page without it is unchanged.
+  "text-field-chips": { source: "components/text-field-chips", dependencies: ["text-field", "chips"], optIn: true },
 };
 
 // All shipped components have selective CSS entries.

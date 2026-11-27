@@ -23,10 +23,17 @@ export type ComponentExports = Record<string, ComponentExport[]>;
 const ROOT = join(import.meta.dir, "..");
 const FIXTURE = join(ROOT, "scripts/fixtures/component-exports.json");
 
+/**
+ * Entry folders that are not components: `text-field-chips` ships an opt-in
+ * enhancer at its own subpath, with no factory, no root export and no barrel
+ * of its own, so it is no member of the factory table or the component pins.
+ */
+export const NON_COMPONENT_ENTRIES = new Set(["text-field-chips"]);
+
 /** The component folders `material/components/<name>` resolves to */
 export const componentNames = (): string[] =>
   readdirSync(join(ROOT, "src/components"))
-    .filter((name) => existsSync(join(ROOT, `src/components/${name}/index.ts`)))
+    .filter((name) => existsSync(join(ROOT, `src/components/${name}/index.ts`)) && !NON_COMPONENT_ENTRIES.has(name))
     .sort();
 
 const kindOf = (symbol: ts.Symbol): ComponentExport["kind"] =>

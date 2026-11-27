@@ -1,111 +1,396 @@
 <!doctype html>
 <html lang="en" data-theme="baseline" data-theme-mode="light">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Text field label geometry</title>
+<title>text-field</title>
 <link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../../../dist/styles/text-field-chips.css">
+<link rel="stylesheet" href="../../shared/harness.css">
 <style>
-  body {
-    margin: 0;
-    padding: clamp(16px, 4vw, 32px);
-    background: var(--mtrl-sys-color-surface);
-    color: var(--mtrl-sys-color-on-surface);
-    font-family: var(--mtrl-ref-typeface-plain, sans-serif);
-  }
-  main { max-width: 800px; margin-inline: auto; }
-  h1, h2, h3, p { margin: 0; }
-  h1 { font-size: 26px; line-height: 32px; }
-  p { margin-block: 8px 24px; max-width: 55ch; }
-  #directions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
-  section {
-    display: grid;
-    align-content: start;
-    gap: 20px;
-    padding: 16px;
-    border: 1px solid var(--mtrl-sys-color-outline-variant);
-    border-radius: 12px;
-  }
-  h2 { font-size: 18px; }
-  h3 { font-size: 14px; font-weight: 500; }
-  .sample { display: grid; gap: 8px; }
-  .sample .mtrl-text-field { width: 100%; }
-  output {
-    color: var(--mtrl-sys-color-on-surface-variant);
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-  }
+  .tp-field { width: 520px; max-width: 100%; }
+  .tp-field--narrow { width: 220px; }
+  .tp-stage { display: grid; gap: 16px; }
 </style>
-<main>
-  <h1>Text field label geometry</h1>
-  <p>Focus an empty field to float its label. While floated, the filled label starts 8 px from the top, and the outlined notch leaves 4 px on each side.</p>
-  <div id="directions">
-    <section id="ltr" aria-labelledby="ltr-heading">
-      <h2 id="ltr-heading">Left to right</h2>
-    </section>
-    <section id="rtl" aria-labelledby="rtl-heading">
-      <h2 id="rtl-heading">Right to left</h2>
-    </section>
-  </div>
-</main>
+</head>
+<body>
 <script type="module">
+  import { initPage, section, scenario } from "../../shared/harness.js";
   import { createTextField } from "../../../../dist/index.js";
+  import { textFieldChips } from "../../../../dist/components/text-field-chips/index.js";
+  import { defineTextField } from "../../../../dist/elements/text-field.js";
+  import "../../../../dist/elements/css/text-field-chips.js";
 
-  const samples = [
-    { variant: "filled", label: "Email address", value: "ada@example.com" },
-    { variant: "filled", label: "Email address" },
-    { variant: "outlined", label: "Backup email for account recovery", value: "ada@example.com", fractional: true },
-    { variant: "outlined", label: "Email address" },
-  ];
-  const measurements = [];
-  const px = value => `${value.toFixed(2)} px`;
-  let frame;
-  const schedule = () => { frame ??= requestAnimationFrame(update); };
-  const observer = new ResizeObserver(schedule);
+  defineTextField();
+  const main = await initPage({ name: "text-field" });
 
-  function update() {
-    frame = undefined;
-    const readings = measurements.map(({ field, label, notch, fractional }) => {
-      const box = label.getBoundingClientRect();
-      if (!notch) return `Label top ${px(box.top - field.field.getBoundingClientRect().top)}`;
-      if (!notch.parentElement.classList.contains("mtrl-text-field__outline--notched")) return "Notch closed";
-      const gap = notch.getBoundingClientRect();
-      const width = fractional ? ` · Label width ${getComputedStyle(label).width.replace("px", " px")}` : "";
-      return `Notch left ${px(box.left - gap.left)} · Right ${px(gap.right - box.right)}${width}`;
-    });
-    for (const [index, { output }] of measurements.entries()) {
-      if (output.textContent !== readings[index]) output.textContent = readings[index];
-    }
-    if (measurements.some(({ label }) => label.getAnimations().some(animation => animation.pending || animation.playState === "running"))) schedule();
-  }
+  const stage = (body) => {
+    const el = document.createElement("div");
+    el.className = "tp-stage";
+    body.append(el);
+    return el;
+  };
+  const factoryField = (parent, config, className = "tp-field") => {
+    const { items = [], ...chips } = config;
+    const field = createTextField({ ...config, chips: textFieldChips({ items, ...chips }) });
+    field.element.classList.add(...className.split(" "));
+    parent.append(field.element);
+    return field;
+  };
+  const chipInfo = (field) => {
+    const root = field.element;
+    const chips = [...root.querySelectorAll(".mtrl-chip")];
+    const first = chips[0];
+    const remove = first?.querySelector(".mtrl-chip__remove");
+    const before = remove ? getComputedStyle(remove, "::before") : null;
+    return {
+      chips: chips.length,
+      values: field.getValues(),
+      rows: new Set(chips.map((chip) => Math.round(chip.getBoundingClientRect().top))).size,
+      firstWidth: first ? Math.round(first.getBoundingClientRect().width) : null,
+      removeTarget: before ? `${before.width} x ${before.height}` : null,
+    };
+  };
+  const labelInfo = (field) => {
+    const element = field.element;
+    const label = element.querySelector(".mtrl-text-field__label");
+    const row = element.querySelector(".mtrl-text-field__chips");
+    const outline = element.querySelector(".mtrl-text-field__outline");
+    const box = element.getBoundingClientRect();
+    return {
+      empty: element.classList.contains("mtrl-text-field--empty"),
+      labelTop: label && row ? Math.round(label.getBoundingClientRect().top - row.getBoundingClientRect().top) : null,
+      rowHeight: row ? Math.round(row.getBoundingClientRect().height) : null,
+      // The outlined label sits on the outline's top edge.
+      labelOnEdge: label && outline
+        ? Math.round(label.getBoundingClientRect().top + label.getBoundingClientRect().height / 2 - outline.getBoundingClientRect().top)
+        : null,
+      notchOpen: outline ? outline.classList.contains("mtrl-text-field__outline--notched") : null,
+      width: Math.round(box.width),
+    };
+  };
+  const json = (value) => JSON.stringify(value);
+  const live = (field) => field.element.querySelector(".mtrl-text-field__chips-live");
 
-  for (const direction of ["ltr", "rtl"]) {
-    const panel = document.getElementById(direction);
-    for (const { variant, label: text, value, fractional } of samples) {
-      const sample = document.createElement("div");
-      sample.className = "sample";
-      sample.dir = direction;
-      const title = document.createElement("h3");
-      title.textContent = `${variant === "filled" ? "Filled" : "Outlined"} · ${value ? "populated" : "empty"}`;
-      const field = createTextField({ variant, label: text, value });
-      const label = field.element.querySelector(".mtrl-text-field__label");
-      const notch = field.element.querySelector(".mtrl-text-field__outline-notch");
-      const output = document.createElement("output");
-      output.dir = "ltr";
-      output.htmlFor.add(field.input.id);
-      output.setAttribute("aria-live", "off");
+  // ---------------------------------------------------------------- Variants
+  const variants = section(main, "Variants and sizes");
+  scenario(variants, {
+    title: "Filled and outlined fields with input chips",
+    lookFor: "the label stays on its own line above the chips and the outlined notch stays open.",
+    expected: "the chips row sits inside the field, the label above it, and both variants keep their 56dp container.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__variantFields = [
+        factoryField(box, { label: "To", name: "to", type: "email", variant: "filled", items: ["alice@example.com", "bob@example.com"] }),
+        factoryField(box, { label: "Copy to", name: "cc", type: "email", variant: "outlined", items: ["carol@example.com"] }),
+      ];
+    },
+    measure: () => json(window.__variantFields.map(labelInfo)),
+  });
+  scenario(variants, {
+    title: "A narrow field wraps its chips",
+    lookFor: "chips wrap onto new rows 16px apart and every chip keeps its 88dp minimum.",
+    expected: "no chip leaves the field, and no two chips share a target.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__narrowField = factoryField(box, { label: "Recipients", items: ["alice@example.com", "bob@example.com", "a-long-recipient-address@example.com", "d@e.com"] }, "tp-field tp-field--narrow");
+    },
+    measure: () => json(chipInfo(window.__narrowField)),
+  });
 
-      // Use a known fractional layout width, regardless of which font loads.
-      if (fractional) label.style.width = "min(232.625px, calc(100% - 32.375px))";
-      sample.append(title, field.element, output);
-      panel.append(sample);
-      measurements.push({ field, label, notch, output, fractional });
-      observer.observe(label);
-      observer.observe(notch ?? field.field);
-      for (const event of ["input", "focusin", "focusout", "transitionrun", "transitionend", "transitioncancel"]) {
-        field.element.addEventListener(event, schedule);
+  // ------------------------------------------------------------------ States
+  const states = section(main, "States");
+  scenario(states, {
+    title: "A committed chip keeps the field filled",
+    lookFor: "blur, focus, typing, clearing, setValue and the form's reset never paint the empty placeholder while a chip is committed.",
+    expected: "the root never carries --empty with a chip and an empty draft, so the label stays floated and the notch open on every frame.",
+    mount: (body) => {
+      const box = stage(body);
+      const form = document.createElement("form");
+      form.addEventListener("submit", (event) => event.preventDefault());
+      box.append(form);
+      const field = factoryField(form, { label: "To", name: "to", variant: "outlined", items: ["alice@example.com"] });
+      const reset = document.createElement("button");
+      reset.type = "reset";
+      reset.textContent = "Reset";
+      form.append(reset);
+      window.__stateField = field;
+    },
+    measure: () => json(labelInfo(window.__stateField)),
+  });
+
+  // From #518: a floated filled label starts 8 px from the top, and the
+  // outlined notch leaves 4 px on each side of the label, in both directions.
+  scenario(states, {
+    title: "The floated label and the outlined notch",
+    lookFor: "focus an empty field to float its label; the filled label starts 8 px from the top, and the outlined notch leaves 4 px on each side, mirrored in RTL.",
+    expected: "the same geometry in left-to-right and right-to-left, at a whole and a fractional label width.",
+    mount: (body) => {
+      const box = stage(body);
+      const samples = [
+        { variant: "filled", label: "Email address", value: "ada@example.com" },
+        { variant: "filled", label: "Email address" },
+        { variant: "outlined", label: "Backup email for account recovery", value: "ada@example.com", fractional: true },
+        { variant: "outlined", label: "Email address" },
+      ];
+      const reads = [];
+      for (const dir of ["ltr", "rtl"]) {
+        const wrapper = document.createElement("div");
+        wrapper.dir = dir;
+        wrapper.style.display = "grid";
+        wrapper.style.gap = "16px";
+        wrapper.dataset.dir = dir;
+        box.append(wrapper);
+        for (const sample of samples) {
+          // #518's geometry is the plain field's: no chips here.
+          const { fractional, ...config } = sample;
+          const field = createTextField(config);
+          field.element.classList.add("tp-field");
+          wrapper.append(field.element);
+          const element = field.element;
+          reads.push({
+            dir,
+            variant: sample.variant,
+            field,
+            label: element.querySelector(".mtrl-text-field__label"),
+            notch: element.querySelector(".mtrl-text-field__outline-notch"),
+            outline: element.querySelector(".mtrl-text-field__outline"),
+            fractional: !!sample.fractional,
+          });
+        }
       }
-    }
-  }
-  schedule();
+      window.__labelReads = reads;
+    },
+    measure: () => {
+      const reads = window.__labelReads.map(({ dir, variant, field, label, notch, outline, fractional }) => {
+        const box = field.element.getBoundingClientRect();
+        const labelBox = label.getBoundingClientRect();
+        if (variant === "filled") return `${dir} filled label top ${(labelBox.top - box.top).toFixed(2)}`;
+        if (!outline.classList.contains("mtrl-text-field__outline--notched")) return `${dir} outlined notch closed`;
+        const gap = notch.getBoundingClientRect();
+        const width = fractional ? ` label width ${getComputedStyle(label).width}` : "";
+        return `${dir} outlined notch left ${(labelBox.left - gap.left).toFixed(2)} right ${(gap.right - labelBox.right).toFixed(2)}${width}`;
+      });
+      return json(reads);
+    },
+  });
+
+  // ------------------------------------------------------------- Interaction
+  const interaction = section(main, "Interaction");
+  scenario(interaction, {
+    title: "Enter, a separator, Backspace and a second activation",
+    lookFor: "typing a name and pressing Enter or a separator makes one chip and clears the draft; Backspace at the start selects the last chip and a second Backspace removes it; a second activation edits the chip as text.",
+    expected: "one chip per entry, the draft empty after a commit, and the status region naming what was added or removed.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__interactionField = factoryField(box, { label: "Participants", separators: [",", ";"] });
+    },
+    measure: () => json({ ...chipInfo(window.__interactionField), live: live(window.__interactionField)?.textContent ?? "" }),
+  });
+
+  let optionsField;
+  scenario(interaction, {
+    title: "Change a chip field’s options after upgrade",
+    lookFor: "press Apply chip options, type one and press semicolon, then type two and press Enter.",
+    expected: "one becomes a chip and two stays in the draft at the new one-chip limit.",
+    mount: (body) => {
+      const box = stage(body);
+      optionsField = document.createElement("m-text-field");
+      optionsField.className = "tp-field";
+      optionsField.setAttribute("label", "Recipients");
+      optionsField.setAttribute("chips", "");
+      const apply = document.createElement("button");
+      apply.type = "button";
+      apply.textContent = "Apply chip options";
+      apply.addEventListener("click", () => {
+        optionsField.setAttribute("separators", ";");
+        optionsField.setAttribute("max-chips", "1");
+        optionsField.shadowRoot.querySelector("input").focus();
+      });
+      box.append(optionsField, apply);
+    },
+    measure: () => json({
+      separator: optionsField.getAttribute("separators"),
+      maxChips: optionsField.getAttribute("max-chips"),
+      chips: optionsField.getValues(),
+      draft: optionsField.value,
+    }),
+  });
+
+  // ------------------------------------------------------------- Edge cases
+  const edges = section(main, "Edge cases");
+  let restoreField;
+  let savedDraft;
+  scenario(edges, {
+    title: "Save and restore a JSON-shaped draft",
+    lookFor: "press Save and restore draft to enter a sample draft, save it and restore the saved state.",
+    expected: "the literal draft returns and the chip list stays empty.",
+    mount: (body) => {
+      const box = stage(body);
+      restoreField = document.createElement("m-text-field");
+      restoreField.className = "tp-field";
+      restoreField.setAttribute("label", "Restored draft");
+      restoreField.setAttribute("chips", "");
+      const roundTrip = document.createElement("button");
+      roundTrip.type = "button";
+      roundTrip.textContent = "Save and restore draft";
+      roundTrip.addEventListener("click", () => {
+        const setFormValue = ElementInternals.prototype.setFormValue;
+        ElementInternals.prototype.setFormValue = function (value, state) {
+          savedDraft = state;
+          setFormValue.call(this, value, state);
+        };
+        try {
+          restoreField.value = JSON.stringify({ v: ["example"], d: "sample text" });
+        } finally {
+          ElementInternals.prototype.setFormValue = setFormValue;
+        }
+        restoreField.value = "";
+        restoreField.formStateRestoreCallback(savedDraft);
+      });
+      box.append(restoreField, roundTrip);
+    },
+    measure: () => json({ saved: savedDraft, chips: restoreField.getValues(), draft: restoreField.value }),
+  });
+  scenario(edges, {
+    title: "An invalid address stays as text",
+    lookFor: "type an address without @ and press Enter.",
+    expected: "no chip is made, the text stays in the input, and the supporting text says why.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__emailField = factoryField(box, { label: "To", type: "email", supportingText: "Separate addresses with a comma" });
+    },
+    measure: () => {
+      const field = window.__emailField;
+      return json({ draft: field.getValue(), chips: field.getValues() });
+    },
+  });
+  scenario(edges, {
+    title: "A chip child added after upgrade becomes a chip",
+    lookFor: "the element is mounted with the chips attribute and no children; press Add a chip.",
+    expected: "each added <m-chip> child becomes a chip with its value, and removing the child takes the chip away.",
+    mount: (body) => {
+      const box = stage(body);
+      const element = document.createElement("m-text-field");
+      element.className = "tp-field tp-field--narrow";
+      element.setAttribute("label", "Added later");
+      element.setAttribute("chips", "");
+      box.append(element);
+      const add = document.createElement("button");
+      add.textContent = "Add a chip";
+      add.addEventListener("click", () => {
+        const chip = document.createElement("m-chip");
+        chip.setAttribute("value", `c${element.querySelectorAll("m-chip").length + 1}`);
+        chip.textContent = `c${element.querySelectorAll("m-chip").length + 1}`;
+        element.append(chip);
+      });
+      box.append(add);
+      window.__addedField = element;
+    },
+    measure: () => {
+      const element = window.__addedField;
+      const root = element.shadowRoot;
+      return json({ shadowChips: root?.querySelectorAll(".mtrl-chip").length ?? 0, lightChips: element.querySelectorAll("m-chip").length, values: element.getValues() });
+    },
+  });
+  scenario(edges, {
+    title: "The chip sheet in either load order",
+    lookFor: "press Load the chip sheet first and watch the row and input sizes; it restores on the next press.",
+    expected: "the row height and the input line measure the same with the chip sheet before or after the full stylesheet, and the chip keeps its 88dp minimum.",
+    mount: (body) => {
+      const box = stage(body);
+      const field = factoryField(box, { label: "Load order", items: ["a"] }, "tp-field tp-field--narrow");
+      const read = () => {
+        const element = field.element;
+        const row = element.querySelector(".mtrl-text-field__chips");
+        const input = element.querySelector(".mtrl-text-field__input");
+        const chip = element.querySelector(".mtrl-chip");
+        return {
+          row: row ? Math.round(row.getBoundingClientRect().height) : null,
+          input: input ? Math.round(input.getBoundingClientRect().height) : null,
+          chip: chip ? Math.round(chip.getBoundingClientRect().width) : null,
+        };
+      };
+      window.__orderField = field;
+      window.__orderReads = { after: read(), first: null };
+      const button = document.createElement("button");
+      button.textContent = "Load the chip sheet first";
+      button.addEventListener("click", () => {
+        const chipSheet = document.head.querySelector('link[href$="styles/text-field-chips.css"]');
+        const fullSheet = document.head.querySelector('link[href$="styles.css"]');
+        if (!chipSheet || !fullSheet) return;
+        const original = chipSheet.previousElementSibling;
+        if (window.__orderReads.first === null) {
+          fullSheet.before(chipSheet);
+          requestAnimationFrame(() => {
+            window.__orderReads.first = read();
+            window.__orderReads.flipped = true;
+          });
+        } else {
+          // Restore: the chip sheet goes back after the full stylesheet.
+          original ? original.after(chipSheet) : document.head.append(chipSheet);
+          window.__orderReads = { after: read(), first: window.__orderReads.first };
+        }
+      });
+      box.append(button);
+    },
+    measure: () => json({ flipped: !!window.__orderReads?.flipped, ...window.__orderReads }),
+  });
+
+  scenario(edges, {
+    title: "Both 48dp targets own their edge, at the browser's zoom",
+    lookFor: "the chip's start belongs to its action and its end to the remove button; zoom the browser to 200% and the edges stay theirs.",
+    expected: "elementFromPoint at 0/40/44 resolves to the action, at 48 and at the chip's end to the remove button.",
+    mount: (body) => {
+      const box = stage(body);
+      window.__hitField = factoryField(box, { label: "Hit targets", items: ["a"] }, "tp-field tp-field--narrow");
+    },
+    measure: () => {
+      const element = window.__hitField.element;
+      const chip = element.querySelector(".mtrl-chip");
+      if (!chip) return json({});
+      const box = chip.getBoundingClientRect();
+      const y = box.top + box.height / 2;
+      const at = (offset) => {
+        const hits = document.elementsFromPoint(box.left + offset, y);
+        const inside = hits.find((hit) => chip.contains(hit)) ?? null;
+        if (!inside) return "nothing";
+        return inside.closest(".mtrl-chip__remove") ? "remove" : inside.closest(".mtrl-chip__action") ? "action" : inside.className;
+      };
+      return json({ width: Math.round(box.width), zoom: window.devicePixelRatio, at0: at(0), at40: at(40), at44: at(44), at48: at(48), atEnd: at(Math.round(box.width) - 2) });
+    },
+  });
+  scenario(edges, {
+    title: "The element matches the factory",
+    lookFor: "the same field as <m-text-field chips> beside the factory's.",
+    expected: "the element's shadow root adopts the chip sheets while chips is on: an 88px short chip, a 48dp remove target, the same values.",
+    mount: (body) => {
+      const box = stage(body);
+      const element = document.createElement("m-text-field");
+      element.className = "tp-field tp-field--narrow";
+      element.setAttribute("label", "Element");
+      element.setAttribute("chips", "");
+      element.innerHTML = ["a", "b"].map((value) => `<m-chip value="${value}">${value}</m-chip>`).join("");
+      box.append(element);
+      window.__elementField = element;
+    },
+    measure: () => {
+      const element = window.__elementField;
+      const root = element.shadowRoot;
+      const chip = root?.querySelector(".mtrl-chip");
+      const remove = chip?.querySelector(".mtrl-chip__remove");
+      const before = remove ? getComputedStyle(remove, "::before") : null;
+      const sheetCounters = (root?.adoptedStyleSheets ?? []).map((sheet) => [...sheet.cssRules].map((rule) => rule.cssText).join("\n"));
+      return json({
+        adopted: root?.adoptedStyleSheets.length ?? 0,
+        chipSheets: sheetCounters.filter((text) => text.includes(".mtrl-text-field__chips")).length,
+        chips: root?.querySelectorAll(".mtrl-chip").length ?? 0,
+        firstWidth: chip ? Math.round(chip.getBoundingClientRect().width) : null,
+        removeTarget: before ? `${before.width} x ${before.height}` : null,
+        values: element.getValues(),
+      });
+    },
+  });
 </script>
+</body>
 </html>

@@ -189,7 +189,14 @@ export async function buildStyles(outdir: string, banner: string, graph?: Catalo
       // base without moving either sheet's rules.
       // Contrast is emitted separately, in that same layer (`emitExplicit`).
       const layer = name === "typography" || name === "base-lite" ? "base" : name === "base-elements" ? "base" : name;
-      await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
+      // The chip row refines rules that are unlayered in the full sheet.
+      // Keep it unlayered so its more specific selectors win in either
+      // load order.
+      if (name === "text-field-chips") {
+        await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
+      } else {
+        await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
+      }
       // JS module edges are deduplicated across entries. Nested CSS @imports
       // can be independently inlined by Vite and duplicate shared styles.
       await writeFile(`${outdir}/${path}.js`, dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") +
@@ -296,7 +303,7 @@ async function emitElementStyles(outdir: string, options: sass.StringOptions<"sy
   await write("ripple", "utilities/ripple", []);
   // Only components that have an element, and what their CSS depends on.
   const specs = Object.values(elements);
-  const names = resolveStyleDependencies(specs.flatMap(element => [...element.spec.styles]));
+  const names = resolveStyleDependencies(specs.flatMap(element => definition.styleNames(element.spec.styles)));
   // A pre-upgrade partial belongs to a CSS module or to an element name.
   // The deprecated top app bar's and drawer's specs reuse their component
   // sheets under the new names, which have no sheet of their own.

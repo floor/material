@@ -1,0 +1,180 @@
+// src/styles/components/_text-field-chips.scss
+//
+// The optional stylesheet for input chips inside a text field,
+// `material/styles/text-field-chips`. It is not part of the full stylesheet and
+// adds nothing to a page that does not import it; the text field's own sheet
+// keeps its layout as it was. The chip's own rules are the chips sheet's
+// (`_chips.scss`) and the field's are the text field's (`_text-field.scss`);
+// this file is the row that joins them.
+//
+// Read on 2026-11-27:
+//   https://m3.material.io/components/chips/guidelines
+//     "Keep an 8dp minimum space between chips"; chips "must also have a
+//     minimum 48dp target size, regardless of placement or density. If
+//     required, the target can extend beyond the visible container."
+//   https://m3.material.io/components/chips/specs
+//     Input chip container 32dp, corner radius 8dp.
+@use "../../styles/abstract/base" as base;
+@use "../../styles/abstract/variables" as v;
+@use "../../styles/abstract/functions" as f;
+@use "../../styles/abstract/mixins" as m;
+@use "../../styles/abstract/theme" as t;
+
+$component: "#{base.$prefix}-text-field";
+
+// The chip being edited is hidden while the draft input takes its place. The
+// chips sheet sets the chip's own display, which would beat the user agent's
+// `[hidden] { display: none }`; the rule lives here because only the chip
+// field hides a chip.
+.#{$component}--with-chips .#{base.$prefix}-chip[hidden] {
+    display: none;
+}
+
+.#{$component} {
+    // ===== INPUT CHIPS =====
+    // m3.material.io chips, "Input chips": the committed chips and the draft
+    // input share one wrapping row. The row takes the container the input
+    // draws — fill, indicator, radius, padding — and the input inside it is a
+    // bare growing line of text beside the chips.
+    &--with-chips {
+        // The chip announcements' status region: in the accessibility tree,
+        // out of the layout.
+        .#{$component}__chips-live {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .#{$component}__chips {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            // 8dp between chips (m3.material.io: "Keep an 8dp minimum space
+            // between chips"); 16dp between rows so the 48dp targets of a
+            // 32dp chip never overlap across wrapped rows (design §3.2).
+            column-gap: 8px;
+            row-gap: 16px;
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 56px;
+            cursor: text;
+
+            // The component sheet's `.mtrl-text-field__input` rule is emitted
+            // unlayered in the full stylesheet, and so are this sheet's rules
+            // (`scripts/build-styles.ts`): these, being more specific, win in
+            // either load order.
+            .#{$component}__input {
+                flex: 1 1 80px;
+                min-width: 60px;
+                width: auto;
+                height: 32px;
+                padding: 0;
+                border: 0;
+                border-radius: 0;
+                background-color: transparent;
+            }
+        }
+
+        // `display: contents` leaves the named group in the accessibility tree
+        // while its chips take part in the row's flex layout (design §3.2).
+        .#{$component}__chips-list {
+            display: contents;
+        }
+
+        // A chip's own remove button carries its 48dp target in ::before; the
+        // chip holds still inside the row instead of growing.
+        .#{$component}__chips .mtrl-chip {
+            flex: 0 1 auto;
+            max-width: 100%;
+        }
+
+        // Two 48dp targets on an 88dp chip. The remove target runs from the
+        // chip's end 48dp back to 8dp past it -- beyond the container, as M3
+        // allows -- so it covers the chip's end and the row's 8dp gap. The
+        // action target then runs from 8dp before the chip to that box's
+        // start, 56dp (its 48dp minimum and the leading 8dp), and the two
+        // meet with no gap. The neighbour's action target begins 8dp before
+        // its chip, inside this chip's remove overhang; the remove's stacking
+        // keeps the seam with the chip it belongs to.
+        .#{$component}__chips .mtrl-chip__action::before {
+            inset-inline-start: -8px;
+            inset-inline-end: auto;
+            width: 56px;
+        }
+
+        .#{$component}__chips .mtrl-chip__remove::before {
+            inset-inline-end: -8px;
+            z-index: 1;
+        }
+    }
+
+    // Filled: the row is the container, under the label's line
+    &--filled.#{$component}--with-chips .#{$component}__chips {
+        background-color: t.color("surface-container-highest");
+        border-bottom: 1px solid t.color("on-surface-variant");
+        border-radius: f.get-shape("extra-small") f.get-shape("extra-small") 0 0;
+        padding: f.density(24px, 12px, 3px) var(--#{$component}-end, 16px)
+            f.density(7px, 3px, 1px) var(--#{$component}-start, 16px);
+        @include m.motion-transition(background-color, border-color);
+
+        &:hover:not(.#{$component}--focused):not(.#{$component}--disabled):not(.#{$component}--error):not(:has(.#{$component}__input:disabled)) {
+            background-image: linear-gradient(#{t.alpha("on-surface", 0.08)}, #{t.alpha("on-surface", 0.08)});
+            border-bottom-color: t.color("on-surface");
+        }
+    }
+
+    // A filled field with no label: the chips sit centred in the 56dp row
+    &--filled.#{$component}--with-chips:not(.#{$component}--with-chips-label) .#{$component}__chips {
+        padding-top: 12px;
+        padding-bottom: 11px;
+    }
+
+    // A label on a field with chips sits on the first line, as the multiline
+    // field pins it: at top: 50% it would sink into wrapped chip rows.
+    &--with-chips {
+        .#{$component}__label {
+            top: 50%;
+        }
+    }
+
+    // The filled variant only: the outlined label sits on the field's top edge
+    // through its own floated transform, wrapped rows or not.
+    &--filled.#{$component}--with-chips.#{$component}--with-chips-label .#{$component}__label {
+        top: f.density(24px, 12px, 3px);
+        transform: none;
+        transform-origin: left top;
+    }
+
+    // Outlined: the outline still draws the edge, the row supplies the padding
+    &--outlined.#{$component}--with-chips .#{$component}__chips {
+        padding: 12px var(--#{$component}-end, 16px) 12px var(--#{$component}-start, 16px);
+        background-color: transparent;
+    }
+
+    // Focus, error and disabled states reach the row, as they reach the input
+    &--filled.#{$component}--with-chips {
+        &.#{$component}--focused .#{$component}__chips {
+            border-bottom-color: transparent;
+        }
+
+        &.#{$component}--error .#{$component}__chips {
+            border-bottom-color: t.color("error");
+        }
+
+        &.#{$component}--error:hover:not(.#{$component}--focused) .#{$component}__chips {
+            border-bottom-color: t.color("on-error-container");
+        }
+
+        &.#{$component}--disabled .#{$component}__chips,
+        &:has(.#{$component}__input:disabled) .#{$component}__chips {
+            background-color: t.alpha("on-surface", 0.04);
+            border-bottom-color: t.alpha("on-surface", 0.38);
+        }
+    }
+}

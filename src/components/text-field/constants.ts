@@ -68,6 +68,10 @@ const TEXT_FIELD_EVENTS = {
   KEYDOWN: "keydown",
   /** Native input event only; not emitted through on() */
   KEYUP: "keyup",
+  /** Fired when the draft text becomes a committed chip */
+  ADD: "add",
+  /** Fired when a committed chip is removed */
+  REMOVE: "remove",
 } as const;
 
 /**
@@ -155,6 +159,12 @@ const TEXT_FIELD_CLASSES = {
   RTL: "text-field--rtl",
   /** Multiline class */
   MULTILINE: "text-field--multiline",
+  /** The flex row holding the committed chips and the draft input */
+  CHIPS: "text-field__chips",
+  /** The named group of committed chips inside that row */
+  CHIPS_LIST: "text-field__chips-list",
+  /** The field with input chips enabled */
+  WITH_CHIPS: "text-field--with-chips",
 } as const;
 
 // Every exported identifier writes "text field" as two words; the

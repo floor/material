@@ -240,7 +240,7 @@ function render(tag: string, attributes: RenderAttributes, children: string, opt
           .map(node => serializeNode(node, expand, depth + 1)).join("");
         // The mounted markup decides which rules the inline sheet can drop.
         const styles = renderStyles(entry, options,
-          options.styles === "link" ? undefined : renderedClasses(element.shadowRoot!));
+          options.styles === "link" ? undefined : renderedClasses(element.shadowRoot!), element);
         if (depth === 0) rootShadow = styles + shadow;
         const content = shadowOnly && depth === 0 ? "" : light.map(node => serializeNode(node, expand, depth + 1)).join("");
         return `<${element.localName}${attributesText(hostAttributes)}><template shadowrootmode="open" shadowrootdelegatesfocus="">` +

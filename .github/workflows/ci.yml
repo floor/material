@@ -499,6 +499,9 @@ jobs:
           - group: card-state-layers
             browsers: chromium webkit
             checks: card-state-layers:check
+          - group: text-field-chips
+            browsers: chromium webkit
+            checks: text-field-chips:check
           - group: settle-helper
             browsers: chromium webkit
             checks: browser-settle:check

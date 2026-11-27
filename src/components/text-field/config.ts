@@ -42,7 +42,7 @@ export const createBaseConfig = (
     type AcceptedKey = keyof TextFieldConfig | keyof BaseComponentConfig | "multiline";
     type Words<S extends string> = S extends `${infer Word} ${infer Rest}` ? Word | Words<Rest> : S;
     const KEY_LIST =
-      "type variant density name label value placeholder required noAsterisk disabled readonly maxLength pattern autocomplete inputMode enterKeyHint leadingIcon trailingIcon trailingIconLabel onTrailingClick supportingText error prefixText suffixText class prefix componentName className parent id title tabIndex style data role ariaLabel ariaDescribedBy ariaLabelledBy ariaHidden multiline controlLabelOnly";
+      "type variant density name label value placeholder required noAsterisk disabled readonly maxLength pattern autocomplete inputMode enterKeyHint leadingIcon trailingIcon trailingIconLabel onTrailingClick supportingText error prefixText suffixText chips class prefix componentName className parent id title tabIndex style data role ariaLabel ariaDescribedBy ariaLabelledBy ariaHidden multiline controlLabelOnly";
     type ListedKey = Words<typeof KEY_LIST>;
     const _complete: Exclude<AcceptedKey, ListedKey> extends never ? true : never = true;
     const _sound: ListedKey extends AcceptedKey ? true : never = true;
