@@ -14,8 +14,8 @@
   },
   "buildInputs": {
     "bun.lock": "d63d551eed6a4274aaa03d9874f8e1dff63506411f706206787dcb381fd180b1",
-    "scripts/build.ts": "576881cac286a7341ccc56dac1ade4f5f3093ad0e7794efae981cd6623d7cac4",
-    "scripts/build-styles.ts": "6ef129369f4298175261f45c10905ee34c4da5fd086606cae91c7cb8be79ed7b",
+    "scripts/build.ts": "cc7bd5e962bf9212068aae71f121a0385e02ef4c2d05281fe017378b28d88421",
+    "scripts/build-styles.ts": "3f7a120af1c484125e4d96210d03d39829aa03b588fef6b681191f3a61576ae2",
     "scripts/style-manifest.ts": "b2ea2d0d2098277a9e595bb277cdd450bddbcdad407ebe2acd048f2813b9ddcd",
     "scripts/button-style-profile.ts": "c4af25cc9327089aeb229dd0e260a452d97736376b99cd8ef8f7c575eb31fb9b",
     "scripts/optional-style-profiles.ts": "001b3cb27a2fa887b73962d06891e1dac67dfe16412a7a9fb4157f834937e5ec"
