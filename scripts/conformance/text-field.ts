@@ -2,10 +2,10 @@ import type { TextFieldComponent, TextFieldConfig } from "../../src/components/t
 import type { Case } from "./measure";
 import { fieldProperties, interaction, part, runFieldFixture, type ReadState } from "./field-fixture";
 
-type Data = { variant:"filled"|"outlined"; direction:"ltr"|"rtl"; state:ReadState; error?:boolean; compact?:boolean; populated?:boolean; multiline?:boolean; decorative?:boolean };
+type Data = { variant:"filled"|"outlined"; direction:"ltr"|"rtl"; state:ReadState; error?:boolean; compact?:boolean; populated?:boolean; multiline?:boolean; decorative?:boolean; withoutIcons?:boolean; withoutAffixes?:boolean; labelWidth?:string };
 
 const mount: Case["mount"] = (mtrl,host,data) => {
-  const {variant,direction,state,error,compact,populated,multiline,decorative} = data as Data;
+  const {variant,direction,state,error,compact,populated,multiline,decorative,withoutIcons,withoutAffixes,labelWidth} = data as Data;
   document.documentElement.dir = direction;
   host.style.width = "360px";
   host.style.display = "block";
@@ -15,10 +15,16 @@ const mount: Case["mount"] = (mtrl,host,data) => {
     variant, type:multiline?"multiline":"text", density:compact?"compact":"default",
     label:"Email address", placeholder:"name@example.com", supportingText:"Enter a valid address",
     error, disabled:state==="disabled", value:populated?"example@site.com":undefined,
-    leadingIcon:icon, trailingIcon:icon, trailingIconLabel:decorative?undefined:"Clear",
-    prefixText:"+", suffixText:".com", maxLength:30, required:true,
+    ...(!withoutIcons && { leadingIcon:icon, trailingIcon:icon, trailingIconLabel:decorative?undefined:"Clear" }),
+    ...(!withoutAffixes && { prefixText:"+", suffixText:".com" }),
+    maxLength:30, required:true,
   });
   host.append(field.element);
+  if (labelWidth) {
+    const label = field.element.querySelector<HTMLElement>(".mtrl-text-field__label");
+    if (!label) throw new Error("Missing label for notch measurement");
+    label.style.width = labelWidth;
+  }
   const input = field.element.querySelector<HTMLInputElement|HTMLTextAreaElement>(".mtrl-text-field__input");
   if (!input || input.disabled !== (state==="disabled") || !input.required) throw new Error("Incorrect field state");
 };
@@ -40,7 +46,8 @@ for (const variant of ["filled","outlined"] as const) {
   const base:Data = {variant,direction:"ltr",state:"rest"};
   const add = (id:string, config:Data, scheme:"light"|"dark"="light",density=0) => cases.push({
     id:`${variant}/${id}`,mount,config,scheme,density,state:config.state,
-    focusTarget:config.state==="focus"?input:undefined, properties:fieldProperties,
+    focusTarget:config.state==="focus"?input:undefined,
+    properties:[...fieldProperties,"webkitTextFillColor"],
     parts:[...parts,...interaction("verifiedState",input,config.state)],
   });
   for (const scheme of ["light","dark"] as const) {
@@ -50,6 +57,17 @@ for (const variant of ["filled","outlined"] as const) {
     }
     add(`${scheme}/populated`,{...base,populated:true},scheme);
   }
+  // A populated input exposes the painted text in each interaction state.
+  for (const state of ["rest","hover","focus","disabled"] as const) {
+    add(`coverage/${state}`,{...base,state,populated:true});
+    if (state!=="disabled") add(`coverage/error-${state}`,{...base,state,error:true,populated:true});
+  }
+  add("coverage/no-icons",{
+    ...base,withoutIcons:true,withoutAffixes:true,populated:true,
+    // A fractional box exercises notch rounding independently of platform font metrics.
+    labelWidth:variant==="outlined"?"120.625px":undefined,
+  });
+  add("coverage/with-icons",{...base,withoutAffixes:true,populated:true});
   for (const density of [-1,-2,-3]) add(`density/${density}`,base,"light",density);
   add("compact",{...base,compact:true});
   add("rtl",{...base,direction:"rtl"});
@@ -61,4 +79,4 @@ for (const variant of ["filled","outlined"] as const) {
     properties:fieldProperties,parts:[...parts,part("verifiedState",target+":focus-visible")],
   });
 }
-await runFieldFixture("text-field",cases,id=>["root","field","input","label","helper","leadingIcon","trailingIcon",...(id.startsWith("outlined")?["outline","notch"]:[])]);
+await runFieldFixture("text-field",cases,id=>["root","field","input","label","helper",...(id.endsWith("/no-icons")?[]:["leadingIcon","trailingIcon"]),...(id.startsWith("outlined")?["outline","notch"]:[])]);
