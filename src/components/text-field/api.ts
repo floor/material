@@ -273,10 +273,11 @@ export const withAPI =
             // A selector engine without this vendor pseudo-class cannot report autofill.
           }
 
-          // Update empty state based on value or autofill
+          // Update empty state based on value, autofill or committed chips
+          const chips = element.querySelectorAll(`.${fieldClass}__chips .mtrl-chip`).length;
           classes.toggle(
             `${fieldClass}--empty`,
-            !(hasValue || isAutofilled)
+            !(hasValue || isAutofilled || chips > 0)
           );
         }
 

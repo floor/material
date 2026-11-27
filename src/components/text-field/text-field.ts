@@ -23,7 +23,6 @@ import {
   withCounter,
   withRequired,
 } from "./features";
-import type { TextFieldChipsEnhancer } from "./types";
 import { TextFieldConfig, TextFieldComponent } from "./types";
 import { createBaseConfig, getElementConfig, getApiConfig } from "./config";
 
@@ -91,7 +90,9 @@ const createTextField = (config: TextFieldConfig = {}): TextFieldComponent => {
       // typed overloads end at twenty steps and this field has twenty-one.
       // `chips` holds the enhancer from textFieldChips(): the function is the
       // code, so this module references no chip module.
-      (comp) => withPlacement()(typeof baseConfig.chips === "function" ? (baseConfig.chips as TextFieldChipsEnhancer)(comp, baseConfig) : comp),
+      // A generic hook: `chips`, when set, is a function that enhances the
+      // component and returns it. Nothing chip-specific runs here.
+      (comp) => withPlacement()(baseConfig.chips ? (baseConfig.chips as (c: typeof comp) => typeof comp)(comp) : comp),
       (comp) => withAPI(getApiConfig(comp))(comp) // Add public API
     )(baseConfig) as TextFieldComponent;
 

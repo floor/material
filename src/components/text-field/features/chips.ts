@@ -116,6 +116,9 @@ export const installChips = <C extends ElementComponent>(
     if (label) {
       if (!label.id) label.id = `${input.id || `${rootClass}-label`}-label`;
       list.setAttribute("aria-labelledby", label.id);
+      // The stylesheet gives a labelled field its padding; without one the
+      // chips sit centred in the 56dp row.
+      component.element.classList.add(`${rootClass}--with-chips-label`);
     }
     // The input's name is the field's: the chips submit under it, one hidden
     // input each, so the draft text never submits as a value of its own.
@@ -125,8 +128,10 @@ export const installChips = <C extends ElementComponent>(
 
     // An email chip field types into a text input: `type="email"` has no
     // selection API, so a chip could not be edited and the caret could not be
-    // read; `inputmode` is the keyboard hint a text input can carry.
-    if ((input.getAttribute("type") ?? "") === "email") {
+    // read; `inputmode` is the keyboard hint a text input can carry. The
+    // address is then validated here: the browser's email state no longer is.
+    const emailMode = (input.getAttribute("type") ?? "") === "email";
+    if (emailMode) {
       input.setAttribute("type", "text");
       input.setAttribute("inputmode", "email");
       input.setAttribute("autocapitalize", "off");
@@ -255,7 +260,11 @@ export const installChips = <C extends ElementComponent>(
     const removeAt = (index: number, triggerEvent: boolean, focusAfter = true): void => {
       const chip = chips[index];
       if (!chip) return;
-      const wasFocused = chip.element.contains(document.activeElement);
+      // Inside a shadow root, the document's active element is the host: the
+      // focused control is the input's own root's active element.
+      const root = input.getRootNode() as Document | ShadowRoot;
+      const active = (root.activeElement ?? document.activeElement) as Node | null;
+      const wasFocused = !!active && chip.element.contains(active);
       if (editingIndex === index) cancelEdit(false);
       chips.splice(index, 1);
       chip.destroy();
@@ -273,8 +282,15 @@ export const installChips = <C extends ElementComponent>(
 
     const currentValues = (extra: string[] = []): string[] => [...chips.map(textOf), ...extra];
 
+    // The HTML email state's practical form: a local part, an @, a domain with
+    // a dot. A rejected address stays editable text (round 2, item 3).
+    const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     /** Whether `text` may become a chip, and the message that says why not. */
     const accepts = (text: string, extra: string[] = []): { ok: boolean; message?: string } => {
+      if (emailMode && !options.validate && !EMAIL.test(text)) {
+        return { ok: false, message: "Enter a valid email address" };
+      }
       if (chips.length + extra.length >= options.maxChips) return { ok: false };
       if (!options.allowDuplicates && currentValues(extra).includes(text)) return { ok: false };
       const result = options.validate?.(text, currentValues(extra)) ?? true;
@@ -372,6 +388,10 @@ export const installChips = <C extends ElementComponent>(
       leaveEdit();
       input.value = "";
       sync();
+      // The element reads its form value again on these events; an edit
+      // changed the submitted chip without touching the input's text.
+      input.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
       if (refocus) input.focus();
     };
 
@@ -544,6 +564,9 @@ export const installChips = <C extends ElementComponent>(
     // person moved to keeps it.
     const onBlur = (): void => {
       if (editingIndex !== null) commitEdit(false);
+      // The shared blur handler toggles --empty from the draft alone; a field
+      // with chips is not empty.
+      queueMicrotask(syncEmpty);
     };
 
     const target = input as HTMLInputElement;
@@ -610,6 +633,9 @@ export const installChips = <C extends ElementComponent>(
         if (isDisabled()) chip.disable();
         else chip.enable();
       }
+      // The shared input handlers toggle --empty from the draft alone; a field
+      // with committed chips is not empty, so the class is taken off again
+      // (only when it is wrong, or the observer would loop).
       syncForm();
     });
     classObserver.observe(component.element, { attributes: true, attributeFilter: ["class"] });

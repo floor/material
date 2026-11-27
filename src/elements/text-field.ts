@@ -209,10 +209,18 @@ const textFieldSpec = {
       return values.length > 0 ? JSON.stringify({ v: values, d: c.getValue() }) : c.getValue();
     },
     restore: (c, state) => {
-      if (state.startsWith("{")) {
-        const { v, d } = JSON.parse(state) as { v?: string[]; d?: string };
-        c.setValues(Array.isArray(v) ? v.map(String) : []);
-        c.setValue(d ?? "");
+      // Our state is `{"v": [...], "d": "..."}`; any other string is a draft,
+      // including one that starts with a brace (`{draft`).
+      let parsed: { v?: unknown; d?: unknown } | null = null;
+      try {
+        const value = JSON.parse(state) as unknown;
+        if (value && typeof value === "object" && "v" in value) parsed = value as { v?: unknown; d?: unknown };
+      } catch {
+        parsed = null;
+      }
+      if (parsed) {
+        c.setValues(Array.isArray(parsed.v) ? parsed.v.map(String) : []);
+        c.setValue(typeof parsed.d === "string" ? parsed.d : "");
       } else c.setValue(state);
     },
     disable: (c, disabled) => void (disabled ? c.disable() : c.enable()),

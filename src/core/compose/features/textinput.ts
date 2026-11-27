@@ -201,11 +201,12 @@ export const withTextInput =
 
     // Handle input state changes
     const updateInputState = (): boolean => {
-      const isEmpty = !input.value;
-      component.element.classList.toggle(
-        `${component.getClass("text-field")}--empty`,
-        isEmpty
-      );
+      // A text field with committed input chips is not empty: the chips carry
+      // the field's content beside the draft text.
+      const name = component.getClass("text-field");
+      const chips = component.element.querySelectorAll(`.${name}__chips .mtrl-chip`).length;
+      const isEmpty = !input.value && chips === 0;
+      component.element.classList.toggle(`${name}--empty`, isEmpty);
       return isEmpty;
     };
 

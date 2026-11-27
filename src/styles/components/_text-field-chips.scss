@@ -90,6 +90,20 @@ $component: "#{base.$prefix}-text-field";
         padding-bottom: 11px;
     }
 
+    // A label on a field with chips sits on the first line, as the multiline
+    // field pins it: at top: 50% it would sink into wrapped chip rows.
+    &--with-chips {
+        .#{$component}__label {
+            top: 50%;
+        }
+    }
+
+    &--with-chips.#{$component}--with-chips-label .#{$component}__label {
+        top: f.density(24px, 12px, 3px);
+        transform: none;
+        transform-origin: left top;
+    }
+
     // Outlined: the outline still draws the edge, the row supplies the padding
     &--outlined.#{$component}--with-chips .#{$component}__chips {
         padding: 12px var(--#{$component}-end, 16px) 12px var(--#{$component}-start, 16px);

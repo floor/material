@@ -411,6 +411,70 @@ section("forms: the element submits one entry per chip and restores its state", 
 });
 
 // ---------------------------------------------------------------------------
+// The review round's blockers, each measured where it broke
+section("email mode rejects an invalid address and keeps it as text", async (page) => {
+  await mountFactory(page, { label: "To", type: "email", chips: true });
+  await typeInto(page, "not-an-email");
+  await page.keyboard.press("Enter");
+  assert.deepEqual(await values(page), [], "an invalid address commits no chip");
+  assert.equal(await draftInput(page).inputValue(), "not-an-email", "the rejected address stays editable");
+  await draftInput(page).fill("alice@example.com");
+  await page.keyboard.press("Enter");
+  assert.deepEqual(await values(page), ["alice@example.com"]);
+});
+
+section("an inline edit submits the new value", async (page) => {
+  await mountElement(page);
+  await settle(page, { target: "#field" });
+  await typeInto(page, "before@example.com");
+  await page.keyboard.press("Enter");
+  const action = page.locator("#field .mtrl-chip__action").first();
+  await action.click();
+  await action.click();
+  await draftInput(page).fill("after@example.com");
+  await page.keyboard.press("Enter");
+  await settle(page, { target: "#field" });
+  const submitted = await page.evaluate(() => {
+    const form = document.getElementById("form") as HTMLFormElement;
+    let entries: string[] = [];
+    const read = (event: Event) => { event.preventDefault(); entries = [...new FormData(form).getAll("to")]; };
+    form.addEventListener("submit", read, { once: true });
+    form.requestSubmit();
+    return entries;
+  });
+  assert.deepEqual(submitted, ["after@example.com"]);
+});
+
+section("Backspace in the element returns focus inside its shadow root", async (page) => {
+  await mountElement(page);
+  await settle(page, { target: "#field" });
+  await typeInto(page, "a@b.com");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Backspace");
+  await settle(page, { target: "#field" });
+  const focus = await page.evaluate(() => {
+    const field = document.getElementById("field") as HTMLElement;
+    const root = (field.shadowRoot ?? document) as Document | ShadowRoot;
+    const active = root.activeElement;
+    return { tag: active?.localName ?? null, inside: !!active && field.shadowRoot?.contains(active) };
+  });
+  assert.equal(focus.tag, "input", "focus returns to the input, not to nothing");
+  assert.equal(focus.inside, true);
+});
+
+section("restore keeps a plain draft that starts with a brace", async (page) => {
+  await mountElement(page);
+  await settle(page, { target: "#field" });
+  const restored = await page.evaluate(() => {
+    const field = document.querySelector("#field") as HTMLElement & { formStateRestoreCallback?: (state: string) => void; value: string };
+    field.formStateRestoreCallback?.("{draft");
+    return field.value;
+  });
+  assert.equal(restored, "{draft");
+});
+
+// ---------------------------------------------------------------------------
 // Layout: wrapping, hit targets across rows, RTL, and the focus ring
 section("wrapping keeps every chip inside the field and every target its own", async (page) => {
   await mountFactory(page, {
