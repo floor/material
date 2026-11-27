@@ -225,7 +225,15 @@ $component: "#{base.$prefix}-list";
   }
   &__item--selected {
     background: t.color("secondary-container");
-    .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-secondary-container"); }
+    // Only this row's own text and slots take the state colour: a standard
+    // list nested in the row keeps its own text and icon colours (the factory
+    // nesting pattern; md.comp.list.list-item.selected text and icon colours,
+    // read 2026-11-27).
+    > .#{$component}__text > .#{$component}__headline,
+    > .#{$component}__text > .#{$component}__overline,
+    > .#{$component}__text > .#{$component}__supporting,
+    > .#{$component}__leading,
+    > .#{$component}__trailing { color: t.color("on-secondary-container"); }
     .#{$component}__action::before { background: t.color("on-secondary-container"); }
     &[role="option"]::before { background: t.color("on-secondary-container"); }
     // Selected rest stays on-secondary-container. Hover, focus and press take
@@ -240,8 +248,19 @@ $component: "#{base.$prefix}-list";
   }
   &__item--disabled {
     &.#{$component}__item--selected { background: t.alpha("on-surface", 0.38); }
-    .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-surface"); }
-    .#{$component}__text, .#{$component}__leading, .#{$component}__trailing, .#{$component}__radio { opacity: 0.38; }
+    // This row's own text, radio and slots take the disabled ink and opacity;
+    // a standard list nested in the row is neither recoloured nor faded (the
+    // factory nesting pattern; md.comp.list.list-item.disabled content, read
+    // 2026-11-27).
+    > .#{$component}__text > .#{$component}__headline,
+    > .#{$component}__text > .#{$component}__overline,
+    > .#{$component}__text > .#{$component}__supporting,
+    > .#{$component}__leading,
+    > .#{$component}__trailing { color: t.color("on-surface"); }
+    > .#{$component}__text,
+    > .#{$component}__radio,
+    > .#{$component}__leading,
+    > .#{$component}__trailing { opacity: 0.38; }
   }
   // Specs table, read 2026-11-25: full width, or inset 16dp at the start and
   // 24dp at the end, with nothing above or below. Logical margins mirror.
