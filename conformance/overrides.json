@@ -2417,12 +2417,12 @@
     }
   },
   "tooltip/hide-delay/plain/after-pointer-exit": {
-    "reason": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal. The reference choice is pending.",
+    "reason": "This measures the time from pointer exit to dismissal start, to the nearest 25 ms. Compose transient pointer exit schedules immediate dismissal.",
     "spec": {
       "value": "1500ms",
       "url": "https://m3.material.io/components/tooltips/guidelines",
       "section": "Transient tooltips",
-      "read": "2026-11-26"
+      "read": "2026-11-27"
     },
     "compose": {
       "value": "0ms",
