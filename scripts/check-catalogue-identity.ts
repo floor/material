@@ -7,7 +7,8 @@
  * Two packed tarballs — the main tip this tree
  * is compared against, and this tree, built and packed by the same job with
  * the same pinned toolchain — are compared member by member:
- * identical bytes in existing members everywhere, except the explicit
+ * compare every existing member outside the recorded inputs whose own compiler
+ * output changed. The explicit
  * allowlist (the version fields of package.json, the dist/tokens catalogue
  * data files, and whole-line additions to README.md — documentation of the new
  * data may be added, existing documentation may not be rewritten). A new
@@ -17,18 +18,22 @@
  * `material/styles/listbox`) ships at its own subpath and joins no barrel, root
  * export or default sheet, so it may add exactly its own files, export key and
  * check script without moving a default byte. Anything
- * else — a moved byte, a renamed file, a shifted bundle —
- * fails with the member named, because a data-only change has no business
- * touching a single default byte.
+ * else fails with the member named. A data-only change has an empty source
+ * scope, so its existing default bytes are all checked.
  *
  *   bun run catalogue:identity:check [branch.tgz] [base.tgz]
+ *     [--base-revision <sha>] [--input-graph <json>] [--base-input-graph <json>]
  *
  * With no arguments the branch tarball is the one packed in this directory
- * and the base the one packed in ../material-base (the CI layout).
+ * and the base the one packed in ../material-base (the CI layout). If no Git
+ * base revision is given, all existing component files are checked for identity.
  */
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
+import { changedSources } from "./catalogue-scope";
+import type { CatalogueInputReceipt } from "./catalogue-input-graph";
 import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
 import { componentStyles } from "./style-manifest";
 
@@ -37,8 +42,47 @@ const sole = (directory: string): string => {
   if (tarballs.length !== 1) throw new Error(`${directory}: expected exactly one packed tarball, found ${tarballs.join(", ") || "none"}`);
   return join(directory, tarballs[0]!);
 };
-const branchTgz = process.argv[2] ?? sole(".");
-const mainTgz = process.argv[3] ?? sole("../material-base");
+const { positionals: [branchTgz = sole("."), mainTgz = sole("../material-base")], values } = parseArgs({
+  options: {
+    "base-revision": { type: "string" },
+    "input-graph": { type: "string" },
+    "base-input-graph": { type: "string" },
+  },
+  allowPositionals: true,
+});
+const baseRevision = values["base-revision"] ?? process.env.MTRL_CATALOGUE_BASE_REVISION;
+const graphPath = values["input-graph"] ?? process.env.MTRL_CATALOGUE_INPUT_GRAPH;
+const baseGraphPath = values["base-input-graph"] ?? process.env.MTRL_CATALOGUE_BASE_INPUT_GRAPH;
+
+const readInputs = (path: string): CatalogueInputReceipt =>
+  JSON.parse(readFileSync(path, "utf8")) as CatalogueInputReceipt;
+
+const changedInputs = new Set<string>();
+const graph = graphPath === undefined ? undefined : readInputs(graphPath);
+if (baseRevision && graph) {
+  const sources = changedSources(baseRevision);
+  // A data-only PR needs no graph for its base. A source change requires both
+  // receipts so a missing compiler fingerprint cannot widen its scope.
+  if (sources.size && baseGraphPath) {
+    const base = readInputs(baseGraphPath);
+    for (const [source, status] of sources) {
+      const own = graph.sourceOutputs[source];
+      const before = base.sourceOutputs[source];
+      if (own && (status === "A" || Object.entries(own).some(([output, hash]) =>
+        before?.[output] !== undefined && before[output] !== hash))) {
+        changedInputs.add(source);
+      }
+    }
+  }
+}
+
+function memberChanges(member: string, added = false): string[] {
+  const inputs = new Set([
+    ...graph?.members[member] ?? [],
+    ...(added ? graph?.addedMembers[member] ?? [] : []),
+  ]);
+  return [...inputs].filter(source => changedInputs.has(source)).sort();
+}
 
 /** The normalized member map of a tarball: path -> content bytes. */
 const readTarball = (tgz: string): Map<string, Buffer> => {
@@ -99,6 +143,8 @@ const additionsOnly = (before: Buffer, after: Buffer): boolean => {
 };
 
 const problems: string[] = [];
+const scopedChanges: string[] = [];
+let identicalMembers = 0;
 // A new optional stylesheet adds catalogue references. Permit only its exact
 // declared pair, validated against the unchanged parent sheet and dependency
 // imports. Once present on main, even these files are byte-frozen below.
@@ -138,16 +184,31 @@ for (const member of [...new Set([...main.keys(), ...branch.keys()])].sort()) {
   const inMain = main.get(member);
   const inBranch = branch.get(member);
   if (inMain === undefined) {
-    if (!allowed(member) && !optionalAdditions.has(member) && !optInMember(member)) problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*, validated optional profiles, declared opt-in entries)`);
+    if (allowed(member) || optionalAdditions.has(member) || optInMember(member)) continue;
+    const inputs = memberChanges(member, true);
+    if (inputs.length) {
+      scopedChanges.push(`added ${member} from ${inputs.join(", ")}`);
+    } else {
+      problems.push(`added member ${member} outside the allowlist (package.json, README.md, dist/tokens/*, validated optional profiles, declared opt-in entries)`);
+    }
     continue;
   }
   if (inBranch === undefined) {
     problems.push(`removed member ${member}: the default surface cannot lose a file`);
     continue;
   }
-  if (inMain.equals(inBranch)) continue;
+  if (inMain.equals(inBranch)) {
+    identicalMembers++;
+    continue;
+  }
   if (!allowed(member)) {
-    problems.push(`changed member ${member} (${inMain.length} -> ${inBranch.length} bytes): a data-only change must not touch the default surface`);
+    const inputs = memberChanges(member);
+    const size = `${inMain.length} -> ${inBranch.length} bytes`;
+    if (inputs.length) {
+      scopedChanges.push(`changed ${member} (${size}) from ${inputs.join(", ")}`);
+    } else {
+      problems.push(`changed member ${member} (${size}): no recorded input with changed compiler output`);
+    }
   } else if (member === "README.md" && !additionsOnly(inMain, inBranch)) {
     problems.push("changed member README.md beyond whole-line additions: the new data may be documented, existing documentation may not be rewritten");
   }
@@ -236,13 +297,17 @@ for (const [name, entry] of optInEntries) {
 // there is retired with this block. The member loop above already governs
 // these files: byte-identical members pass, and a regenerated catalogue
 // document or schema is the sanctioned data change this gate exists to
-// allow, while every default member and the whole manifest stay frozen
-// exactly as before.
+// allow. The same comparison holds all shared and component output to its
+// recorded source scope.
 
+if (scopedChanges.length) {
+  console.log("Catalogue members backed by changed sources");
+  for (const change of scopedChanges) console.log(`  - ${change}`);
+}
 if (problems.length) {
   console.error(`catalogue identity check failed (${problems.length} problem(s)):`);
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
 const added = [...branch.keys()].filter(member => !main.has(member));
-console.log(`catalogue identity check passed: ${main.size} default members byte-identical; additions: ${added.sort().join(", ")}`);
+console.log(`catalogue identity check passed: ${identicalMembers} existing members byte-identical, ${scopedChanges.length} scoped changes; additions: ${added.sort().join(", ")}`);

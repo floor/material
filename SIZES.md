@@ -9,9 +9,8 @@ loads on demand. `vs core` is the gzipped delta against the `core` kernel
 (`pipe`, `createBase`, `withElement`) that every component starts from. A
 scenario that carries another component's code fails the run, not this table.
 
-Measured at 123e1c99 on 2026-11-24. Regenerate with
-`bun run size --markdown > SIZES.md`; a plain `bun run size` fails when
-these rows drift from a fresh measurement.
+Measured at 6ebafa1f on 2026-11-27. Regenerate with
+`bun run size --markdown > SIZES.md` on the release candidate.
 
 <!-- size-table -->
 | Component | Minified | Gzipped | vs core | Deferred |
@@ -33,7 +32,7 @@ these rows drift from a fresh measurement.
 | drawer | 27.5 KB | 9.9 KB | +6.9 KB |  |
 | fab | 15.1 KB | 5.4 KB | +2.3 KB |  |
 | fab-menu | 29.0 KB | 10.1 KB | +7.1 KB | +11.2 KB |
-| extended-fab | 17.3 KB | 6.0 KB | +2.9 KB |  |
+| extended-fab | 17.6 KB | 6.1 KB | +3.0 KB |  |
 | icon-button | 18.7 KB | 6.3 KB | +3.3 KB |  |
 | list | 20.5 KB | 7.2 KB | +4.2 KB |  |
 | menu | 40.4 KB | 13.3 KB | +10.2 KB | +2.1 KB |
@@ -44,15 +43,15 @@ these rows drift from a fresh measurement.
 | split-button | 27.2 KB | 9.5 KB | +6.5 KB | +17.7 KB |
 | radios | 15.1 KB | 5.2 KB | +2.1 KB |  |
 | search | 32.3 KB | 10.9 KB | +7.9 KB |  |
-| select | 41.2 KB | 13.2 KB | +10.2 KB | +11.3 KB |
-| slider | 34.7 KB | 12.1 KB | +9.0 KB |  |
+| select | 41.5 KB | 13.4 KB | +10.3 KB | +11.3 KB |
+| slider | 34.8 KB | 12.1 KB | +9.1 KB |  |
 | snackbar | 36.5 KB | 12.2 KB | +9.2 KB | +6.9 KB |
 | switch | 18.8 KB | 6.2 KB | +3.2 KB |  |
 | tabs | 41.5 KB | 13.5 KB | +10.4 KB | +6.9 KB |
-| text-field | 27.9 KB | 8.7 KB | +5.7 KB |  |
+| text-field | 28.2 KB | 8.9 KB | +5.8 KB |  |
 | timepicker | 32.8 KB | 11.3 KB | +8.3 KB |  |
 | top-app-bar | 12.7 KB | 4.4 KB | +1.4 KB |  |
-| tooltip | 17.9 KB | 6.3 KB | +3.3 KB |  |
+| tooltip | 18.2 KB | 6.4 KB | +3.4 KB |  |
 | toolbar | 33.1 KB | 11.2 KB | +8.2 KB | +6.9 KB |
-| all | 409.2 KB | 130.1 KB | +127.1 KB | +2.1 KB |
+| all | 409.9 KB | 130.4 KB | +127.4 KB | +2.1 KB |
 <!-- /size-table -->
