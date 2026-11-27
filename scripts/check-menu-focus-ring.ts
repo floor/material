@@ -96,7 +96,7 @@ const vanishingMount = (mtrl: Record<string, unknown>, host: HTMLElement) => {
   opener.textContent = "Actions";
   host.append(opener);
   const icon = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 4h16v16H4z"/></svg>';
-  const menu = (mtrl.createMenu as (config: unknown) => { element: HTMLElement })(
+  (mtrl.createMenu as (config: unknown) => { element: HTMLElement })(
     { opener, variant: "baseline", color: "standard", width: "240px", offset: 8, openSubmenuOnHover: true,
       items: [{ id: "a", text: "First", icon, shortcut: "⌘A" }, { id: "b", text: "Second", icon }, { id: "c", text: "Third", icon }] },
   );
