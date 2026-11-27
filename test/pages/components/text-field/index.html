@@ -142,7 +142,11 @@
         wrapper.dataset.dir = dir;
         box.append(wrapper);
         for (const sample of samples) {
-          const field = factoryField(wrapper, { ...sample, class: undefined });
+          // #518's geometry is the plain field's: no chips here.
+          const { fractional, ...config } = sample;
+          const field = createTextField(config);
+          field.element.classList.add("tp-field");
+          wrapper.append(field.element);
           const element = field.element;
           reads.push({
             dir,
