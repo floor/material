@@ -875,7 +875,7 @@ section("both 48dp targets own their edge at 100% and 200% zoom, light DOM and s
       const field = document.getElementById("field") as HTMLElement;
       return (field.shadowRoot ?? field).querySelector(".mtrl-chip__action")?.getAttribute("aria-checked");
     });
-    assert.equal(selected === "true" || selected === "false", true, `shadow ${zoom}x: a click at +40 reaches the chip's action (${selected})`);
+    assert.equal(selected, "true", `shadow ${zoom}x: a click at +40 selects the chip's action (${selected})`);
     await page.keyboard.press("Escape");
     await page.mouse.click(Math.round(boxes.left + (boxes.width / boxes.zoom - 2) * boxes.zoom), Math.round(boxes.mid));
     await settle(page, { target: "#field" });
@@ -913,6 +913,97 @@ section("a real click at the action's area fires it, and one at the remove's are
   await page.mouse.click(removePoint.x, removePoint.y);
   await settle(page, { target: "#field" });
   assert.equal(await page.locator("#field .mtrl-chip").count(), 0, "a click at +86 removes the chip");
+});
+
+
+// ---------------------------------------------------------------------------
+// The edge points the review measured, and the two plain-field regressions
+section("the three edge points reach their own control, at 100% and 200% zoom, both trees", async (page) => {
+  const points = [
+    { x: 39, y: -7, expected: "action", where: "upper inner edge of the first action" },
+    { x: 45, y: 39, expected: "action", where: "lower inner edge beside the row boundary" },
+    { x: 95, y: 39, expected: "remove", where: "lower outer corner of the remove box" },
+  ] as const;
+  const items = ["a", "b", "c", "d"];
+  for (const mode of ["factory", "shadow"] as const) {
+    for (const zoom of [1, 2]) {
+      for (const point of points) {
+        if (mode === "factory") await mountFactory(page, { label: "To", chips: { items } });
+        else await mountElement(page, items.map((value) => `<m-chip value="${value}">${value}</m-chip>`).join(""));
+        await page.evaluate((zoom) => {
+          const host = document.getElementById("host") as HTMLElement;
+          host.style.width = "200px";
+          host.style.zoom = String(zoom);
+        }, zoom);
+        await settle(page, { target: "#field" });
+        const box = await page.evaluate(() => {
+          const field = document.getElementById("field")!;
+          const root = field.shadowRoot ?? field;
+          const chips = [...root.querySelectorAll(".mtrl-chip")];
+          const probe = window as Window & { hit?: { control: string; chip: number } };
+          probe.hit = undefined;
+          // A capture listener, so the control the point reached is read
+          // without a host-attribute rebuild in between.
+          root.addEventListener("click", (event) => {
+            const control = event.composedPath().find((node): node is Element =>
+              node instanceof Element && node.matches(".mtrl-chip__action, .mtrl-chip__remove"));
+            probe.hit = {
+              control: control?.classList.contains("mtrl-chip__action") ? "action" : control ? "remove" : "other",
+              chip: control ? chips.indexOf(control.closest(".mtrl-chip")!) : -1,
+            };
+          }, { capture: true, once: true });
+          const { left, top } = chips[0]!.getBoundingClientRect();
+          return { left, top };
+        });
+        await page.mouse.click(box.left + point.x * zoom, box.top + point.y * zoom);
+        const hit = await page.evaluate(() => (window as Window & { hit?: unknown }).hit);
+        assert.deepEqual(hit, { control: point.expected, chip: 0 }, `${mode} ${zoom}x ${point.where}: ${JSON.stringify(hit)}`);
+        // Undo what the click did, so the next point starts clean.
+        await page.keyboard.press("Escape");
+        await settle(page, { target: "#field" });
+      }
+    }
+  }
+  await page.evaluate(() => { (document.getElementById("host") as HTMLElement).style.zoom = "1"; });
+});
+
+section("a plain field keeps its input and restores its draft literally", async (page) => {
+  await page.evaluate(() => {
+    const host = document.getElementById("host")!;
+    host.replaceChildren();
+    const field = document.createElement("m-text-field");
+    field.setAttribute("label", "Plain");
+    field.id = "field";
+    host.append(field);
+  });
+  await settle(page, { target: "#field" });
+  const kept = await page.evaluate(async () => {
+    const field = document.getElementById("field") as HTMLElement;
+    const root = field.shadowRoot!;
+    const input = root.querySelector("input")!;
+    input.focus();
+    // An attribute the element does not declare: a page's own data-*.
+    field.setAttribute("data-check", "1");
+    await new Promise(requestAnimationFrame);
+    return { same: input === root.querySelector("input"), focused: root.activeElement === input };
+  });
+  assert.deepEqual(kept, { same: true, focused: true }, "a host data-* attribute keeps the input and its focus");
+  const draft = '{"v":["valid plain JSON"],"d":"another string"}';
+  const literal = await page.evaluate((state) => {
+    const field = document.getElementById("field") as HTMLElement & { formStateRestoreCallback(value: string): void };
+    field.formStateRestoreCallback(state);
+    return field.shadowRoot!.querySelector("input")!.value;
+  }, draft);
+  assert.equal(literal, draft, "a plain field restores the literal");
+  // A chip field still reads the envelope.
+  await mountElement(page);
+  await settle(page, { target: "#field" });
+  const envelope = await page.evaluate((state) => {
+    const field = document.getElementById("field") as HTMLElement & { formStateRestoreCallback(value: string): void };
+    field.formStateRestoreCallback(state);
+    return { values: (field as unknown as { getValues: () => string[] }).getValues(), draft: field.shadowRoot!.querySelector("input")!.value };
+  }, JSON.stringify({ v: ["kept"], d: "draft text" }));
+  assert.deepEqual(envelope, { values: ["kept"], draft: "draft text" }, "a chip field restores the envelope");
 });
 
 // ---------------------------------------------------------------------------
