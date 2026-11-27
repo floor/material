@@ -30,6 +30,7 @@ describe("the CI toolchain is pinned", () => {
       ".github/actions/browsers/action.yml",
       ".github/workflows/cache.yml",
       ".github/workflows/ci.yml",
+      ".github/workflows/combined-stylesheet-pins.yml",
       ".github/workflows/publish.yml",
     ]);
   });

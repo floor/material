@@ -83,6 +83,9 @@ jobs:
 
       - run: bun run build
 
+      - name: Verify the combined stylesheet pins
+        run: bun run combined-stylesheet-pins:check
+
       # npm packs from a staging copy, never from this checkout: the packable
       # files are copied to .package-stage and the shipped Sass is normalized
       # there (silent comments and ordinary indentation leave it, and
