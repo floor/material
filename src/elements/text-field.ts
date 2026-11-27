@@ -60,7 +60,8 @@ const chipsConfigOf = (host: HTMLElement): TextFieldChipsConfig | undefined => {
   const maxChips = host.getAttribute("max-chips");
   return {
     items: declaredChips(host),
-    separators: separators ? separators.split(/[\s,]+/).filter(Boolean) : undefined,
+    // `separators=",;"` names two keys: each character is one.
+    separators: separators ? [...separators].filter((key) => key.trim() !== "") : undefined,
     maxChips: maxChips ? Number(maxChips) : undefined,
   };
 };
@@ -171,7 +172,7 @@ const textFieldSpec = {
       set: (c, v) => void c.setValues(Array.isArray(v) ? v.map(String) : []),
     },
   },
-  methods: ["select", "setError"] as const,
+  methods: ["select", "setError", "getValues", "setValues", "addChip", "removeChip"] as const,
   model: "value" as const,
   events: {
     input: { detail: (payload) => ({ value: (payload as { value: string }).value }) },

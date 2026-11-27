@@ -411,6 +411,66 @@ section("forms: the element submits one entry per chip and restores its state", 
 });
 
 // ---------------------------------------------------------------------------
+// Announcements, the element's separators, and the 229 key after the flag clears
+section("a status region announces what was added and removed", async (page) => {
+  await mountFactory(page, { label: "To", chips: true });
+  await typeInto(page, "a@b.com");
+  await page.keyboard.press("Enter");
+  const added = await page.locator("#field .mtrl-text-field__chips-live").textContent();
+  assert.equal(added, "a@b.com added");
+  await page.locator("#field .mtrl-chip__remove").first().click();
+  await settle(page, { target: "#field" });
+  const removed = await page.locator("#field .mtrl-text-field__chips-live").textContent();
+  assert.equal(removed, "a@b.com removed");
+});
+
+section('separators=",;" names two commit keys on the element', async (page) => {
+  await page.evaluate(() => {
+    const host = document.getElementById("host")!;
+    host.replaceChildren();
+    const field = document.createElement("m-text-field");
+    field.setAttribute("label", "To");
+    field.setAttribute("chips", "");
+    field.setAttribute("separators", ",;");
+    field.id = "field";
+    (window as unknown as { chipField: unknown }).chipField = field;
+    host.append(field);
+  });
+  await settle(page, { target: "#field" });
+  const input = page.locator("#field .mtrl-text-field__input");
+  await input.click();
+  await input.fill("a@b.com");
+  await page.keyboard.type(",");
+  await input.fill("c@d.com");
+  await page.keyboard.type(";");
+  assert.deepEqual(await page.evaluate(() => (document.getElementById("field") as HTMLElement & { values: string[] }).values), ["a@b.com", "c@d.com"]);
+});
+
+section("WebKit's 229 is the guard after compositionend has settled", async (page, engine) => {
+  await mountFactory(page, { label: "To", chips: true });
+  await draftInput(page).click();
+  await draftInput(page).fill("東京");
+  // compositionstart/end in one task, then the confirming key in the next:
+  // `justEndedComposition` has cleared, so only keyCode 229 can stop it.
+  await page.evaluate(() => {
+    const input = document.querySelector("#field .mtrl-text-field__input") as HTMLInputElement;
+    input.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true }));
+    input.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true, data: "東京" }));
+  });
+  await page.evaluate(() => new Promise((done) => setTimeout(done, 0)));
+  await page.evaluate((engine) => {
+    const input = document.querySelector("#field .mtrl-text-field__input") as HTMLInputElement;
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: engine === "webkit" ? 229 : 13, isComposing: false, bubbles: true, cancelable: true }));
+  }, engine);
+  if (engine === "webkit") {
+    assert.deepEqual(await values(page), [], "the 229 key commits nothing after the composition flag cleared");
+    assert.equal(await draftInput(page).inputValue(), "東京");
+  } else {
+    assert.deepEqual(await values(page), ["東京"]);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // The empty state: with a committed chip and an empty draft, nothing that
 // writes --empty may let it stay on — the label keeps its floated place and
 // the outlined notch stays open, with no frame in between.

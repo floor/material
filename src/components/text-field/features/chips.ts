@@ -111,6 +111,18 @@ export const installChips = <C extends ElementComponent>(
     row.appendChild(input);
     component.element.classList.add(`${rootClass}--with-chips`);
 
+    // A polite status region says what changed, for a screen reader: the
+    // chips are removed and added without a focus move that would announce
+    // them on its own.
+    const live = document.createElement("span");
+    live.className = `${rootClass}__chips-live`;
+    live.setAttribute("role", "status");
+    live.setAttribute("aria-live", "polite");
+    field.appendChild(live);
+    const announce = (message: string): void => {
+      live.textContent = message;
+    };
+
     // The group and the textbox are named by the same label.
     const label = host.label?.getElement() ?? null;
     if (label) {
@@ -274,7 +286,10 @@ export const installChips = <C extends ElementComponent>(
       if (editingIndex === index) cancelEdit(false);
       chips.splice(index, 1);
       chip.destroy();
-      if (triggerEvent) emit("remove", eventOf(chip, index));
+      if (triggerEvent) {
+        emit("remove", eventOf(chip, index));
+        announce(`${textOf(chip)} removed`);
+      }
       sync();
       if (focusAfter && wasFocused) {
         // The last chip removed hands focus back to the input; an interior one
@@ -324,6 +339,7 @@ export const installChips = <C extends ElementComponent>(
       deselectAll();
       input.dispatchEvent(new Event("input", { bubbles: true }));
       emit("add", eventOf(chips[chips.length - 1]!, chips.length - 1));
+      announce(`${text} added`);
       sync();
       return true;
     };
