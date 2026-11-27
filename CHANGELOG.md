@@ -31,6 +31,13 @@ Slider value indicator, text field label and notch geometry, and coverage of the
 - **Filled text field labels float to an 8 dp top inset. Outlined text field notches leave 4 dp on each side, including when the label has a fractional width.**
 - **Extended FAB and tooltip defaults.** Options set to `undefined` now use a defined component-wide default or fall back to the built-in value. This keeps the extended FAB's default variant and width classes and gives tooltips the same variant as when the option is omitted.
 
+### Size
+
+Release CI measured **924,184 B** packed (**+665 B** since 3.16.8), **5,265,261 B**
+unpacked and **1,304 files**. The root JavaScript bundle measured **136,601 B** gzip,
+and the every-component scenario measured **133,579 B** gzip.
+[Release CI run 46015808859](https://github.com/floor/material/actions/runs/46015808859/job/140563277407)
+
 ## [3.16.8] - 2026-11-27
 
 Search bars leave 16 px at the end when they have no trailing action, and cards use the correct focus elevation and state-layer opacities.
