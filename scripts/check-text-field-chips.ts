@@ -44,8 +44,11 @@ const server = Bun.serve({
     if (path === "/styles.css") return new Response(css, { headers: { "Content-Type": "text/css" } });
     if (path === "/text-field-chips.css") return new Response(chipsCss, { headers: { "Content-Type": "text/css" } });
     if (path === "/chips.js") return new Response(enhancer, { headers: { "Content-Type": "text/javascript" } });
+    const links = path === "/order-before"
+      ? '<link rel="stylesheet" href="/text-field-chips.css"><link rel="stylesheet" href="/styles.css">'
+      : '<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/text-field-chips.css">';
     return new Response(
-      `<!doctype html><html data-theme="baseline"><head><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/text-field-chips.css">
+      `<!doctype html><html data-theme="baseline"><head>${links}
 <style>body{margin:0;padding:24px;font:16px system-ui}#host{width:400px}</style></head>
 <body><button id="before" type="button">Before</button><button id="outside" type="button">Outside</button>
 <form id="form"><main id="host"></main></form>
@@ -408,6 +411,39 @@ section("forms: the element submits one entry per chip and restores its state", 
   });
   assert.deepEqual(restored.values, ["restored@y.com"]);
   assert.equal(restored.value, "draft");
+});
+
+// ---------------------------------------------------------------------------
+// The opt-in sheet wins over the component sheet in either load order: the row
+// keeps its 56dp, the draft input its 32dp, the label its place on the edge.
+section("the chips sheet wins in either load order", async (page) => {
+  for (const route of ["/", "/order-before"]) {
+    await page.goto(`http://127.0.0.1:${server.port}${route}`);
+    await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
+    await mountFactory(page, { label: "To", variant: "outlined", chips: true });
+    await typeInto(page, "a@b.com");
+    await page.keyboard.press("Enter");
+    await settle(page, { target: "#field" });
+    const geometry = await page.evaluate(() => {
+      const field = document.getElementById("field") as HTMLElement;
+      const root = field.getBoundingClientRect();
+      const row = field.querySelector(".mtrl-text-field__chips")!.getBoundingClientRect();
+      const input = field.querySelector(".mtrl-text-field__input")!.getBoundingClientRect();
+      const label = field.querySelector(".mtrl-text-field__label") as HTMLElement;
+      const box = label.getBoundingClientRect();
+      const outline = field.querySelector(".mtrl-text-field__outline")!;
+      return {
+        row: Math.round(row.height),
+        input: Math.round(input.height),
+        onEdge: Math.abs(box.top + box.height / 2 - root.top) < 3,
+        notch: outline.classList.contains("mtrl-text-field__outline--notched"),
+      };
+    });
+    assert.equal(geometry.row, 56, `${route}: the row keeps its 56dp`);
+    assert.equal(geometry.input, 32, `${route}: the draft input is 32dp`);
+    assert.equal(geometry.onEdge, true, `${route}: the label sits on the outline's top edge`);
+    assert.equal(geometry.notch, true, `${route}: the notch is open`);
+  }
 });
 
 // ---------------------------------------------------------------------------

@@ -57,15 +57,19 @@ $component: "#{base.$prefix}-text-field";
             min-height: 56px;
             cursor: text;
 
+            // The component sheet's `.mtrl-text-field__input` rule is emitted
+            // unlayered in the full stylesheet, and an unlayered rule beats
+            // every layered one: these resets are !important so the row keeps
+            // its 32dp draft input whichever sheet loads first.
             .#{$component}__input {
                 flex: 1 1 80px;
                 min-width: 60px;
                 width: auto;
-                height: 32px;
-                padding: 0;
-                border: 0;
-                border-radius: 0;
-                background-color: transparent;
+                height: 32px !important;
+                padding: 0 !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                background-color: transparent !important;
             }
         }
 
