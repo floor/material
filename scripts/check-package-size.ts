@@ -10,6 +10,7 @@ import ts from "typescript";
 import { createPackageFixture, run } from "./package-fixture";
 import { internalIdRefs } from "./internal-ids";
 import { measureConsumerSizes, measureSlider } from "./size-fixtures";
+import { NON_COMPONENT_ENTRIES } from "./component-exports";
 import type { SizeRow } from "./size-policy";
 
 const fixture = await createPackageFixture();
@@ -143,8 +144,12 @@ try {
   // counted another way: every "./components/<name>" key. Which keys those must
   // be is test/component-exports.test.ts's check, so the number is read, not written here.
   const exportKeys = Object.keys(JSON.parse(await Bun.file("package.json").text()).exports);
-  const componentKeys = exportKeys.filter(k => k.startsWith("./components/") && k.split("/").length === 3 && !k.endsWith("constants"));
-  const componentEntryCount = exportKeys.filter(k => /^\.\/components\/[^/]+$/.test(k)).length;
+  // An opt-in entry ships a sheet and an enhancer, not a factory: it is
+  // imported by name below, and it is not one of the factory entries this
+  // count compares.
+  const isComponentKey = (k: string) => k.split("/").length === 3 && !k.endsWith("constants") && !NON_COMPONENT_ENTRIES.has(k.slice("./components/".length));
+  const componentKeys = exportKeys.filter(k => k.startsWith("./components/") && isComponentKey(k));
+  const componentEntryCount = exportKeys.filter(k => /^\.\/components\/[^/]+$/.test(k) && isComponentKey(k)).length;
   assert(componentEntryCount > 0, "package.json exports no component entry");
 
   // Resolve and execute the installed ESM/CJS APIs in Node, not Bun's permissive resolver.
@@ -165,6 +170,11 @@ try {
     assert.equal(esm.addClass, undefined);
     // 3.0.0 is ESM-only: no require condition, so require('material') does not resolve
     assert.throws(() => createRequire(import.meta.url)('material'), { code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' });
+
+    // The opt-in entry exports the enhancer by name and is not on the root.
+    const { textFieldChips } = await import('material/components/text-field-chips');
+    assert.equal(typeof textFieldChips, 'function', 'material/components/text-field-chips must export textFieldChips');
+    assert.equal(esm.textFieldChips, undefined, 'the opt-in entry must not be on the root');
 
     const componentKeys = ${JSON.stringify(componentKeys)};
     // A filter that matches nothing would loop over nothing and pass
