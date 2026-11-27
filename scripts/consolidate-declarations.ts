@@ -2,6 +2,7 @@ import ts from "typescript";
 import { readdir, readFile, rmdir, stat, unlink, writeFile } from "node:fs/promises";
 import { join, posix, resolve } from "node:path";
 import { exportTargets } from "./prune-declarations";
+import { recordCatalogueInputs, type CatalogueInputGraph } from "./catalogue-input-graph";
 
 /**
  * Fold the internal declaration modules into the exported barrels.
@@ -373,7 +374,7 @@ class Consolidation {
    * source with no declaration beside it, and the generated shape an adapter
    * ships is not the pass's to change.
    */
-  chooseKept(): void {
+  chooseKept(graph?: CatalogueInputGraph): void {
     const seeds: string[] = [...this.modules.keys()].filter((file) => this.files.has(file.slice(0, -DTS.length)));
     for (const need of this.needs()) {
       if (need.name === "*" || this.exportingBarrel(need.target, need.name)) continue;
@@ -381,6 +382,10 @@ class Consolidation {
       const declaration = this.declarationOf(need.target, need.name, group);
       if (!declaration) throw new Error(`${need.target} does not declare ${need.name}, which ${need.importer} needs`);
       seeds.push(declaration.file);
+      if (graph) {
+        recordCatalogueInputs(graph.addedMembers, `dist/${declaration.file}`,
+          graph.members.get(`dist/${need.importer}`) ?? []);
+      }
     }
     const queue = [...seeds];
     while (queue.length > 0) {
@@ -391,7 +396,14 @@ class Consolidation {
       for (const specifier of specifiersOfSource(this.module(file).source)) {
         if (!specifier.startsWith(".")) continue;
         const target = this.resolve(file, specifier);
-        if (target && !this.targets.has(target)) queue.push(target);
+        if (!target || this.targets.has(target)) continue;
+        queue.push(target);
+        if (graph) {
+          recordCatalogueInputs(graph.addedMembers, `dist/${target}`, [
+            ...graph.members.get(`dist/${file}`) ?? [],
+            ...graph.addedMembers.get(`dist/${file}`) ?? [],
+          ]);
+        }
       }
     }
   }
@@ -483,7 +495,7 @@ class Consolidation {
   }
 
   /** Merge every group, rewrite the other shipped declarations, delete the folded files. */
-  async apply(): Promise<{ merged: string[]; kept: string[] }> {
+  async apply(graph?: CatalogueInputGraph): Promise<{ merged: string[]; kept: string[] }> {
     for (const file of this.modules.keys()) {
       if (this.targets.has(file) || this.kept.has(file)) continue;
       const barrel = this.canonical(file);
@@ -501,6 +513,10 @@ class Consolidation {
       // and its shadowing-renaming allocation — must not depend on it.
       const text = this.buildGroup(barrel, [...members].sort());
       await writeFile(join(this.root, barrel), text);
+      if (graph) {
+        recordCatalogueInputs(graph.members, `dist/${barrel}`,
+          members.flatMap(member => [...graph.members.get(`dist/${member}`) ?? []]));
+      }
     }
     for (const file of this.modules.keys()) {
       if (!this.targets.has(file) || this.groups.has(file)) continue;
@@ -1099,6 +1115,7 @@ export async function consolidateDeclarations(
   outdir: string,
   exports: unknown,
   fileOrder?: (files: string[]) => string[],
+  graph?: CatalogueInputGraph,
 ): Promise<ConsolidateResult> {
   const root = resolve(outdir);
   // The directory walk returns the filesystem's order, which varies between
@@ -1112,9 +1129,9 @@ export async function consolidateDeclarations(
   const consolidation = new Consolidation(root, files, exports);
   await consolidation.load();
   consolidation.loadBefore();
-  consolidation.chooseKept();
+  consolidation.chooseKept(graph);
   consolidation.routeNeeds();
-  const { merged, kept } = await consolidation.apply();
+  const { merged, kept } = await consolidation.apply(graph);
 
   let bytes = 0;
   for (const file of merged) {
