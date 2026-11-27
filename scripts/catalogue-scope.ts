@@ -33,6 +33,18 @@ export function styleManifestDependenciesOnly(before: string, after: string): bo
   return withoutComponentEdges(before) === withoutComponentEdges(after);
 }
 
+/** Compare the exact checkout the package was built from with its CI base. */
+export function changedSources(base: string): Map<string, string> {
+  const fields = execFileSync("git", [
+    "diff", "--no-renames", "--name-status", "-z", base, "HEAD", "--", "src/",
+  ], { encoding: "utf8" }).split("\0");
+  const changes = new Map<string, string>();
+  for (let index = 0; index + 1 < fields.length; index += 2) {
+    changes.set(fields[index + 1]!, fields[index]!);
+  }
+  return changes;
+}
+
 if (import.meta.main) {
   const base = process.argv[2];
   if (!base) {

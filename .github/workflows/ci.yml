@@ -222,11 +222,19 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
       - name: Build
+        env:
+          MTRL_CATALOGUE_INPUT_GRAPH: analysis/catalogue-identity-inputs.json
         run: bun run build
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
           path: dist
+          retention-days: 1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: catalogue-identity-inputs
+          path: analysis/catalogue-identity-inputs.json
+          if-no-files-found: error
           retention-days: 1
 
   # The checks that read the built package, on the build's dist/.
@@ -650,10 +658,9 @@ jobs:
   # single byte of the default surface. The step no-ops itself when no
   # catalogue input changed (the scope test is inside the step, not an `if`, so
   # the gate can never be silently skipped by the workflow). On a pull request
-  # the checkout is the merge commit, so the base it compares against is the
-  # main tip that merge was computed from: bytes main itself moved since the
-  # branch started are not this change's to answer for, and the comparison sees
-  # exactly this pull request's delta. On a main push HEAD is that tip, the
+  # the checkout is the merge commit, so its first parent is the base for the
+  # package comparison and the component source diff. The comparison sees
+  # exactly this pull request's delta. On a main push HEAD is the base, the
   # scope test is empty, and the step rests.
   identity:
     needs: build
@@ -675,13 +682,20 @@ jobs:
         with:
           name: dist
           path: dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: catalogue-identity-inputs
+          path: analysis
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22.23.3"
       - name: Catalogue identity, when a catalogue input changed
         run: |
-          base="$(git rev-parse origin/main)"
-          changed="$(git diff --name-only "$base" HEAD -- scripts/token-catalogue scripts/generate-token-catalogue.ts scripts/check-token-catalogue.ts scripts/check-token-catalogue-browser.ts scripts/check-catalogue-identity.ts scripts/style-manifest.ts scripts/optional-style-profiles.ts scripts/button-style-profile.ts)"
+          base="$(git rev-parse HEAD)"
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            base="$(git rev-parse HEAD^1)"
+          fi
+          changed="$(git diff --name-only "$base" HEAD -- scripts/token-catalogue scripts/generate-token-catalogue.ts scripts/check-token-catalogue.ts scripts/check-token-catalogue-browser.ts scripts/check-catalogue-identity.ts scripts/catalogue-scope.ts scripts/catalogue-input-graph.ts scripts/style-manifest.ts scripts/optional-style-profiles.ts scripts/button-style-profile.ts)"
           if [ -z "$changed" ]; then
             echo "no catalogue input changed against main $base; the identity gate does not apply"
             exit 0
@@ -698,9 +712,12 @@ jobs:
           git worktree add ../material-base "$base"
           cd ../material-base
           bun install --frozen-lockfile
+          export MTRL_CATALOGUE_INPUT_GRAPH=analysis/catalogue-identity-inputs.json
           bun run build
           npm pack --silent
           cd "$GITHUB_WORKSPACE"
+          export MTRL_CATALOGUE_BASE_REVISION="$base"
+          export MTRL_CATALOGUE_BASE_INPUT_GRAPH=../material-base/analysis/catalogue-identity-inputs.json
           bun run catalogue:identity:check
 
   # Tooling-only comparators. Dependencies and builds never enter the published package.
