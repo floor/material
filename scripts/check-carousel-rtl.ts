@@ -237,14 +237,16 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
       () => (document.querySelector(".mtrl-carousel__scroller") as HTMLElement).scrollLeft,
     );
     await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
-    await settle(flipPage);
-    const ltrAtOne = await readScroll();
+    // goTo scrolls with `scrollTo({behavior: "smooth"})`, which Web Animations
+    // cannot see: the strip is read at the position its scroll ends in.
+    const ltrAtOne = (await settle(flipPage, { until: async () => (await readScroll()) > 100, read: readScroll }))!;
     assert.ok(ltrAtOne > 100, `before the flip, LTR goTo(1) advances (got ${ltrAtOne})`);
     await flipPage.evaluate(() => document.documentElement.setAttribute("dir", "rtl"));
-    await flipPage.waitForTimeout(100); // stays: pointer pacing inside a drag
+    // The direction reaches the component through the computed style, and its
+    // anchors follow on the next read: the scroll is waited for as it is above.
+    await flipPage.waitForFunction(() => getComputedStyle(document.documentElement).direction === "rtl");
     await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
-    await settle(flipPage);
-    const rtlAtOne = await readScroll();
+    const rtlAtOne = (await settle(flipPage, { until: async () => Math.abs((await readScroll()) + ltrAtOne) < 1, read: readScroll }))!;
     assert.ok(
       Math.abs(rtlAtOne + ltrAtOne) < 1,
       `after the dir flip, goTo(1) settles at ${-ltrAtOne} (got ${rtlAtOne})`,
@@ -258,10 +260,11 @@ export async function checkCarouselRtl(browser: Browser, base: string): Promise<
       host.append(carousel.element);
       (window as unknown as { __goTo(index: number): void }).__goTo = (i: number) => carousel.goTo(i);
     });
-    await flipPage.waitForTimeout(200); // stays: pointer pacing inside a drag
+    // The remount lays the strip out before goTo reads its anchors.
+    await settle(flipPage, { read: readScroll });
     await flipPage.evaluate(() => (window as unknown as { __goTo(index: number): void }).__goTo(1));
     // goTo scrolls the strip itself; the reading settles when the scroll stops.
-    const unsnapped = (await settle(flipPage, { read: readScroll })) ?? (await readScroll());
+    const unsnapped = (await settle(flipPage, { until: async () => (await readScroll()) <= -100, read: readScroll }))!;
     assert.ok(
       unsnapped <= -100,
       `after the flip, snap:false goTo(1) still moves negative (got ${unsnapped})`,
