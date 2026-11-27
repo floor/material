@@ -3,7 +3,7 @@ import { closeSync, mkdtempSync, openSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import pin from "../../conformance/reference.json";
-import { bindings } from "./matrix-bindings";
+import { bindings, matrixRowId } from "./matrix-bindings";
 import { colourThemes, parseColour, readColourRoles, type ResolvedColours, type ThemePalettes } from "./matrix-colours";
 import { elevationRole, measureMetric, metricProbe } from "./matrix-metrics";
 import { matrixTokens } from "./matrix-reference";
@@ -23,8 +23,6 @@ const composeRelease = "https://developer.android.com/jetpack/androidx/releases/
 const kotlin = "compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3";
 
 const urlId = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
-const rowId = (component: string, key: string) => /^top-app-bar\/[^/]+\/[^/]+\/[^/]+$/.test(key)
-  ? key : `${component}/${key}`;
 const hex = /#[A-F\d]{6}\b/i;
 const colorMatch = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/;
 const asHex = (r: string, g: string, b: string) =>
@@ -245,7 +243,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     }
     fixtures.add(binding.fixture);
     for (const row of binding.rows) {
-      const id = rowId(binding.id, row.key);
+      const id = matrixRowId(binding.id, row.key);
       if (!urlId.test(id) || ids.has(id)) throw new Error(`Invalid or repeated row id ${id}`);
       ids.add(id);
       if (!overrides[id]?.compose && row.token) files.add(row.token.split(".")[0]!);
@@ -350,7 +348,7 @@ export async function generateMatrix(entries: ReadonlyMap<string, string>, check
     }
     const component = components.get(binding.id) ?? { id: binding.id, name: binding.name, properties: [] };
     for (const row of binding.rows) {
-      const id = rowId(binding.id, row.key);
+      const id = matrixRowId(binding.id, row.key);
       const existingSpec = overrides[id]?.spec ?? specDefault;
       const publishedSpec = specValues[id];
       const spec = publishedSpec ?? existingSpec;

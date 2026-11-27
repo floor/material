@@ -83,6 +83,9 @@ const extendedGeometry = [["small", "Small"], ["medium", "Medium"], ["large", "L
   [`icon-label-gap/${size}`, "Icon to label space", "spacing", `size/${size}/rest`, css("root", "columnGap"), `ExtendedFab${token}Tokens.IconLabelSpace`, size],
 ]);
 
+export const matrixRowId = (component: string, key: string) => /^top-app-bar\/[^/]+\/[^/]+\/[^/]+$/.test(key)
+  ? key : `${component}/${key}`;
+
 export const bindings: FixtureBinding[] = [
   fixture("badge", "Badge", [
     ["container-height/small", "Container height", "size", "small/base/light", height("badge"), "BadgeTokens.Size", "small"],
@@ -159,7 +162,7 @@ export const bindings: FixtureBinding[] = [
     ["density/multi-browse/minus-one", "Container height", "density", "multi-browse/density/-1", height("root"), undefined, "multi-browse"],
   ]),
   fixture("checkbox", "Checkbox", [
-    ["box-height/default", "Box height", "size", "unselected/rest", height("icon")],
+    ["box-height/default", "Box height", "size", "unselected/rest", height("icon"), "CheckboxTokens.ContainerSize"],
     ["box-width/default", "Box width", "size", "unselected/rest", width("icon")],
     ["checked-colour", "Selected box tone", "colour", "selected/rest", colour("icon"), "CheckboxTokens.SelectedContainerColor"],
     ["focus-ring/default/focus", "Focus indicator", "focus", "unselected/focus", outline("state layer")],
@@ -296,7 +299,7 @@ export const bindings: FixtureBinding[] = [
     ["trailing-icon-colour/outlined/error-focus", "Error focus trailing icon tone", "colour", "outlined/light/error-focus", css("indicatorIcon", "color"), "OutlinedAutocompleteTokens.TextFieldErrorFocusTrailingIconColor"],
     ["menu-container-colour/filled/popup", "Popup tone", "colour", "filled/light/popup", colour("popup"), "FilledAutocompleteTokens.MenuContainerColor"],
     ["label-colour/outlined/hover", "Hovered outlined label tone", "colour", "outlined/light/hover", css("label", "color"), "OutlinedAutocompleteTokens.FieldHoverLabelTextColor"],
-    ["field-height/outlined", "Field height", "size", "outlined/light/rest", height("field"), "OutlinedTextFieldTokens.ContainerHeight", "outlined"],
+    ["field-height/outlined", "Field height", "size", "outlined/light/rest", height("field"), undefined, "outlined"],
     ["field-colour/outlined", "Field tone", "colour", "outlined/light/rest", colour("field"), undefined, "outlined"],
     ["trailing-icon/outlined", "Trailing icon size", "size", "outlined/light/rest", width("indicatorIcon"), "OutlinedAutocompleteTokens.TextFieldTrailingIconSize", "outlined"],
     ["menu-container-colour/outlined/popup", "Popup tone", "colour", "outlined/light/popup", colour("popup"), "OutlinedAutocompleteTokens.MenuContainerColor", "outlined"],
@@ -369,10 +372,10 @@ export const bindings: FixtureBinding[] = [
   fixture("text-field", "Text field", [
     ["trailing-action-focus-ring/filled/focus", "Trailing action focus ring", "focus", "filled/trailing-focus", outline("trailing")],
     ["trailing-action-focus-ring/outlined/focus", "Trailing action focus ring", "focus", "outlined/trailing-focus", outline("trailing")],
-    ["height/filled", "Container height", "size", "filled/light/rest", height("field"), "OutlinedTextFieldTokens.ContainerHeight", "filled"],
+    ["height/filled", "Container height", "size", "filled/light/rest", height("field"), undefined, "filled"],
     ["height/outlined", "Container height", "size", "outlined/light/rest", height("field"), "OutlinedTextFieldTokens.ContainerHeight", "outlined"],
     ["corner/outlined", "Container corner radius", "shape", "outlined/light/rest", corner("outline"), "OutlinedTextFieldTokens.ContainerShape", "outlined"],
-    ["outline-width/outlined-focus", "Focus outline width", "focus", "outlined/light/focus", css("outline", "borderTopWidth"), undefined, "outlined"],
+    ["outline-width/outlined-focus", "Focus outline width", "focus", "outlined/light/focus", css("outline", "borderTopWidth"), "OutlinedTextFieldTokens.FocusOutlineWidth", "outlined"],
     ["leading-icon/filled", "Leading icon size", "size", "filled/light/rest", width("leadingIcon"), "FilledTextFieldTokens.LeadingIconSize", "filled"],
   ]),
   fixture("time-picker", "Time picker", [
@@ -417,13 +420,13 @@ export const bindings: FixtureBinding[] = [
     ["top-app-bar/large-flexible/expressive/rest", "Large flexible variant", "other", "small/large-flexible", present("largeFlexible")],
     ["top-app-bar/subtitle/expressive/rest", "Subtitle", "other", "small/subtitle", present("subtitle")],
     ["top-app-bar/search-variant/expressive/rest", "Search variant", "other", "small/search", present("search")],
-    ["top-app-bar/leading-space/small/rest", "Small bar leading button inset", "spacing", "small/rest/light", inset("leading", "root", "left")],
-    ["top-app-bar/trailing-space/small/rest", "Small bar trailing button inset", "spacing", "small/rest/light", inset("lastTrailing", "root", "right")],
+    ["top-app-bar/leading-space/small/rest", "Small bar leading button inset", "spacing", "small/rest/light", inset("leading", "root", "left"), "AppBarTokens.LeadingSpace"],
+    ["top-app-bar/trailing-space/small/rest", "Small bar trailing button inset", "spacing", "small/rest/light", inset("lastTrailing", "root", "right"), "AppBarTokens.TrailingSpace"],
     ["top-app-bar/title-inset/medium-no-leading/rest", "Title inset without leading button", "spacing", "medium/no-leading", inset("title", "root", "left")],
     ["top-app-bar/title-inset/large-no-leading/rest", "Title inset without leading button", "spacing", "large/no-leading", inset("title", "root", "left")],
     ["container-height/small", "Bar height", "size", "small/rest/light", height("root"), "AppBarSmallTokens.ContainerHeight", "small"],
     ["container-height/centre", "Bar height", "size", "center/rest/light", height("root"), "AppBarSmallTokens.ContainerHeight", "centre-aligned"],
-    ["leading-icon-size/small", "Leading icon size", "size", "small/rest/light", width("leadingIcon"), undefined, "small"],
+    ["leading-icon-size/small", "Leading icon size", "size", "small/rest/light", width("leadingIcon"), "AppBarTokens.IconSize", "small"],
     ["leading-inset/small", "Leading target inset", "spacing", "small/rest/light", inset("leading", "root", "left"), undefined, "small"],
   ], "app-bar"),
 ];
