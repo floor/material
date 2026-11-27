@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>carousel</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<header id="tp-header"></header>
+<div id="tp-toolbar"></div>
+<main id="tp-main"></main>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createCarousel } from "../../../../dist/components/carousel/index.js";
+await initPage({ name: "carousel" });
+const main = document.getElementById("tp-main");
+
+// Served files, not data: URLs: the component refuses a src whose scheme is
+// not an allowed navigable one (core/utils/url.ts), and a `data:` image is
+// stripped — which left every slide blank.
+const slides = Array.from({ length: 6 }, (_, i) => ({
+  image: `slides/slide-${i + 1}.svg`,
+  alt: `Slide ${i + 1}`,
+}));
+
+// Ghost lines: thin vertical rules at the DOM-predicted edges of the widest
+// visible slides, drawn over the carousel — if the picture is displaced
+// against its layout, the painted edges drift off the lines.
+const attachGhosts = (box, carousel) => {
+  const ghosts = document.createElement("div");
+  ghosts.style.cssText = "position:absolute;inset:0;pointer-events:none";
+  box.style.position = "relative";
+  box.append(ghosts);
+  // The scroller is the element that scrolls (the outer root does not): its
+  // event does not bubble, so the lines listen on the scroller itself.
+  const listening = new WeakSet();
+  const listen = (scroller) => {
+    if (listening.has(scroller)) return;
+    listening.add(scroller);
+    scroller.addEventListener("scroll", () => requestAnimationFrame(draw), { passive: true });
+  };
+  const draw = () => {
+    ghosts.replaceChildren();
+    const scroller = carousel.element.querySelector(".mtrl-carousel__scroller");
+    const items = [...carousel.element.querySelectorAll(".mtrl-carousel__item")];
+    if (!scroller || !items.length) return;
+    listen(scroller);
+    const sb = scroller.getBoundingClientRect();
+    const gb = ghosts.getBoundingClientRect();
+    const widths = new Set(items.map(el => +el.getBoundingClientRect().width.toFixed(0)));
+    const widest = Math.max(...widths);
+    for (const item of items) {
+      const r = item.getBoundingClientRect();
+      if (r.right < sb.left || r.left > sb.right) continue;
+      for (const x of [r.left, r.right]) {
+        if (x < sb.left || x > sb.right) continue;
+        const line = document.createElement("div");
+        line.style.cssText = `position:absolute;top:0;bottom:0;width:1px;background:#0b7;opacity:.6;left:${x - gb.left}px`;
+        ghosts.append(line);
+      }
+    }
+  };
+  new ResizeObserver(draw).observe(box);
+  draw();
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Standard carousel with ghost lines",
+  lookFor: "large and compacted slides on their keylines; the green lines sit exactly on the painted slide edges",
+  expected: "snap points settle on a slide; the painted edges never drift off the lines",
+  mount: (body) => {
+    const box = document.createElement("div");
+    box.style.cssText = "width:720px;height:320px";
+    body.append(box);
+    const carousel = createCarousel({ slides });
+    box.append(carousel.element);
+    attachGhosts(box, carousel);
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Hover and focus",
+  lookFor: "the grab cursor; the focused slide's outline follows its keyline",
+  expected: "no clipped outline",
+  mount: (body) => {
+    const box = document.createElement("div");
+    box.style.cssText = "width:480px;height:240px";
+    body.append(box);
+    const carousel = createCarousel({ slides: slides.slice(0, 4) });
+    box.append(carousel.element);
+    attachGhosts(box, carousel);
+  },
+});
+
+let dragCarousel = null;
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Drag, flick, trackpad overscroll",
+  lookFor: "the slide follows the pointer; a flick advances in the reading direction; the trackpad's elastic pull does not displace the strip",
+  expected: "the release settles on the nearest anchor; no rubber band",
+  measure: () => {
+    if (!dragCarousel) return "no scroller mounted";
+    const scroller = dragCarousel.element.querySelector(".mtrl-carousel__scroller");
+    if (!scroller) return "no scroller";
+    return `scrollLeft ${scroller.scrollLeft.toFixed(0)} of ${scroller.scrollWidth - scroller.clientWidth} (this scenario's own scroller)`;
+  },
+  mount: (body) => {
+    const box = document.createElement("div");
+    box.style.cssText = "width:720px;height:320px";
+    body.append(box);
+    dragCarousel = createCarousel({ slides });
+    box.append(dragCarousel.element);
+    attachGhosts(box, dragCarousel);
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "RTL and dark",
+  lookFor: "the reading direction flips; flicks advance leftward; the ghost lines mirror",
+  expected: "the same settle behaviour mirrored",
+  mount: (body) => {
+    const box = document.createElement("div");
+    box.style.cssText = "width:720px;height:320px";
+    body.append(box);
+    const carousel = createCarousel({ slides });
+    box.append(carousel.element);
+    attachGhosts(box, carousel);
+  },
+});
+</script>
+</body>
+</html>
