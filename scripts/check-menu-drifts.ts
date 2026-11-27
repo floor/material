@@ -48,7 +48,10 @@ const icon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="curre
 interface Lab {
   mtrl: { createMenu: (config: Record<string, unknown>) => { element: HTMLElement; open: () => void; close: () => void; setSelected: (id: string | null) => void } };
   vibrant?: { element: HTMLElement; open: () => void; close: () => void };
-  baseline?: { element: HTMLElement; open: () => void; close: () => void };
+  baseline?: { element: HTMLElement; open: () => void; close: () => void; setSelected: (id: string | null) => void };
+  vertical?: { element: HTMLElement; open: () => void; close: () => void; setSelected: (id: string | null) => void };
+  disabled?: { element: HTMLElement; open: () => void; close: () => void };
+  extra?: { element: HTMLElement; open: () => void; close: () => void; setSelected: (id: string | null) => void };
   direction?: string;
 }
 
@@ -91,11 +94,35 @@ const run = async (name: Engine, launcher: typeof chromium | typeof webkit): Pro
         variant: "baseline",
         items: [
           { id: "x", text: "Cut", icon },
-          { id: "y", text: "Zebra crossing", icon },
-          { id: "z", text: "More", icon, hasSubmenu: true, submenu: [{ id: "z1", text: "Deep" }] },
+          { id: "y", text: "Save changes and exit", icon, supportingText: "Selected line" },
+          { id: "z", text: "Save changes and exit", icon, hasSubmenu: true, submenu: [{ id: "z1", text: "Deep" }] },
         ],
       });
+      lab.extra = lab.mtrl.createMenu({
+        opener: document.getElementById("opener")!,
+        variant: "baseline",
+        items: [
+          { id: "es", text: "Save changes and exit", icon, shortcut: "Ctrl+S", supportingText: "Selected shortcut" },
+          { id: "em", text: "Save changes and exit", icon, shortcut: "Ctrl+M", hasSubmenu: true, submenu: [{ id: "e1", text: "Deep" }] },
+        ],
+      });
+      lab.extra.setSelected("es");
       (lab.baseline as unknown as { setSelected: (id: string | null) => void }).setSelected("y");
+      lab.vertical = lab.mtrl.createMenu({
+        opener: document.getElementById("opener")!,
+        variant: "vertical",
+        items: [
+          { id: "vs", text: "Vertical selected", icon },
+          { id: "vm", text: "Vertical more", icon, hasSubmenu: true, submenu: [{ id: "v1", text: "Deep" }] },
+        ],
+      });
+      (lab.vertical as unknown as { setSelected: (id: string | null) => void }).setSelected("vs");
+      lab.disabled = lab.mtrl.createMenu({
+        opener: document.getElementById("opener")!,
+        variant: "vertical",
+        color: "vibrant",
+        items: [{ id: "d", text: "Disabled", icon, disabled: true }],
+      });
     }, icon);
     const tokens = await page.evaluate(() => ({
       tertiary: getComputedStyle(document.getElementById("tertiary")!).color,
@@ -147,54 +174,141 @@ const run = async (name: Engine, launcher: typeof chromium | typeof webkit): Pro
     await page.keyboard.press("Escape");
     await page.waitForTimeout(200);
 
-    // Baseline: the item's end padding is 12dp, in both directions, and the
-    // label reserves the mark's room.
-    const baselineGeometry = () => page.evaluate(() => {
+    // Baseline: every item's end padding is 12dp, the content row reserves the
+    // mark's room once, and a shortcut stays clear of the check or the arrow --
+    // in both directions. Main's sizes are the reference: at 240px with an
+    // icon and a supporting line, the label is 152px beside the check and
+    // 144px beside the arrow, and the shortcut clears them by 10 and 12px.
+    const geometryOf = (menuName: "baseline" | "extra") => page.evaluate((menuName) => {
       const lab = window as unknown as Lab;
-      const menu = lab.baseline!.element;
+      const menu = (lab[menuName]!.element);
+      menu.style.width = "240px";
       const rtl = getComputedStyle(menu).direction === "rtl";
       const items = [...menu.querySelectorAll<HTMLElement>(".mtrl-menu__item")];
       const row = (item: HTMLElement) => {
-        const text = item.querySelector<HTMLElement>(".mtrl-menu__item-text")!;
         const itemBox = item.getBoundingClientRect();
-        const textBox = text.getBoundingClientRect();
-        // The label box ends where the item's 12dp end padding begins; the
-        // label's own end padding is the room it reserves for a mark.
-        const boxToEnd = rtl ? textBox.left - itemBox.left : itemBox.right - textBox.right;
+        const label = (item.querySelector(".mtrl-menu__item-label") ?? item.querySelector(".mtrl-menu__item-text")) as HTMLElement;
+        const labelBox = label.getBoundingClientRect();
+        const shortcut = item.querySelector<HTMLElement>(".mtrl-menu__item-shortcut");
+        const shortcutBox = shortcut?.getBoundingClientRect();
+        const markWidth = item.classList.contains("mtrl-menu__item--submenu") ? 36 : 30;
+        // The mark box: the last markWidth px of the item, ending in the 12dp
+        // end padding.
+        const markInner = rtl ? itemBox.left + markWidth : itemBox.right - markWidth;
+        const shortcutClearance = shortcutBox
+          ? Math.round(rtl ? shortcutBox.left - markInner : markInner - shortcutBox.right)
+          : null;
+        const boxToEnd = rtl ? labelBox.left - itemBox.left : itemBox.right - labelBox.right;
         return {
           padding: getComputedStyle(item).paddingInlineEnd,
-          textPadding: getComputedStyle(text).paddingInlineEnd,
+          contentPadding: getComputedStyle(item.querySelector<HTMLElement>(".mtrl-menu__item-content")!).paddingInlineEnd,
+          labelWidth: Math.round(labelBox.width),
+          shortcutClearance,
           boxToEnd: Math.round(boxToEnd * 10) / 10,
         };
       };
-      return { direction: rtl ? "rtl" : "ltr", plain: row(items[0]!), selected: row(items[1]!), submenu: row(items[2]!) };
-    });
+      return { direction: rtl ? "rtl" : "ltr", rows: items.map(row) };
+    }, menuName);
     for (const direction of ["ltr", "rtl"]) {
       await page.evaluate((direction) => {
         document.documentElement.dir = direction;
-        const lab = window as unknown as Lab;
-        lab.baseline!.open();
+        (window as unknown as Lab).baseline!.open();
       }, direction);
       await page.waitForTimeout(400);
-      await page.evaluate(() => (window as unknown as Lab).mtrl && (window as unknown as Lab));
-      const geometry = await baselineGeometry();
+      const geometry = await geometryOf("baseline");
       try {
         assert.equal(geometry.direction, direction);
-        for (const key of ["plain", "selected", "submenu"] as const) {
-          const row = geometry[key];
-          assert.equal(row.padding, "12px", `${direction} ${key}: item end padding is ${row.padding}`);
-          assert.equal(row.boxToEnd, 12, `${direction} ${key}: label box ends ${row.boxToEnd} from the item end`);
+        const [plain, selected, submenu] = geometry.rows;
+        for (const [key, row] of [["plain", plain], ["selected", selected], ["submenu", submenu]] as const) {
+          assert.equal(row!.padding, "12px", `${direction} ${key}: item end padding is ${row!.padding}`);
         }
-        assert.equal(geometry.plain.textPadding, "0px", `plain label reserves ${geometry.plain.textPadding}`);
-        assert.equal(geometry.selected.textPadding, "30px", `selected label reserves ${geometry.selected.textPadding} (18dp check + 12dp)`);
-        assert.equal(geometry.submenu.textPadding, "36px", `submenu label reserves ${geometry.submenu.textPadding} (24dp arrow + 12dp)`);
+        // The label sits inside the content row: its end is the item's 12dp
+        // padding plus the content's reservation (no shortcut shifts it).
+        for (const [key, row] of [["plain", plain], ["selected", selected], ["submenu", submenu]] as const) {
+          const expected = 12 + parseFloat(row!.contentPadding);
+          assert.equal(row!.boxToEnd, expected, `${direction} ${key}: label box ends ${row!.boxToEnd} from the item end, expected ${expected}`);
+        }
+        assert.equal(plain!.contentPadding, "0px", `plain content reserves ${plain!.contentPadding}`);
+        assert.equal(selected!.contentPadding, "28px", `selected content reserves ${selected!.contentPadding} (18dp check + 10dp)`);
+        assert.equal(submenu!.contentPadding, "36px", `submenu content reserves ${submenu!.contentPadding} (24dp arrow + 12dp)`);
+        // Main's label sizes at 240px: no double reservation. (Main's RTL
+        // submenu label is 4px narrower: its RTL start padding was 16dp where
+        // the spec, and this fix, use 12dp on both sides.)
+        assert.equal(selected!.labelWidth, 152, `selected label is ${selected!.labelWidth}px, main's 152px`);
+        assert.equal(submenu!.labelWidth, 144, `submenu label is ${submenu!.labelWidth}px, main's 144px`);
         passed.push(`${name} baseline geometry ${direction}`);
       } catch (error) {
         failures.push(`${name} baseline geometry ${direction}: ${error instanceof Error ? error.message : String(error)}`);
       }
       await page.keyboard.press("Escape");
       await page.waitForTimeout(200);
+      // Shortcut clearance, main's 10 and 12px, and main's label sizes.
+      await page.evaluate(() => (window as unknown as Lab).extra!.open());
+      await page.waitForTimeout(400);
+      const extra = await geometryOf("extra");
+      const [extraSelected, extraSubmenu] = extra.rows;
+      try {
+        assert.equal(extraSelected!.contentPadding, "28px", `${direction} selected+shortcut reserves ${extraSelected!.contentPadding}`);
+        assert.equal(extraSubmenu!.contentPadding, "36px", `${direction} submenu+shortcut reserves ${extraSubmenu!.contentPadding}`);
+        // Main's clearances: 10 and 12 in LTR, 22 and 24 in RTL (the check
+        // mirrors to the inline start and the shortcut's start margin grows).
+        const expected = direction === "ltr" ? [10, 12] : [22, 24];
+        assert.equal(extraSelected!.shortcutClearance, expected[0], `${direction} selected+shortcut clearance is ${extraSelected!.shortcutClearance}, main's ${expected[0]}`);
+        assert.equal(extraSubmenu!.shortcutClearance, expected[1], `${direction} submenu+shortcut clearance is ${extraSubmenu!.shortcutClearance}, main's ${expected[1]}`);
+        passed.push(`${name} shortcut clearance ${direction}`);
+      } catch (error) {
+        failures.push(`${name} shortcut clearance ${direction}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(200);
     }
+
+    // The vertical menu keeps its own padding and marks: the reservation is
+    // the baseline menu's only.
+    await page.evaluate(() => (window as unknown as Lab).vertical!.open());
+    await page.waitForTimeout(400);
+    const vertical = await page.evaluate(() => {
+      const lab = window as unknown as Lab;
+      const items = [...lab.vertical!.element.querySelectorAll<HTMLElement>(".mtrl-menu__item")];
+      return items.map((item) => ({
+        padding: getComputedStyle(item).paddingInlineEnd,
+        contentPadding: getComputedStyle(item.querySelector<HTMLElement>(".mtrl-menu__item-content")!).paddingInlineEnd,
+        labelWidth: Math.round((item.querySelector(".mtrl-menu__item-label") ?? item.querySelector(".mtrl-menu__item-text"))!.getBoundingClientRect().width),
+      }));
+    });
+    try {
+      assert.deepEqual(vertical, [
+        { padding: "16px", contentPadding: "0px", labelWidth: 134 },
+        { padding: "48px", contentPadding: "0px", labelWidth: 102 },
+      ], `vertical items changed: ${JSON.stringify(vertical)}`);
+      passed.push(`${name} vertical variants unchanged`);
+    } catch (error) {
+      failures.push(`${name} vertical variants unchanged: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(200);
+
+    // A disabled vibrant item takes no hover colour.
+    await page.evaluate(() => (window as unknown as Lab).disabled!.open());
+    await page.waitForTimeout(400);
+    const disabledReading = () => page.evaluate(() => {
+      const lab = window as unknown as Lab;
+      const item = lab.disabled!.element.querySelector<HTMLElement>(".mtrl-menu__item")!;
+      const icon = item.querySelector<HTMLElement>(".mtrl-menu__item-icon")!;
+      return { color: getComputedStyle(icon).color, box: item.getBoundingClientRect().toJSON() };
+    });
+    try {
+      const before = await disabledReading();
+      await page.mouse.move(before.box.x + before.box.width / 2, before.box.y + before.box.height / 2);
+      await page.waitForTimeout(200);
+      const after = await disabledReading();
+      assert.equal(after.color, before.color, `disabled vibrant icon on hover is ${after.color}, at rest ${before.color}`);
+      assert.notEqual(after.color, tokens.tertiary, "the disabled icon must not take the hover colour");
+      passed.push(`${name} disabled vibrant unchanged on hover`);
+    } catch (error) {
+      failures.push(`${name} disabled vibrant unchanged on hover: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    await page.mouse.move(1, 1);
     assert.deepEqual(errors, [], `${name}: no page errors`);
   } finally {
     await browser.close();

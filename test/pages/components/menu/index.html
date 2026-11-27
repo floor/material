@@ -63,10 +63,13 @@
       };
       const baseline = item(window.__baseline);
       if (!window.__baseline.element.classList.contains("mtrl-menu--visible")) return "menu closed - press Show";
+      const verticalItem = item(window.__vertical);
       return json({
         baselineItem: height(window.__baseline),
         baselineEndPadding: getComputedStyle(baseline).paddingInlineEnd,
-        verticalItem: window.__vertical.element.classList.contains("mtrl-menu--visible") ? height(window.__vertical) : "menu closed - press its Show",
+        verticalItem: verticalItem
+          ? { height: height(window.__vertical), padding: getComputedStyle(verticalItem).paddingInlineEnd, reserved: getComputedStyle(verticalItem.querySelector(".mtrl-menu__item-content")).paddingInlineEnd }
+          : "menu closed - press its Show",
       });
     },
   });
@@ -94,7 +97,7 @@
       const items = [...window.__statesMenu.element.querySelectorAll(".mtrl-menu__item")];
       const read = (item) => ({
         padding: getComputedStyle(item).paddingInlineEnd,
-        reserved: getComputedStyle(item.querySelector(".mtrl-menu__item-text")).paddingInlineEnd,
+        reserved: getComputedStyle(item.querySelector(".mtrl-menu__item-content")).paddingInlineEnd,
       });
       return json({ plain: read(items[0]), selected: read(items[1]), submenu: read(items[2]) });
     },
@@ -110,7 +113,7 @@
       window.__vibrant = menuOf(body, {
         variant: "vertical",
         color: "vibrant",
-        items: [{ id: "h1", text: "Alpha", icon }, { id: "h2", text: "Beta", icon }],
+        items: [{ id: "h1", text: "Alpha", icon }, { id: "h2", text: "Beta", icon }, { id: "h3", text: "Disabled", icon, disabled: true }],
       });
     },
     measure: () => {
@@ -129,6 +132,7 @@
       const iconNode = item.querySelector(".mtrl-menu__item-icon");
       return json({
         state: menu.querySelector(".mtrl-menu__item:hover") ? "hover" : menu.querySelector(".mtrl-menu__item:focus-visible") ? "focus" : "rest",
+        disabled: item.classList.contains("mtrl-menu__item--disabled"),
         icon: iconNode ? getComputedStyle(iconNode).color : null,
         tertiary,
       });
@@ -137,6 +141,36 @@
 
   // ------------------------------------------------------------- Edge cases
   const edges = section(main, "Edge cases");
+  scenario(edges, {
+    title: "A shortcut beside the check or the arrow",
+    lookFor: "a selected item and a submenu item, each with a shortcut at the end.",
+    expected: "the shortcut ends before the check (10dp clear) or the arrow (12dp clear), and the label keeps main's width: 101px with a shortcut and supporting line at 240px.",
+    mount: (body) => {
+      window.__shortcut = menuOf(body, {
+        variant: "baseline",
+        items: [
+          { id: "s1", text: "Save changes and exit", icon, shortcut: "Ctrl+S", supportingText: "Selected shortcut" },
+          { id: "s2", text: "Save changes and exit", icon, shortcut: "Ctrl+M", hasSubmenu: true, submenu: [{ id: "s3", text: "Deep" }] },
+        ],
+      });
+      window.__shortcut.setSelected("s1");
+    },
+    measure: () => {
+      const menu = window.__shortcut.element;
+      if (!menu.classList.contains("mtrl-menu--visible")) return "menu closed - press Show";
+      const rtl = getComputedStyle(menu).direction === "rtl";
+      const read = (item) => {
+        const itemBox = item.getBoundingClientRect();
+        const shortcut = item.querySelector(".mtrl-menu__item-shortcut").getBoundingClientRect();
+        const mark = item.classList.contains("mtrl-menu__item--submenu") ? 36 : 30;
+        const clearance = rtl ? Math.round(shortcut.left - (itemBox.left + mark)) : Math.round(itemBox.right - mark - shortcut.right);
+        const label = item.querySelector(".mtrl-menu__item-label") ?? item.querySelector(".mtrl-menu__item-text");
+        return { clearance, labelWidth: Math.round(label.getBoundingClientRect().width) };
+      };
+      const items = [...menu.querySelectorAll(".mtrl-menu__item")];
+      return json({ direction: rtl ? "rtl" : "ltr", selected: read(items[0]), submenu: read(items[1]) });
+    },
+  });
   scenario(edges, {
     title: "The baseline menu in right-to-left",
     lookFor: "turn RTL on in the toolbar first, then press Show: the same menu with the page in RTL.",
