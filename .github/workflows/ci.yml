@@ -459,6 +459,9 @@ jobs:
           - group: menu-item-checked
             browsers: chromium
             checks: menu-item-checked:check
+          - group: menu-focus-ring
+            browsers: webkit
+            checks: menu-focus-ring:check
           - group: fab-menu-ripple
             browsers: chromium
             checks: fab-menu-ripple:check

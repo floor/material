@@ -595,6 +595,7 @@
     "card-state-layers:check": "bun run scripts/check-card-state-layers.ts",
     "browser-settle:check": "bun run scripts/check-browser-settle.ts",
     "menu-item-checked:check": "bun run scripts/check-menu-item-checked.ts",
+    "menu-focus-ring:check": "bun run scripts/check-menu-focus-ring.ts",
     "fab-menu-ripple:check": "bun run scripts/check-fab-menu-ripple.ts",
     "fab-menu-position:check": "bun run scripts/check-fab-menu-position.ts",
     "fab-menu-items:check": "bun run scripts/check-fab-menu-items.ts",
