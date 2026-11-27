@@ -17,6 +17,17 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.10] - 2026-11-27
+
+Faster slider bubble exit, tooltip hide delay, and menu and list values matched to the spec
+
+### Fixed
+
+- **Lists.** The space between a list item's slots is 12 dp, segmented icons are 20 dp, a segmented trailing icon is on-surface, and a selected icon turns on-surface while hovered, focused, or pressed.
+- **Menu drifts against the M3 specs.** A vibrant menu's leading icon is Tertiary as the item is hovered, focused or pressed, while the rest state keeps the vibrant mapping's on-tertiary-container; a disabled item takes no hover colour, and a selected item keeps its selection colours. A baseline menu item's end padding is 12dp on every item, in both directions: the selected check and the submenu arrow sit in that padding and the content row reserves their room once (18dp check + 10dp, 24dp arrow + 12dp), so a label, a supporting line or a shortcut beside it stays clear and keeps main's width. The vertical menu keeps its own padding and marks (m3.material.io/components/menus/specs, read 2026-11-27: left/right padding 12dp, with-icon too, padding between elements 12dp, icons 24dp).
+- **Slider value indicator.** The pill stays visible while it shrinks and drops in 200 ms after release. It takes 250 ms to appear.
+- **A plain tooltip stays up for 1.5 seconds after the pointer leaves its trigger.**
+
 ## [3.16.9] - 2026-11-27
 
 Slider value indicator, text field label and notch geometry, and coverage of the Compose tokens.
@@ -7517,7 +7528,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.9...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.10...HEAD
+[3.16.10]: https://github.com/floor/material/compare/v3.16.9...v3.16.10
 [3.16.9]: https://github.com/floor/material/compare/v3.16.8...v3.16.9
 [3.16.8]: https://github.com/floor/material/compare/v3.16.7...v3.16.8
 [3.16.7]: https://github.com/floor/material/compare/v3.16.6...v3.16.7
