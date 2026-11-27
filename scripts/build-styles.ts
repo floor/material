@@ -165,7 +165,15 @@ export async function buildStyles(outdir: string, banner: string) {
       // base without moving either sheet's rules.
       // Contrast is emitted separately, in that same layer (`emitExplicit`).
       const layer = name === "typography" || name === "base-lite" ? "base" : name === "base-elements" ? "base" : name;
-      await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
+      // An opt-in entry's rules are emitted unlayered: the component rules it
+      // refines are unlayered in the full stylesheet, and an unlayered rule
+      // beats every layered one. Its selectors are more specific than the
+      // rules they refine, so specificity decides in either load order.
+      if (componentStyles[name]?.optIn) {
+        await writeFile(`${outdir}/${path}.css`, `${banner}\n${css}\n`);
+      } else {
+        await writeFile(`${outdir}/${path}.css`, `${banner}\n${order}@layer mtrl.${layer}{${css}}\n`);
+      }
       // JS module edges are deduplicated across entries. Nested CSS @imports
       // can be independently inlined by Vite and duplicate shared styles.
       await writeFile(`${outdir}/${path}.js`, dependencies.map(dependency => `import "./${dependency}.js";`).join("\n") +

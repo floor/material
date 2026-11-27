@@ -58,18 +58,18 @@ $component: "#{base.$prefix}-text-field";
             cursor: text;
 
             // The component sheet's `.mtrl-text-field__input` rule is emitted
-            // unlayered in the full stylesheet, and an unlayered rule beats
-            // every layered one: these resets are !important so the row keeps
-            // its 32dp draft input whichever sheet loads first.
+            // unlayered in the full stylesheet, and so are this sheet's rules
+            // (`scripts/build-styles.ts`): these, being more specific, win in
+            // either load order.
             .#{$component}__input {
                 flex: 1 1 80px;
                 min-width: 60px;
                 width: auto;
-                height: 32px !important;
-                padding: 0 !important;
-                border: 0 !important;
-                border-radius: 0 !important;
-                background-color: transparent !important;
+                height: 32px;
+                padding: 0;
+                border: 0;
+                border-radius: 0;
+                background-color: transparent;
             }
         }
 
@@ -84,6 +84,21 @@ $component: "#{base.$prefix}-text-field";
         .#{$component}__chips .mtrl-chip {
             flex: 0 1 auto;
             max-width: 100%;
+        }
+
+        // Two 48dp targets on an 88dp chip would share its middle 8dp; M3 lets
+        // a target extend beyond the chip's container, so each keeps its own
+        // 48dp outside the other: the action runs from 8dp before the chip to
+        // 48dp before its end, the remove box from the chip's end 48dp back to
+        // 8dp after it. They meet exactly, and the row's 8dp gap means the
+        // neighbour's target meets there too, with no overlap.
+        .#{$component}__chips .mtrl-chip__action::before {
+            inset-inline-start: -8px;
+            inset-inline-end: 48px;
+        }
+
+        .#{$component}__chips .mtrl-chip__remove::before {
+            inset-inline-end: -8px;
         }
     }
 
