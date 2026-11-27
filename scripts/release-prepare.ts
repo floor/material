@@ -12,15 +12,14 @@
  *   bun run release:prepare --version 3.16.11 --trailer "Agent: …"
  *   bun run release:prepare --version 3.16.11 --dry-run
  *
- * A dry run prints the files it would write and the tables' first difference
- * from the committed ones, and writes nothing: it is the fixture test path.
- * `--skip-measure` reuses the size measurement already in `analysis/` (what
- * `bun run size` and `bun run size:check` leave there) instead of measuring
- * again.
+ * A dry run is plan-only: it prints the files it would write and the tables'
+ * difference from the committed ones, writes nothing, and does not measure —
+ * the size commands write scratch under the checkout. It needs the analysis a
+ * previous `bun run size` and `bun run size:check` left in `analysis/`, or
+ * `--analysis <dir>`. `--skip-measure` does the same for a real run.
  */
 import assert from "node:assert/strict";
-import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { assemble, FRAGMENT_DIR, parseFragment, type Fragment } from "./changelog-fragments";
@@ -133,56 +132,56 @@ async function main(): Promise<void> {
   const matrix = JSON.parse(await readFile(paths.matrix, "utf8")) as { material?: string };
   assert(matrix.material, "conformance/matrix.json has no material version");
 
-  let analysisDir = options.analysis;
-  let scratch: string | undefined;
-  try {
-    if (options.measure) {
-      // A dry run writes nothing, the measurement's analysis output included.
-      if (options.dryRun) scratch = await mkdtemp(join(tmpdir(), "release-prepare-analysis-"));
-      const env: Record<string, string> = scratch ? { MTRL_SIZE_ANALYSIS: scratch } : {};
-      await run(["bun", "run", "size"], options.root, env);
-      await run(["bun", "run", "size:check"], options.root, env);
-      if (scratch) analysisDir = scratch;
+  // A dry run is plan-only: the size commands write scratch under the
+  // checkout (tmp/size, analysis/), and a plan must not touch it. The analysis
+  // has to be there already — from a previous `bun run size` and
+  // `bun run size:check`, or the --analysis directory.
+  if (options.dryRun) {
+    for (const file of ["component-size.json", "package-size.json"]) {
+      if (!(await Bun.file(join(options.analysis, file)).exists())) {
+        throw new Error(`a dry run writes nothing, measurement included: ${join(options.analysis, file)} is missing. Run \`bun run size\` and \`bun run size:check\` first, or pass --analysis, then run the dry run again.`);
+      }
     }
-    const commit = await new Command("git", ["rev-parse", "--short", "HEAD"], options.root).text().catch(() => "local");
-    const tables = await buildReleaseTables(options.root, analysisDir, { commit: commit.trim() || "local", date: options.date });
-
-    const committed: Record<string, string | undefined> = {};
-    for (const path of Object.keys(tables)) {
-      committed[path] = await readFile(join(options.root, path), "utf8").catch(() => undefined);
-    }
-    const diffs = tableDiffs(tables, committed);
-
-    const changes = [
-      `package.json: version ${manifest.version} → ${options.version}`,
-      `CHANGELOG.md: a ${options.version} section from ${fragments.length} fragment(s), and ${fragments.map((fragment) => fragment.path).join(", ")} deleted`,
-      `conformance/matrix.json: material ${matrix.material} → ${options.version}`,
-      ...Object.keys(tables).map((path) => `${path}: ${committed[path] === undefined ? "created" : diffs.some((diff) => diff.startsWith(`${path}:`)) ? "changed" : "unchanged"} from the local measurement`),
-    ];
-    console.log(`release:prepare ${options.version}${options.dryRun ? " (dry run)" : ""}\n`);
-    for (const change of changes) console.log(`  ${change}`);
-    for (const diff of diffs) console.log(`  measurement vs commit: ${diff}`);
-
-    if (options.dryRun) {
-      console.log("\ndry run: no file written, no fragment deleted, no commit made");
-      return;
-    }
-
-    const nextManifest = `${JSON.stringify({ ...manifest, version: options.version }, null, 2)}\n`;
-    await writeFile(paths.manifest, nextManifest);
-    await writeFile(paths.changelog, changelog.changelog);
-    await writeFile(paths.matrix, `${JSON.stringify({ ...matrix, material: options.version }, null, 2)}\n`);
-    for (const [path, text] of Object.entries(tables)) await writeFile(join(options.root, path), text);
-    for (const fragment of fragments) await rm(join(options.root, fragment.path));
-
-    const staged = ["package.json", "CHANGELOG.md", "conformance/matrix.json", ...Object.keys(tables), ...fragments.map((fragment) => fragment.path)];
-    await run(["git", "add", "--", ...staged], options.root);
-    await run(["git", "commit", "-m", `release: bump material to ${options.version}`, "-m", options.trailer!], options.root);
-    const head = (await new Command("git", ["log", "-1", "--oneline"], options.root).text()).trim();
-    console.log(`\nrelease:prepare wrote ${head}`);
-  } finally {
-    if (scratch) await rm(scratch, { recursive: true, force: true });
+  } else if (options.measure) {
+    await run(["bun", "run", "size"], options.root);
+    await run(["bun", "run", "size:check"], options.root);
   }
+  const commit = await new Command("git", ["rev-parse", "--short", "HEAD"], options.root).text().catch(() => "local");
+  const tables = await buildReleaseTables(options.root, options.analysis, { commit: commit.trim() || "local", date: options.date });
+
+  const committed: Record<string, string | undefined> = {};
+  for (const path of Object.keys(tables)) {
+    committed[path] = await readFile(join(options.root, path), "utf8").catch(() => undefined);
+  }
+  const diffs = tableDiffs(tables, committed);
+
+  const changes = [
+    `package.json: version ${manifest.version} → ${options.version}`,
+    `CHANGELOG.md: a ${options.version} section from ${fragments.length} fragment(s), and ${fragments.map((fragment) => fragment.path).join(", ")} deleted`,
+    `conformance/matrix.json: material ${matrix.material} → ${options.version}`,
+    ...Object.keys(tables).map((path) => `${path}: ${committed[path] === undefined ? "created" : diffs.some((diff) => diff.startsWith(`${path}:`)) ? "changed" : "unchanged"} from the local measurement`),
+  ];
+  console.log(`release:prepare ${options.version}${options.dryRun ? " (dry run)" : ""}\n`);
+  for (const change of changes) console.log(`  ${change}`);
+  for (const diff of diffs) console.log(`  measurement vs commit: ${diff}`);
+
+  if (options.dryRun) {
+    console.log("\ndry run: no file written, no fragment deleted, no commit made");
+    return;
+  }
+
+  const nextManifest = `${JSON.stringify({ ...manifest, version: options.version }, null, 2)}\n`;
+  await writeFile(paths.manifest, nextManifest);
+  await writeFile(paths.changelog, changelog.changelog);
+  await writeFile(paths.matrix, `${JSON.stringify({ ...matrix, material: options.version }, null, 2)}\n`);
+  for (const [path, text] of Object.entries(tables)) await writeFile(join(options.root, path), text);
+  for (const fragment of fragments) await rm(join(options.root, fragment.path));
+
+  const staged = ["package.json", "CHANGELOG.md", "conformance/matrix.json", ...Object.keys(tables), ...fragments.map((fragment) => fragment.path)];
+  await run(["git", "add", "--", ...staged], options.root);
+  await run(["git", "commit", "-m", `release: bump material to ${options.version}`, "-m", options.trailer!], options.root);
+  const head = (await new Command("git", ["log", "-1", "--oneline"], options.root).text()).trim();
+  console.log(`\nrelease:prepare wrote ${head}`);
 }
 
 /** A git invocation in `root`, with a readable failure. */

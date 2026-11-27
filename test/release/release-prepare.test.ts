@@ -127,28 +127,45 @@ const git = async (root: string, ...args: string[]): Promise<string> => {
 const prepareScript = resolve(import.meta.dir, "../../scripts/release-prepare.ts");
 
 describe("release:prepare refuses to write outside its own files", () => {
-  test("a dry run measures into a temporary directory and writes nothing into the tree", async () => {
+  test("a dry run does not measure at all, and the checkout's scratch survives it", async () => {
     const root = await fixture();
     try {
-      // The fixture's own size commands record where they were told to write,
-      // which proves the tool redirected the output away from the checkout.
+      // Markers prove whether the size commands ran, and a sentinel in the
+      // size scratch proves the checkout is untouched.
       await mkdir(join(root, "tools"), { recursive: true });
-      await writeFile(join(root, "tools/size.ts"), `import { mkdir, writeFile } from "node:fs/promises";\nimport { join } from "node:path";\nconst out = process.env.MTRL_SIZE_ANALYSIS;\nif (!out) throw new Error("size ran without MTRL_SIZE_ANALYSIS");\nawait mkdir(out, { recursive: true });\nawait writeFile(join(out, "component-size.json"), JSON.stringify({ rows: [], results: [{ name: "core", minBytes: 1024, gzBytes: 900, brBytes: 800, deferredGzBytes: 0, minKB: 1, gzKB: 0.9, deltaKB: 0 }] }));\n`);
-      await writeFile(join(root, "tools/size-check.ts"), `import { writeFile } from "node:fs/promises";\nimport { join } from "node:path";\nconst out = process.env.MTRL_SIZE_ANALYSIS;\nif (!out) throw new Error("size:check ran without MTRL_SIZE_ANALYSIS");\nawait writeFile(join(out, "package-size.json"), ${JSON.stringify(JSON.stringify({ rows: [], sizes, package: { size: 1000 } }))});\n`);
+      await mkdir(join(root, "tmp/size"), { recursive: true });
+      await writeFile(join(root, "tmp/size/sentinel.txt"), "survives a dry run\n");
+      await writeFile(join(root, "tools/size.ts"), `import { writeFileSync } from "node:fs";\nwriteFileSync("size-ran.txt", "the dry run measured");\n`);
       await writeFile(join(root, "package.json"), `${JSON.stringify({
         name: "fixture", version: "1.0.0",
-        scripts: { size: "bun run ./tools/size.ts", "size:check": "bun run ./tools/size-check.ts" },
+        scripts: { size: "bun run ./tools/size.ts", "size:check": "bun run ./tools/size.ts" },
       }, null, 2)}\n`);
 
-      const child = Bun.spawn(["bun", prepareScript, "--root", root, "--version", "1.1.0", "--date", "2026-11-28", "--dry-run"], { stdout: "pipe", stderr: "pipe" });
-      const [stdout, , code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+      const child = Bun.spawn(["bun", prepareScript, "--root", root, "--analysis", join(root, "analysis"),
+        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run"], { stdout: "pipe", stderr: "pipe" });
+      const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
       expect(code).toBe(0);
       expect(stdout).toContain("(dry run)");
       expect(stdout).toContain("no file written");
-      expect(stdout).toContain("SIZES.md");
-      // Neither the measurement nor the tables landed in the tree.
-      expect(await readFile(join(root, "analysis"), "utf8").catch(() => null)).toBeNull();
+      expect(stderr).toBe("");
+      expect(await readFile(join(root, "tmp/size/sentinel.txt"), "utf8")).toBe("survives a dry run\n");
+      expect(await readFile(join(root, "size-ran.txt"), "utf8").catch(() => null)).toBeNull();
       expect(JSON.parse(await readFile(join(root, "package.json"), "utf8")).version).toBe("1.0.0");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a dry run without a measurement says how to make one", async () => {
+    const root = await fixture();
+    try {
+      await rm(join(root, "analysis"), { recursive: true, force: true });
+      const child = Bun.spawn(["bun", prepareScript, "--root", root, "--analysis", join(root, "analysis"),
+        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run"], { stdout: "pipe", stderr: "pipe" });
+      const [, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+      expect(code).not.toBe(0);
+      expect(stderr).toContain("a dry run writes nothing, measurement included");
+      expect(stderr).toContain("bun run size");
     } finally {
       await rm(root, { recursive: true, force: true });
     }

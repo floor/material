@@ -272,7 +272,9 @@ Install the stable release with `npm install material`.
    fills `SIZES.md` and both README size tables from a local measurement
    (`bun run size` and `bun run size:check`; `--skip-measure` reuses the
    `analysis/` they leave). A real run refuses a tree whose index or worktree
-   is not clean, so nothing else rides in the commit. Then add the section's
+   is not clean, so nothing else rides in the commit. The dry run is plan-only
+   and never measures: run those two commands first, then
+   `--dry-run --skip-measure`. Then add the section's
    one-line summary and its `### Size` measurements by hand.
 
    **Keep the install sections consistent with the version**, between

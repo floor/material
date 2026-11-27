@@ -675,9 +675,7 @@ const main = async (): Promise<void> => {
     { name: `Component ${result.name} gzip`, gate: "component-gzip", bytes: result.gzBytes },
     { name: `Component ${result.name} deferred gzip`, gate: "component-gzip", bytes: result.deferredGzBytes },
   ]);
-  // An explicit directory lets a caller measure without writing into the
-  // checkout (release:prepare's dry run).
-  const analysis = process.env.MTRL_SIZE_ANALYSIS ?? join(root, "analysis");
+  const analysis = join(root, "analysis");
   mkdirSync(analysis, { recursive: true });
   writeFileSync(join(analysis, "component-size.json"), JSON.stringify({ rows, results }) + "\n");
 
