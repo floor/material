@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { tableDiffs, tableRowDiffs } from "../../scripts/release-tables";
+import { buildReleaseTables, tableDiffs, tableRowDiffs } from "../../scripts/release-tables";
 import { README_SIZE_ROWS } from "../../scripts/readme-sizes";
 
 const rows = README_SIZE_ROWS.length;
@@ -89,19 +89,40 @@ const measuredTree = async (wrong: boolean): Promise<string> => {
   return root;
 };
 
+const runReleaseSizeReport = async (base: string, head: string) => {
+  const script = resolve(import.meta.dir, "../../scripts/size-report.ts");
+  const child = Bun.spawn(["bun", script], {
+    cwd: head,
+    stdout: "pipe",
+    stderr: "pipe",
+    env: {
+      ...process.env,
+      MTRL_SIZE_BASE: base, MTRL_SIZE_TAG: "v1.0.0", MTRL_SIZE_RELEASE: "true",
+      GITHUB_SHA: "abc1234", GITHUB_EVENT_PATH: "", GITHUB_STEP_SUMMARY: "",
+    },
+  });
+  const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+  return { stdout, stderr, code };
+};
+
+const sizeTableMeta = { commit: "abc1234", date: "2026-01-01" };
+const sizeTableCases: { name: string; change: (text: string) => string; code: number }[] = [
+  { name: "an added blank line", change: text => text + "\n", code: 1 },
+  { name: "a missing final newline", change: text => text.slice(0, -1), code: 1 },
+  { name: "a trailing space", change: text => text.replace(/^# Component sizes$/m, "$& "), code: 1 },
+  {
+    name: "a different Measured-at line",
+    change: text => text.replace(/^Measured at .*$/m, "Measured at def5678 on 2026-02-01. Regenerate with"),
+    code: 0,
+  },
+];
+
 describe("the release run gates the committed tables", () => {
   test("a wrong committed size fails the release run", async () => {
     const base = await measuredTree(false);
     const head = await measuredTree(true);
     try {
-      const script = resolve(import.meta.dir, "../../scripts/size-report.ts");
-      const child = Bun.spawn(["bun", script], {
-        cwd: head,
-        stdout: "pipe",
-        stderr: "pipe",
-        env: { ...process.env, MTRL_SIZE_BASE: base, MTRL_SIZE_TAG: "v1.0.0", MTRL_SIZE_RELEASE: "true", GITHUB_SHA: "abc1234" },
-      });
-      const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+      const { stdout, stderr, code } = await runReleaseSizeReport(base, head);
       expect(code).toBe(1);
       const output = `${stdout}\n${stderr}`;
       expect(output).toContain("differ from this run's measurement");
@@ -115,6 +136,32 @@ describe("the release run gates the committed tables", () => {
       await rm(head, { recursive: true, force: true });
     }
   });
+
+  for (const { name, change, code } of sizeTableCases) {
+    test(`SIZES.md with ${name} exits ${code}`, async () => {
+      const root = await measuredTree(false);
+      try {
+        const tables = await buildReleaseTables(root, join(root, "analysis"), sizeTableMeta);
+        const measured = tables["SIZES.md"]!;
+        expect(measured.endsWith("\n")).toBe(true);
+        const changed = change(measured);
+        expect(changed).not.toBe(measured);
+        await Promise.all(Object.entries({ ...tables, "SIZES.md": changed })
+          .map(([file, text]) => writeFile(join(root, file), text)));
+
+        const result = await runReleaseSizeReport(root, root);
+        expect(result.code).toBe(code);
+        if (code === 1) {
+          expect(result.stderr).toContain("The committed release size tables differ");
+          expect(result.stderr.match(/^- .* — /gm)).toEqual(["- SIZES.md — "]);
+        } else {
+          expect(result.stderr).toBe("");
+        }
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
+  }
 });
 
 const git = async (root: string, ...args: string[]): Promise<string> => {
@@ -272,6 +319,16 @@ describe("release table comparison", () => {
     const trimmed = readme.replace(/\n$/, "");
     expect(tableDiffs({ "README.md": readme }, { "README.md": trimmed })).toHaveLength(1);
   });
+
+  for (const { name, change, code } of sizeTableCases) {
+    test(`the row diff for SIZES.md with ${name}`, () => {
+      const measured = "# Component sizes\n\nMeasured at abc1234 on 2026-01-01. Regenerate with\n\n| core | 0.9 KB |\n";
+      const changed = change(measured);
+      expect(changed).not.toBe(measured);
+      const differences = tableRowDiffs({ "SIZES.md": measured }, { "SIZES.md": changed });
+      expect(differences.map(diff => diff.file)).toEqual(code === 1 ? ["SIZES.md"] : []);
+    });
+  }
 
   test("a missing committed table fails", () => {
     expect(tableDiffs({ "SIZES.md": "x" }, {})).toEqual(["SIZES.md: the tree has no table at this path"]);
