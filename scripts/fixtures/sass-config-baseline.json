@@ -20,6 +20,10 @@
     "scripts/button-style-profile.ts": "c4af25cc9327089aeb229dd0e260a452d97736376b99cd8ef8f7c575eb31fb9b",
     "scripts/optional-style-profiles.ts": "001b3cb27a2fa887b73962d06891e1dac67dfe16412a7a9fb4157f834937e5ec"
   },
+  "contrastSplit": {
+    "sha256": "8413060a5e63d1d84d6e9a4aec416b46429a7b25b491435913180b0294c6d81d",
+    "length": 558563
+  },
   "sources": {
     "main": "787081dbdbd811f353acd967f08e325bd9915c86e2e420459fe619469717fd5f",
     "themes": "87e58249637b431a6c3aff0488b6d447abfd88686bb857b9c7384336e5e0280c",
