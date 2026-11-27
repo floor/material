@@ -326,6 +326,8 @@ export const bindings: FixtureBinding[] = [
     ["handle-height/xs", "Handle height", "size", "xs/discrete/light", css("handleInk", "height"), "SliderTokens.HandleHeight", "size xs"],
     ["active-colour/xs", "Active track tone", "colour", "xs/discrete/light", colour("active"), "SliderTokens.ActiveTrackColor", "size xs"],
     ["focus/xs", "Handle focus indicator", "focus", "xs/focus/light", outline("handleInk"), undefined, "size xs"],
+    ["value-indicator-hide-duration", "Value indicator transform exit duration", "motion", "xs/rest/light",
+      { part: "hiddenBubble", transitionDuration: "transform" }],
   ]),
   fixture("snackbar", "Snackbar", [
     ["close-icon-inset-start/one-line-action-close/rest", "Close glyph start inset", "spacing", "light/single/action-close", inset("icon", "close", "left")],

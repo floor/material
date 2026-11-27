@@ -32,6 +32,7 @@
     <dt>Rise on entry</dt><dd id="indicator-rise">—</dd>
     <dt>Maximum horizontal alignment error</dt><dd id="indicator-alignment">—</dd>
     <dt>Exit scale, drop and midsize opacity</dt><dd id="indicator-exit">—</dd>
+    <dt>Transform timing</dt><dd id="indicator-timing">—</dd>
   </dl>
 <script type="module">
   const panel = document.querySelector("#sound-panel");
@@ -39,11 +40,19 @@
   const riseOutput = document.querySelector("#indicator-rise");
   const alignmentOutput = document.querySelector("#indicator-alignment");
   const exitOutput = document.querySelector("#indicator-exit");
+  const timingOutput = document.querySelector("#indicator-timing");
   let motionFrame = 0;
   let exitFrame = 0;
   let release;
   const readTransform = ({ transform }) => {
     return new DOMMatrixReadOnly(transform === "none" ? undefined : transform);
+  };
+
+  const transformDuration = ({ transitionProperty, transitionDuration }) => {
+    const index = transitionProperty.split(",").map(property => property.trim()).lastIndexOf("transform");
+    const durations = transitionDuration.split(",");
+    const time = index < 0 ? "" : durations[index % durations.length].trim();
+    return time ? `${parseFloat(time) * (time.endsWith("ms") ? 1 : 1000)} ms` : "—";
   };
 
   panel.addEventListener("pointerdown", event => {
@@ -57,8 +66,13 @@
     const indicator = slider.querySelector(".mtrl-slider__value");
     const initial = readTransform(getComputedStyle(indicator));
     let maximumError = 0;
+    let entranceDuration = "—";
+    timingOutput.textContent = "—";
     const measure = () => {
-      const transform = readTransform(getComputedStyle(indicator));
+      const style = getComputedStyle(indicator);
+      const transform = readTransform(style);
+      entranceDuration = transformDuration(style);
+      timingOutput.textContent = `${entranceDuration} in`;
       const pill = indicator.getBoundingClientRect();
       const thumb = handle.getBoundingClientRect();
       maximumError = Math.max(maximumError, Math.abs(pill.x + pill.width / 2 - thumb.x - thumb.width / 2));
@@ -83,6 +97,7 @@
             midpoint = { distance, opacity: Number(style.opacity) };
           }
           const opacity = midpoint ? `${Math.round(midpoint.opacity * 100)}%` : "—";
+          timingOutput.textContent = `${entranceDuration} in · ${transformDuration(style)} out`;
           exitOutput.textContent = `${transform.a.toFixed(2)} · ${transform.f.toFixed(2)} px · ${opacity}`;
         }
         if (style.visibility !== "hidden") exitFrame = requestAnimationFrame(measureExit);
@@ -274,10 +289,10 @@ const interaction = section(main, "Interaction");
 scenario(interaction, {
   title: "Value indicator entrance and exit",
   lookFor: "press either handle, or the track after the pill has hidden: the whole pill grows from scale 0 to 1, rises 5 px, and stays horizontally centred within 0.5 px",
-  expected: "on release the pill lingers for one second, then visibly shrinks from scale 1 to 0 and drops 5 px",
+  expected: "the pill grows in 250 ms, lingers for one second after release, then visibly shrinks and drops 5 px in 200 ms",
   measure: () => {
     const text = (id) => document.getElementById(id)?.textContent ?? "—";
-    return `scale ${text("indicator-scale")} · rise ${text("indicator-rise")} · alignment ${text("indicator-alignment")} · exit ${text("indicator-exit")}`;
+    return `scale ${text("indicator-scale")} · rise ${text("indicator-rise")} · alignment ${text("indicator-alignment")} · exit ${text("indicator-exit")} · timing ${text("indicator-timing")}`;
   },
   mount: (body) => {
     // The Sound script has already filled #sound-panel, and the readout is
