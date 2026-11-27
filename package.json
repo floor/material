@@ -1,6 +1,6 @@
 {
   "name": "material",
-  "version": "3.16.9",
+  "version": "3.16.10",
   "description": "Material Design 3 components for the web: plain JavaScript, web components, and React, Vue, Svelte and Solid components. TypeScript, zero dependencies.",
   "author": "floor",
   "license": "MIT",
@@ -597,6 +597,7 @@
     "browser-settle:check": "bun run scripts/check-browser-settle.ts",
     "menu-item-checked:check": "bun run scripts/check-menu-item-checked.ts",
     "menu-focus-ring:check": "bun run scripts/check-menu-focus-ring.ts",
+    "menu-drifts:check": "bun run scripts/check-menu-drifts.ts",
     "fab-menu-ripple:check": "bun run scripts/check-fab-menu-ripple.ts",
     "fab-menu-position:check": "bun run scripts/check-fab-menu-position.ts",
     "fab-menu-items:check": "bun run scripts/check-fab-menu-items.ts",

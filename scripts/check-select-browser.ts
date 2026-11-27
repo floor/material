@@ -40,7 +40,13 @@ type Row = {
 
 export async function checkSelectMenu(page: Page, api: "factory" | "factory-top" | "element"): Promise<void> {
   const rows = await page.evaluate(async (api) => {
-    const options = [{ id: "cat", text: "Cat" }, { id: "dog", text: "Dog" }];
+    // The selected option's label is long enough to reach the mark if the
+    // mark's room were not reserved: at zero reserve it truncates under the
+    // mark, which the clipped-text check catches (proven in the review).
+    const options = [
+      { id: "cat", text: "Cat, a selected option whose label is long enough to reach the trailing mark" },
+      { id: "dog", text: "Dog" },
+    ];
     const role = (name: string): string => {
       const probe = document.createElement("i");
       probe.style.color = `var(--mtrl-sys-color-${name})`;
@@ -110,9 +116,17 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       const box = item.getBoundingClientRect();
       const style = getComputedStyle(item);
       const after = getComputedStyle(item, "::after");
+      // The mark's room is reserved on the content row, whose padding ends
+      // under the mark, while the label's own box stops 12px clear of it.
+      // Measure the option label's text and clip it to the label's box, the
+      // way the stylesheet clips it (overflow hidden, ellipsis): the item's
+      // padded content box is not text.
+      const label = item.querySelector(".mtrl-menu__item-label .mtrl-menu__item-text") ?? item.querySelector(".mtrl-menu__item-text") ?? item;
       const range = document.createRange();
-      range.selectNodeContents(item);
-      const text = range.getBoundingClientRect();
+      range.selectNodeContents(label);
+      const rawText = range.getBoundingClientRect();
+      const labelBox = label.getBoundingClientRect();
+      const text = { left: Math.max(rawText.left, labelBox.left), right: Math.min(rawText.right, labelBox.right) };
       // The mark's box, from its own used left, margin and width inside the item
       const left = box.left + parseFloat(after.left) + parseFloat(after.marginLeft);
       const right = left + parseFloat(after.width);

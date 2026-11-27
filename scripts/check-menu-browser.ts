@@ -524,7 +524,9 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       assert.ok(Math.abs(horizontal.trailingEdge - 12) <= 0.5, `${dir} horizontal: the check ends ${horizontal.trailingEdge}px from the item, not 12px`);
       assert.ok(Math.abs(horizontal.width - 18) <= 0.5 && Math.abs(horizontal.height - 18) <= 0.5, `${dir} horizontal: the check is ${horizontal.width} by ${horizontal.height}, not 18 by 18`);
       assert.equal(horizontal.overlap, 0, `${dir} horizontal: the check overlaps the label by ${horizontal.overlap}px`);
-      assert.ok(Math.abs(horizontal.gap - 10) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 10px`);
+      // The 12dp between elements the baseline measurements give (m3.material.io/
+      // components/menus/specs): the label's content ends 12px before the mark.
+      assert.ok(Math.abs(horizontal.gap - 12) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 12px`);
     }
 
     // Forced-colors mode on the default vertical menu: the high-contrast rule
@@ -582,7 +584,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       document.documentElement.dir = "";
     });
   }
-  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; the selected item keeps its checked state.");
+  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with the spec's 12px gap; the selected item keeps its checked state.");
 }
 
 /**
