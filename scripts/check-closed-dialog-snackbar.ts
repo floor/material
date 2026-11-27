@@ -299,14 +299,23 @@ try {
       assert.deepEqual(before, { hidden: "true", inert: "true" }, `${kind} closed attributes at creation`);
       assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the never-opened snapshot`);
       await act(openName);
-      await settle(page);
-      assert.equal((await snapshotOf(selector)).includes(label), true, `${label} is not in the open snapshot`);
+      // The accessibility tree is updated after the surface's own task: wait
+      // for the label to appear, then read the tree once it is at rest.
+      const openSnapshot = await settle(page, {
+        until: async () => (await snapshotOf(selector)).includes(label),
+        read: () => snapshotOf(selector),
+      });
+      assert.equal(openSnapshot!.includes(label), true, `${label} is not in the open snapshot`);
       const open = await closedAttributes(selector);
       assert.deepEqual(open, { hidden: null, inert: "false" }, `${kind} attributes while open`);
       await act(closeName as "close" | "hide");
       const closed = await closedAttributes(selector);
       assert.deepEqual(closed, { hidden: "true", inert: "true" }, `${kind} attributes just after close`);
-      assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the snapshot after close`);
+      const closedSnapshot = await settle(page, {
+        until: async () => !(await snapshotOf(selector)).includes(label),
+        read: () => snapshotOf(selector),
+      });
+      assert.equal(closedSnapshot!.includes(label), false, `${label} is in the snapshot after close`);
       await settleOpen();
     });
   }
@@ -351,9 +360,12 @@ try {
       const api = (window as unknown as { api: Record<string, (config: Record<string, unknown>) => Record<string, unknown>> }).api;
       (window as unknown as { surface: unknown }).surface = api.createDialog!({ open: true, title: "Initially open", buttons: [{ text: "Continue", action: "close" }] });
     });
-    await settle(page);
+    const snapshot = await settle(page, {
+      until: async () => (await snapshotOf(".mtrl-dialog")).includes("Initially open"),
+      read: () => snapshotOf(".mtrl-dialog"),
+    });
     assert.deepEqual(await closedAttributes(".mtrl-dialog"), { hidden: null, inert: "false" }, "attributes of a dialog created open");
-    assert.equal((await snapshotOf(".mtrl-dialog")).includes("Initially open"), true, "a dialog created open is absent from the snapshot");
+    assert.equal(snapshot!.includes("Initially open"), true, "a dialog created open is absent from the snapshot");
   });
 
   assert.deepEqual(errors, []);
