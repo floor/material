@@ -210,7 +210,9 @@ export const installChips = <C extends ElementComponent>(
       const missing = wantedRequired && chips.length === 0;
       writingRequired = true;
       input.required = missing;
-      input.setCustomValidity(missing ? " " : "");
+      // A server-side DOM (linkedom) builds the input without constraint APIs;
+      // SSR needs the markup, not the message.
+      if (typeof input.setCustomValidity === "function") input.setCustomValidity(missing ? " " : "");
       queueMicrotask(() => {
         writingRequired = false;
       });
