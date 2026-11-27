@@ -402,13 +402,13 @@ jobs:
           retention-days: 7
 
       - name: Record PR merge and size evidence
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
           MTRL_SIZE_TAG: ${{ steps.release.outputs.tag }}
           MTRL_SIZE_BASE_SHA: ${{ steps.release.outputs.sha }}
         run: bun scripts/main-ci-proof.ts record
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
         with:
           name: pr-merge-proof

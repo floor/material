@@ -30,7 +30,7 @@ const COMMANDS = [
   "core:check", "a11y-svg:check", "readme-browser:check", "rtl:check", "switch-transition:check", "preupgrade:check", "tokens:check", "tokens:catalogue-browser:check", "contrast-emit:check", "theme-root-scope:check", "theme-runtime:check", "theme-roles:check", "theme-origins:check", "spring-tokens:check", "base-lite:check", "base-elements:check", "typescale-consumers:check", "component-sheets:check", "density:check", "ssr:check:a", "ssr:check:b",
 ];
 
-interface Step { name?: string; run?: string; if?: string; "continue-on-error"?: unknown; "timeout-minutes"?: unknown }
+interface Step { name?: string; run?: string; if?: string; with?: { name?: string }; "continue-on-error"?: unknown; "timeout-minutes"?: unknown }
 interface Job {
   needs?: string | string[];
   if?: string;
@@ -195,7 +195,11 @@ describe("CI (.github/workflows/ci.yml)", () => {
     const record = pack.steps.findIndex(step => step.run === "bun scripts/main-ci-proof.ts record");
     expect(size).toBeGreaterThanOrEqual(0);
     expect(record).toBeGreaterThan(size);
-    expect(pack.steps[record].if).toBe("github.event_name == 'pull_request'");
+    const sameRepoPr = "github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository";
+    expect(pack.steps[record].if).toBe(sameRepoPr);
+    const upload = pack.steps.findIndex(step => step.with?.name === "pr-merge-proof");
+    expect(upload).toBeGreaterThan(record);
+    expect(pack.steps[upload].if).toBe(sameRepoPr);
     const gate = workflow.jobs["ci-ok"].steps.map(step => step.run ?? "").join("\n");
     expect(gate).toContain("needs.changes.result }}:${{ needs.changes.outputs.covered }}' != success:true");
     expect(gate).toContain("needs.package.result }}' != success:success:success:success");

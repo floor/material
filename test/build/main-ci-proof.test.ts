@@ -77,6 +77,11 @@ test.each<[string, (state: ReturnType<typeof fixture>["state"]) => void]>([
   ["the latest run is still in progress", state => { state.run.status = "in_progress"; }],
   ["CI finished after the merge", state => { state.run.updated_at = "2026-11-27T15:30:01Z"; }],
   ["the run tested an older PR head", state => { state.run.head_sha = sha("0"); }],
+  ["the PR and its successful run are from a fork", state => {
+    state.pull.head.repo.id = 8;
+    state.run.head_repository.id = 8;
+  }],
+  ["the workflow run head is from another repository", state => { state.run.head_repository.id = 8; }],
   ["the receipt is for a different PR", state => { state.proof.pull = 43; }],
   ["the size tag changed", state => { state.sizeBase.tag = "v3.16.11"; }],
   ["the size tag points to a different commit", state => { state.sizeBase.commit = sha("0"); }],

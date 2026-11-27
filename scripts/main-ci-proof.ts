@@ -80,8 +80,8 @@ export async function verifyMainCi(push: MainPush, evidence: Evidence) {
       pull.base.ref === "main" && pull.base.repo.id === push.repository.id);
     assert(candidates.length === 1, "no unique merged pull request for the push");
     const [pull] = candidates;
-    assert(positiveId(pull.number) && sha.test(pull.head.sha) && pull.head.repo && positiveId(pull.head.repo.id),
-      "the final PR head is missing");
+    assert(positiveId(pull.number) && sha.test(pull.head.sha), "the final PR head is missing");
+    assert(pull.head.repo?.id === push.repository.id, "the PR head is from another repository");
     assert(pull.body === null || typeof pull.body === "string", "the PR body is missing");
 
     const commit = await evidence.api<Commit>(`${root}/git/commits/${push.after}`);
@@ -95,7 +95,7 @@ export async function verifyMainCi(push: MainPush, evidence: Evidence) {
     const { workflow_runs: [run] } = await evidence.api<{ workflow_runs: Run[] }>(`${root}/actions/workflows/ci.yml/runs?${query}`);
     assert(run && positiveId(run.id) && run.event === "pull_request" && run.path === ".github/workflows/ci.yml" &&
       run.repository.id === push.repository.id && run.head_sha === pull.head.sha && run.head_branch === pull.head.ref &&
-      run.head_repository?.id === pull.head.repo.id && run.status === "completed" && run.conclusion === "success" &&
+      run.head_repository?.id === push.repository.id && run.status === "completed" && run.conclusion === "success" &&
       Date.parse(run.updated_at) <= Date.parse(pull.merged_at ?? ""), "the latest CI on the final PR head was not green before merge");
 
     const proof = await evidence.receipt(run.id);
