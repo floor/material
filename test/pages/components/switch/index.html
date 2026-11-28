@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>Switch</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createSwitch } from "../../../../dist/components/switch/index.js";
+
+await initPage({ name: "switch" });
+const states = section(document.getElementById("tp-main"), "States");
+let unselected;
+scenario(states, {
+  title: "Disabled unselected track",
+  lookFor: "compare the disabled switches in light and dark",
+  expected: "the unselected fill uses SurfaceContainerHighest at 0.12, with OnSurface outline at 0.12 and handle at 0.38",
+  mount: (body) => {
+    unselected = createSwitch({ checked: false, disabled: true, label: "Disabled off" });
+    const selected = createSwitch({ checked: true, disabled: true, label: "Disabled on" });
+    body.append(unselected.element, selected.element);
+  },
+  measure: () => {
+    const track = getComputedStyle(unselected.element.querySelector(".mtrl-switch__track"));
+    const handle = getComputedStyle(unselected.element.querySelector(".mtrl-switch__thumb"));
+    return `fill ${track.backgroundColor} · outline ${track.borderTopColor} · handle ${handle.backgroundColor}`;
+  },
+});
+</script>
+</body>
+</html>

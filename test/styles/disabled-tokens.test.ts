@@ -76,9 +76,9 @@ describe('disabled states use the per-role tokens', () => {
     expect(declaration(dash, 'background-color')).toBe('var(--mtrl-sys-color-surface)');
   });
 
-  test('switch: the track is 12%, which is its own token, not the handle 38%', () => {
+  test('switch: the unselected fill is surface-container-highest 12%', () => {
     const track = find('switch', /\.mtrl-switch--disabled .mtrl-switch__track$/)[0];
-    expect(declaration(track, 'background-color')).toBe(onSurface(12));
+    expect(declaration(track, 'background-color')).toBe('color-mix(in srgb, var(--mtrl-sys-color-surface-container-highest) 12%, transparent)');
     expect(declaration(track, 'border-color')).toBe(onSurface(12));
     expect(declaration(track, 'opacity')).toBeUndefined();
   });
@@ -93,16 +93,9 @@ describe('disabled states use the per-role tokens', () => {
     expect(declaration(checkedThumb, 'background-color')).toBe('var(--mtrl-sys-color-surface)');
   });
 
-  test('switch: the selected disabled track keeps 12% rather than the enabled outline role', () => {
-    // The checked+disabled track rule sets no colour of its own; the disabled
-    // track rule (asserted above to carry on-surface 12%) follows the checked
-    // track rule in the sheet, so it wins the specificity tie and the selected
-    // disabled track keeps 12%.
+  test('switch: the selected disabled fill is on-surface 12% with no outline', () => {
     const checkedTrack = find('switch', /--disabled.*--checked .mtrl-switch__track$/)[0];
-    expect(declaration(checkedTrack, 'background-color')).toBeUndefined();
-    const order = rules('switch');
-    const checked = order.findIndex((rule) => /\.mtrl-switch--checked .mtrl-switch__track$/.test(rule.selector));
-    const disabled = order.findIndex((rule) => /\.mtrl-switch--disabled .mtrl-switch__track$/.test(rule.selector));
-    expect(disabled).toBeGreaterThan(checked);
+    expect(declaration(checkedTrack, 'background-color')).toBe(onSurface(12));
+    expect(declaration(checkedTrack, 'border-color')).toBe('transparent');
   });
 });

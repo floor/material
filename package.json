@@ -589,7 +589,7 @@
     "drawer-divider:check": "bun run scripts/check-drawer-divider.ts",
     "bottom-sheet:check": "bun run scripts/check-bottom-sheet-drag.ts",
     "rtl:check": "bun run scripts/check-rtl.ts",
-    "switch-transition:check": "bun run scripts/check-switch-transition.ts",
+    "switch-transition:check": "bun run scripts/check-switch-transition.ts && bun run scripts/check-switch-disabled-track.ts",
     "navigation-bar:check": "bun run scripts/check-navigation-bar.ts",
     "navigation-rail:check": "bun run scripts/check-navigation-rail.ts",
     "carousel:check": "bun run scripts/check-carousel.ts && bun run scripts/check-carousel-click-drag.ts && bun run scripts/check-carousel-zoom-drag.ts",
