@@ -232,6 +232,29 @@ scenario(edge, {
     body.append(list.element);
   },
 });
+
+scenario(edge, {
+  title: "A list inside a flex row",
+  lookFor: "the standard and segmented lists' widths inside a 360 px flex row",
+  expected: "both lists fill the row they are given",
+  measure: () => {
+    const width = (id) => {
+      const element = document.getElementById(id);
+      return element ? `${Math.round(element.getBoundingClientRect().width)} px` : "no list";
+    };
+    return `standard ${width("flex-standard-list")} · segmented ${width("flex-segmented-list")} in a 360 px row`;
+  },
+  mount: (body) => {
+    for (const [id, variant] of [["flex-standard", undefined], ["flex-segmented", "segmented"]]) {
+      const host = document.createElement("div");
+      host.style.cssText = "display:flex;width:360px;outline:1px dashed currentColor";
+      const list = createList({ ariaLabel: id, ...(variant ? { variant } : {}), items: [{ id: "one", headline: "One" }] });
+      list.element.id = `${id}-list`;
+      host.append(list.element);
+      body.append(host);
+    }
+  },
+});
 </script>
 </body>
 </html>

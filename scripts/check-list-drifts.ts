@@ -132,6 +132,18 @@ const mount = () => {
   const frozenRow = frozen.element.querySelector("[data-id='frozen']");
   if (frozenRow) frozenRow.append(chill.element);
   document.body.append(standard.element, segmented.element, dense.element, outer.element, held.element, frozen.element);
+  // A list inside a flex row fills the row: its own root has no width or
+  // growth, so a row lays it out at its content width unless the sheet gives
+  // it one.
+  for (const [id, variant] of [["flex-standard", undefined], ["flex-segmented", "segmented"]] as const) {
+    const host = document.createElement("div");
+    host.id = id;
+    host.style.cssText = "display:flex;width:360px";
+    const fresh = createList({ ariaLabel: `Flex ${id}`, ...(variant ? { variant } : {}), items: [row("only", {})] });
+    fresh.element.id = `${id}-list`;
+    host.append(fresh.element);
+    document.body.append(host);
+  }
 };
 
 const snapshot = (page: Page) => page.evaluate(() => {
@@ -213,6 +225,8 @@ const snapshot = (page: Page) => page.evaluate(() => {
     chillHeadline: textOf(chill, "headline"),
     chillSupporting: textOf(chill, "supporting"),
     chillTextOpacity: opacityOf(chill, "text"),
+    flexStandard: Math.round((document.getElementById("flex-standard-list") as HTMLElement).getBoundingClientRect().width),
+    flexSegmented: Math.round((document.getElementById("flex-segmented-list") as HTMLElement).getBoundingClientRect().width),
     pickRadioBorder: roleOf(getComputedStyle(item("chooser", "pick").querySelector(".mtrl-list__radio") as HTMLElement).borderTopColor),
     pickRadioDot: getComputedStyle(item("chooser", "pick").querySelector(".mtrl-list__radio") as HTMLElement, "::after").transform,
     insideActionLayer: roleOf(getComputedStyle(item("inside", "inside").querySelector(".mtrl-list__action") as HTMLElement, "::before").backgroundColor),
@@ -238,6 +252,8 @@ const run = async (page: Page, engine: string) => {
   // slots only, not a descendant list's (md.comp.list.list-item.selected and
   // .disabled .{leading,trailing}-icon.color; the factory nesting pattern.
   // Specs read 2026-11-27).
+  assert.equal(rest.flexStandard, 360, `${engine}: a standard list fills the flex row it is given`);
+  assert.equal(rest.flexSegmented, 360, `${engine}: a segmented list fills the flex row it is given`);
   assert.equal(rest.heldLeading, "OnSecondaryContainer", `${engine}: the selected row's own leading icon is OnSecondaryContainer at rest`);
   assert.equal(rest.heldTrailing, "OnSecondaryContainer", `${engine}: the selected row's own trailing icon is OnSecondaryContainer at rest`);
   assert.equal(rest.insideLeading, "OnSurfaceVariant", `${engine}: a standard list nested in a selected row keeps its unselected leading icon OnSurfaceVariant`);
