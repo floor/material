@@ -11,6 +11,17 @@ $component: "#{base.$prefix}-drawer";
 // Only used as a CSS fallback if --#{base.$prefix}-drawer-width is not set by JS
 $default-width: 360px;
 
+// Section motion: three component tokens an app can set on the drawer (or any
+// ancestor). Their defaults are the menu's reveal, so the two move together
+// unless an app separates them on purpose. Reduced motion still wins.
+//   --mtrl-drawer-section-motion-duration  (default duration-medium1, 250ms)
+//   --mtrl-drawer-section-motion-easing    (default easing-emphasized)
+//   --mtrl-drawer-section-reveal-scale     (default 0: the rows scale from the
+//     header like a menu; 1: a plain height reveal with the fade)
+$section-duration: var(--#{base.$prefix}-drawer-section-motion-duration, #{v.motion("duration-medium1")});
+$section-easing: var(--#{base.$prefix}-drawer-section-motion-easing, #{v.motion("easing-emphasized")});
+$section-reveal-scale: var(--#{base.$prefix}-drawer-section-reveal-scale, 0);
+
 // ==========================================================================
 // ROOT CONTAINER
 // ==========================================================================
@@ -331,7 +342,11 @@ $default-width: 360px;
         // 2026-11-24: 16dp from the start inside the indicator, 24dp before
         // the trailing content at the end; the indicator itself sits 12dp
         // from the drawer's edge.
-        padding: 0 24px 0 16px;
+        // Logical, so RTL mirrors it with no override, and the end-padding
+        // rules below (the selectable header's reserve for its chevron)
+        // hold in both directions.
+        padding-block: 0;
+        padding-inline: 16px 24px;
         gap: 12px;
         border: none;
         border-radius: v.shape('full'); // NavigationDrawerTokens active-indicator-shape
@@ -428,7 +443,7 @@ $default-width: 360px;
         // HOVER / FOCUS / PRESSED STATES
         // ======================================================================
 
-        &:hover:not(:is([disabled], [aria-disabled="true"])) {
+        &:hover:not(:is([disabled], [aria-disabled="true"], .#{$component}__item--header)) {
             color: t.color("on-surface");
 
             .#{$component}__active-indicator::after {
@@ -447,7 +462,7 @@ $default-width: 360px;
             }
         }
 
-        &:active:not(:is([disabled], [aria-disabled="true"])) {
+        &:active:not(:is([disabled], [aria-disabled="true"], .#{$component}__item--header)) {
             color: t.color("on-surface");
 
             // A rippled item leaves the press to its ripple.
@@ -495,8 +510,40 @@ $default-width: 360px;
         // no weight change. Hover and press still give their own feedback on
         // top — their rules are more specific, so the pressed and focused
         // opacities win over this floor.
-        &--has-active .#{$component}__active-indicator::after {
+        &--has-active:not(&--header, &--selectable) .#{$component}__active-indicator::after {
             opacity: v.state("hover-state-layer-opacity");
+        }
+
+        // A section header is a label, not a control: it takes no hover or
+        // press layer and keeps the default cursor. Only its chevron, an
+        // icon button, answers the pointer. While the section is collapsed
+        // and holds the current page, the header carries the selected pill
+        // instead of its hidden child; once open, the child has it again.
+        &--header {
+            cursor: default;
+        }
+
+        // Section rows sit above the plain rows and take no vertical touch
+        // extension of their own: the rows' 48dp targets overlap their
+        // neighbours at density, and a later row's target must never take a
+        // tap inside a section's chevron or header (review, 2026-11-28).
+        &--header,
+        &--selectable {
+            z-index: 1;
+
+            &::after {
+                content: none;
+            }
+        }
+
+        &--header#{&}--has-active:not(#{&}--expanded),
+        &--selectable#{&}--has-active:not(#{&}--expanded) {
+            color: t.color("on-secondary-container");
+
+            .#{$component}__active-indicator::before {
+                opacity: 1;
+                transform: scaleX(1);
+            }
         }
 
         // ======================================================================
@@ -533,15 +580,15 @@ $default-width: 360px;
         // the flip by the same duration, so the shrink is seen before the
         // rows leave the tree.
         transition:
-            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
-            visibility 0s linear v.motion("duration-medium1");
+            grid-template-rows $section-duration $section-easing,
+            visibility 0s linear $section-duration;
     }
 
     &__group--expanded > &__group-items {
         grid-template-rows: 1fr;
         visibility: visible;
         transition:
-            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
+            grid-template-rows $section-duration $section-easing,
             visibility 0s;
     }
 
@@ -561,11 +608,22 @@ $default-width: 360px;
         // panel was already at the menu's fraction. The fade rides the same
         // tokens as the panel's height.
         min-height: 0;
-        opacity: 0;
-        transition: opacity v.motion("duration-medium1") v.motion("easing-emphasized");
+        // The rows grow from the header the way a menu grows from its
+        // opener: the menu's own reveal (scaleY from the top edge with a
+        // fade, duration-medium1, easing-emphasized), shared through the
+        // mixin so the two cannot drift. The panel's height above rides the
+        // same duration and curve, so the rows below the section move in
+        // step with the scale instead of jumping.
+        @include m.reveal-motion;
+        // The drawer's tokens over the shared reveal's literal timing.
+        transform: scaleY($section-reveal-scale);
+        transition:
+            transform $section-duration $section-easing,
+            opacity $section-duration $section-easing;
     }
 
     &__group--expanded &__group-items-inner {
+        transform: scaleY(1);
         opacity: 1;
     }
 
@@ -578,6 +636,14 @@ $default-width: 360px;
         // default reproduces the measured 12px shift.
         margin-inline-start: calc(12px + var(--#{base.$prefix}-drawer-child-indent, 12px));
         width: calc(100% - 24px - var(--#{base.$prefix}-drawer-child-indent, 12px));
+    }
+
+    // A section header without an icon is a title for its group, as in
+    // Google's consoles: its rows line up with the top-level rows instead of
+    // stepping in. A header with an icon keeps the child indent.
+    &__group:not(:has(> &__item--header > &__item-icon, > &__item-row > &__item > &__item-icon)) > &__group-items &__item--child {
+        margin-inline-start: 12px;
+        width: calc(100% - 24px);
     }
 
     &__item-chevron {
@@ -599,7 +665,7 @@ $default-width: 360px;
         transform: rotate(0deg);
         // The chevron turns on the same duration and curve the section
         // opens with, so the rotation and the reveal read as one motion.
-        transition: transform v.motion("duration-medium1") v.motion("easing-emphasized");
+        transition: transform $section-duration $section-easing;
 
         svg {
             width: 24px;
@@ -608,12 +674,126 @@ $default-width: 360px;
         }
     }
 
-    &__item--expanded &__item-chevron {
+    &__item--expanded &__item-chevron,
+    &__item--expanded + &__item-toggle &__item-chevron {
         transform: rotate(180deg);
     }
 
-    &__item-badge + &__item-chevron {
+    // A selectable section: its header is a full row destination, and the
+    // chevron button sits over the row's end, beside the header rather than
+    // inside it. The label stops short of the button.
+    &__item-row {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+
+        // On the indicator's end, 12dp from the drawer's edge.
+        > .#{$component}__item-toggle {
+            position: absolute;
+            top: 50%;
+            inset-inline-end: 12px;
+            margin: 0;
+            transform: translateY(-50%);
+        }
+    }
+
+    // The label stops 8dp short of the button.
+    &__item--selectable {
+        padding-inline-end: calc(#{f.density(56px, 36px)} + 8px);
+    }
+
+    &__group--expanded > &__item-row {
+        margin-block-end: 1px;
+    }
+
+    &__item-badge + &__item-chevron,
+    &__item-badge + &__item-toggle {
         margin-inline-start: 0;
+    }
+
+    // The section chevron as an icon button (owner, 2026-11-28, after
+    // Google's own consoles): a round button as tall as the row at every
+    // density — 56dp at rest, 36dp dense — that ends on the indicator's end.
+    // Its state layer is the only hover feedback a section header gives.
+    // Below 48dp the touch target widens to 48dp, keeping the row height.
+    &__item-toggle {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: f.density(56px, 36px);
+        height: f.density(56px, 36px);
+        margin-inline-start: auto;
+        // Past the row's 24dp end padding, onto the indicator's end.
+        margin-inline-end: -24px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: t.color("on-surface-variant");
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+
+        // State layer for hover, focus and press. The ripple clips itself
+        // to the button's round shape, so the button does not clip: the
+        // touch target below has to reach past a 36dp button.
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background-color: currentColor;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity v.motion("spring-default-effects-duration")
+                v.motion("spring-default-effects-easing");
+        }
+
+        // The touch target reaches 48dp sideways only. A taller one would
+        // overlap the next section's chevron in a dense drawer, and the
+        // later chevron would take a tap inside this one's own box. The row
+        // height (36dp at the densest) stays the vertical target.
+        &::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: max(100%, 48px);
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        &:hover::before {
+            opacity: v.state("hover-state-layer-opacity");
+        }
+
+        &:focus-visible {
+            outline: 3px solid t.color("secondary");
+            outline-offset: 2px;
+
+            &::before {
+                opacity: v.state("focus-state-layer-opacity");
+            }
+        }
+
+        &:active:not(:has(> .#{base.$prefix}-ripple))::before {
+            opacity: v.state("pressed-state-layer-opacity");
+        }
+
+        &:disabled {
+            cursor: default;
+        }
+
+        .#{$component}__item-chevron {
+            margin: 0;
+        }
+    }
+
+    &__item--header#{&}__item--has-active:not(#{&}__item--expanded) &__item-toggle,
+    &__item--selectable#{&}__item--has-active:not(#{&}__item--expanded) + &__item-toggle,
+    &__item--selectable#{&}__item--active + &__item-toggle {
+        color: t.color("on-secondary-container");
     }
 
     // ========================================================================
@@ -720,12 +900,8 @@ $default-width: 360px;
     // RTL — item padding direction
     // ========================================================================
 
-    // The asymmetric paddings mirror in RTL: the 24dp end padding goes to
-    // the reading direction's end side. The child indent is a logical
-    // margin and mirrors itself.
-    @include m.rtl-selector('.#{$component}__item') {
-        padding: 0 16px 0 24px;
-    }
+    // The item paddings and the child indent are logical properties, so
+    // they mirror in RTL with no override here.
 
     // ========================================================================
     // REDUCED MOTION
@@ -792,6 +968,17 @@ $default-width: 360px;
 
         &__divider {
             background-color: currentColor;
+        }
+
+        // The chevron button's state layer is hidden in forced colors: an
+        // outline marks the hovered button, and the focus ring takes the
+        // system colour like the rows'.
+        &__item-toggle:hover {
+            outline: 1px solid CanvasText;
+        }
+
+        &__item-toggle:focus-visible {
+            outline: 3px solid CanvasText;
         }
     }
 }

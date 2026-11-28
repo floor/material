@@ -286,7 +286,7 @@ export function section(parent, title) {
 export function scenario(parent, spec) {
   const el = document.createElement("article");
   el.className = "tp-scenario";
-  el.innerHTML = `<h3>${spec.title}</h3><p class="tp-look"><b>Look for</b> ${spec.lookFor}</p><p class="tp-expected"><b>Expected</b> ${spec.expected}</p><div class="tp-body"></div><p class="tp-measure"></p>`;
+  el.innerHTML = `<h3>${spec.title}</h3><div class="tp-look"><b>Look for</b> ${spec.lookFor}</div><div class="tp-expected"><b>Expected</b> ${spec.expected}</div><div class="tp-body"></div><p class="tp-measure"></p>`;
   parent.append(el);
   const body = el.querySelector(".tp-body");
   spec.mount(body);

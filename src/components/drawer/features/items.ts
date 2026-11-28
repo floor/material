@@ -15,6 +15,8 @@ let drawerCount = 0;
 const DEFAULT_CHEVRON = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>';
 const isDestination = (item: DrawerItemConfig) => item.type !== "divider" && item.type !== "section";
 const isSection = (item: DrawerItemConfig) => item.type !== "divider" && !!item.items?.length;
+/** A section that is also a destination: its header opens a page or runs an action. */
+const isSelectableSection = (item: DrawerItemConfig) => isSection(item) && (item.href !== undefined || item.selectable === true);
 const hasModifiers = (event: MouseEvent | KeyboardEvent) => event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
 const enabled = (element: HTMLElement) => !element.matches('[disabled], [aria-disabled="true"]');
 const visible = (element: HTMLElement) => enabled(element) && !element.closest("[inert], [hidden]");
@@ -24,6 +26,9 @@ interface Section {
   index: number;
   label: string;
   group: HTMLElement;
+  /** The header row: a label, not a control. */
+  header: HTMLElement;
+  /** The chevron icon button that opens and closes the section. */
   button: HTMLElement;
   panel: HTMLElement;
   expanded: boolean;
@@ -35,8 +40,8 @@ interface Destination {
 }
 
 const initialActive = (items: DrawerItemConfig[]) =>
-  items.flatMap(item => isSection(item) ? item.items! : [item])
-    .find(item => isDestination(item) && item.active && !item.disabled)?.id || null;
+  items.flatMap(item => isSection(item) ? (isSelectableSection(item) ? [item, ...item.items!] : item.items!) : [item])
+    .find(item => (isDestination(item) || isSelectableSection(item)) && item.active && !item.disabled)?.id || null;
 
 /**
  * An empty or zero count is no badge: the same rule the standalone badge
@@ -82,24 +87,27 @@ export interface ItemsFeature {
 const createItemElement = (
   item: DrawerItemConfig,
   getClass: (name: string) => string,
+  header = false,
 ): HTMLElement => {
   const { href } = item;
-  const el = document.createElement(href === undefined ? "button" : "a");
+  const el = document.createElement(header ? "div" : href === undefined ? "button" : "a");
   el.className = getClass(DRAWER_CLASSES.ITEM);
-  if (href !== undefined) {
+  if (header) {
+    if (item.disabled) el.setAttribute("aria-disabled", "true");
+  } else if (href !== undefined) {
     if (item.disabled) el.setAttribute("role", "link");
     else el.setAttribute("href", safeUrl(href) || (href ? "about:blank" : ""));
   } else {
     el.setAttribute("type", "button");
     if (item.disabled) el.setAttribute("disabled", "");
   }
-  el.setAttribute("tabindex", item.disabled ? "-1" : "0");
+  if (!header) el.setAttribute("tabindex", item.disabled ? "-1" : "0");
 
   if (item.id) {
     el.dataset.id = item.id;
   }
 
-  if (item.disabled) {
+  if (item.disabled && !header) {
     el.setAttribute("aria-disabled", "true");
   }
 
@@ -203,12 +211,12 @@ export const withItems =
     const paintSection = (section: Section, expanded: boolean): void => {
       section.expanded = expanded;
       section.button.setAttribute("aria-expanded", String(expanded));
-      section.button.classList.toggle(cls(DRAWER_CLASSES.ITEM_EXPANDED), expanded);
+      section.header.classList.toggle(cls(DRAWER_CLASSES.ITEM_EXPANDED), expanded);
       section.group.classList.toggle(cls("drawer__group--expanded"), expanded);
       section.panel.toggleAttribute("inert", !expanded);
     };
     const paintParent = (section: Section, active: boolean): void => {
-      section.button.classList.toggle(cls(DRAWER_CLASSES.ITEM_HAS_ACTIVE), active);
+      section.header.classList.toggle(cls(DRAWER_CLASSES.ITEM_HAS_ACTIVE), active);
     };
 
     const setExpanded = (section: Section | undefined, expanded: boolean, event?: Event): void => {
@@ -249,6 +257,12 @@ export const withItems =
     };
 
     const renderItems = (): void => {
+      // A re-render (new items, an element's label edit) rebuilds every row:
+      // the focus goes back to the same row, or the same section chevron.
+      const focused = activeElementOf(itemsContainer) as HTMLElement | null;
+      const refocus = focused && itemsContainer.contains(focused) && focused.dataset.id !== undefined
+        ? { id: focused.dataset.id, toggle: focused.classList.contains(cls(DRAWER_CLASSES.ITEM_TOGGLE)) }
+        : null;
       unmountRipples();
       itemsContainer.replaceChildren();
       destinations = [];
@@ -268,12 +282,17 @@ export const withItems =
         }
         const active = !!activeId && item.id === activeId && !item.disabled;
         const element = createItemElement({ ...item, active }, cls);
-        const index = destinations.length;
-        element.dataset.navIndex = String(index);
         if (parent) {
           element.classList.add(cls(DRAWER_CLASSES.ITEM_CHILD));
           element.dataset.parentId = parent.id;
         }
+        wireDestination(item, element, parent);
+        container.append(element);
+      };
+
+      function wireDestination(item: DrawerItemConfig, element: HTMLElement, parent?: Section): void {
+        const index = destinations.length;
+        element.dataset.navIndex = String(index);
         destinations.push({ item, element, parent });
         element.addEventListener("click", (event) => {
           if (item.disabled) {
@@ -287,8 +306,7 @@ export const withItems =
           component.emit(DRAWER_EVENTS.SELECT, detail);
         });
         mountRipple(element, item.disabled);
-        container.append(element);
-      };
+      }
 
       currentItems.forEach((item, index) => {
         if (!isSection(item)) {
@@ -313,29 +331,63 @@ export const withItems =
         const group = document.createElement("div");
         group.className = cls(DRAWER_CLASSES.GROUP);
         group.dataset.sectionId = id;
-        const button = createItemElement({ ...item, id, label, href: undefined, active: false }, cls);
+        // The header is a label; only its chevron is a control, an icon
+        // button with its own state layer (Google's own consoles draw
+        // sections this way). A section has no page of its own.
+        // A selectable section's header is a destination of its own (a link
+        // or a button that selects it); the chevron then sits beside it,
+        // not inside it, since a control cannot hold another control.
+        const selectable = isSelectableSection(item);
+        const selfActive = selectable && !!activeId && activeId === id && !item.disabled;
+        const header = selectable
+          ? createItemElement({ ...item, id, label, items: undefined, active: selfActive }, cls)
+          : createItemElement({ ...item, id, label, href: undefined, active: false }, cls, true);
+        header.id = `${prefix}-header`;
+        header.classList.add(cls(DRAWER_CLASSES.ITEM_EXPANDABLE), cls(selectable ? DRAWER_CLASSES.ITEM_SELECTABLE : DRAWER_CLASSES.ITEM_HEADER));
+        const button = document.createElement("button");
+        button.type = "button";
         button.id = `${prefix}-btn`;
-        button.classList.add(cls(DRAWER_CLASSES.ITEM_EXPANDABLE));
+        button.className = cls(DRAWER_CLASSES.ITEM_TOGGLE);
+        // An explicit tab stop: WebKit's default Tab skips native buttons,
+        // and the rows already carry tabindex="0" for the same reason.
+        button.setAttribute("tabindex", item.disabled ? "-1" : "0");
+        button.dataset.id = id;
+        button.setAttribute("aria-label", label);
+        if (item.disabled) {
+          button.disabled = true;
+          button.setAttribute("aria-disabled", "true");
+        }
         const chevron = document.createElement("span");
         chevron.className = cls(DRAWER_CLASSES.ITEM_CHEVRON);
         chevron.setAttribute("aria-hidden", "true");
         setHTML(chevron, chevronMarkup);
         button.append(chevron);
+        let row: HTMLElement = header;
+        if (selectable) {
+          row = document.createElement("div");
+          row.className = cls(DRAWER_CLASSES.ITEM_ROW);
+          row.append(header, button);
+        } else header.append(button);
 
         const panel = document.createElement("div");
         panel.className = cls(DRAWER_CLASSES.GROUP_ITEMS);
         panel.id = `${prefix}-panel`;
         panel.setAttribute("role", "group");
-        panel.setAttribute("aria-labelledby", button.id);
+        // The panel is named by the header's label alone; the header also
+        // holds the chevron, whose aria-label would repeat the name.
+        const labelElement = header.querySelector<HTMLElement>(`.${cls(DRAWER_CLASSES.ITEM_LABEL)}`);
+        if (labelElement) labelElement.id = `${prefix}-label`;
+        panel.setAttribute("aria-labelledby", labelElement ? labelElement.id : header.id);
         button.setAttribute("aria-controls", panel.id);
         const inner = document.createElement("div");
         inner.className = cls(DRAWER_CLASSES.GROUP_ITEMS_INNER);
         panel.append(inner);
-        group.append(button, panel);
+        group.append(row, panel);
         itemsContainer.append(group);
 
-        const section: Section = { id, index, label, group, button, panel, expanded: false };
+        const section: Section = { id, index, label, group, header, button, panel, expanded: false };
         sections.set(id, section);
+        if (selectable) wireDestination({ ...item, id, label, items: undefined }, header);
         item.items!.forEach(child => renderItem(child, inner, section));
         const active = !!activeId && item.items!.some(child => isDestination(child) && !child.disabled && child.id === activeId);
         paintParent(section, active);
@@ -345,6 +397,14 @@ export const withItems =
         });
         mountRipple(button, item.disabled);
       });
+
+      if (refocus) {
+        const target = [...itemsContainer.querySelectorAll<HTMLElement>("[data-id]")].find(element =>
+          element.dataset.id === refocus.id
+          && element.classList.contains(cls(DRAWER_CLASSES.ITEM_TOGGLE)) === refocus.toggle
+          && !element.matches(`.${cls(DRAWER_CLASSES.ITEM_HEADER)}`));
+        target?.focus();
+      }
     };
 
     const setItems = (items: DrawerItemConfig[]): void => {
@@ -355,7 +415,7 @@ export const withItems =
 
     const setBadge = (id: string, badge: string): void => {
       const section = sections.get(id);
-      const element = section?.button ?? destinations.find(row => row.element.dataset.id === id)?.element;
+      const element = section?.header ?? destinations.find(row => row.element.dataset.id === id)?.element;
       if (!element) return;
 
       let badgeElement = element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_BADGE)}`);
@@ -363,7 +423,7 @@ export const withItems =
         if (!badgeElement) {
           badgeElement = document.createElement("span");
           badgeElement.className = cls(DRAWER_CLASSES.ITEM_BADGE);
-          element.insertBefore(badgeElement, element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_CHEVRON)}`));
+          element.insertBefore(badgeElement, element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_TOGGLE)}`));
         }
         badgeElement.textContent = badge;
       } else badgeElement?.remove();
@@ -373,7 +433,7 @@ export const withItems =
     };
 
     const visibleItems = (container: HTMLElement): HTMLElement[] =>
-      [...container.querySelectorAll<HTMLElement>(`.${cls(DRAWER_CLASSES.ITEM)}`)].filter(visible);
+      [...container.querySelectorAll<HTMLElement>(`button.${cls(DRAWER_CLASSES.ITEM)}, a.${cls(DRAWER_CLASSES.ITEM)}, .${cls(DRAWER_CLASSES.ITEM_TOGGLE)}`)].filter(visible);
 
     const handleKeydown = (event: KeyboardEvent): void => {
       const { key } = event;
@@ -404,7 +464,7 @@ export const withItems =
           const opens = key === (itemsContainer.matches(":dir(rtl)") ? "ArrowLeft" : "ArrowRight");
           const section = sections.get(current.dataset.id ?? "");
           const parent = sections.get(current.dataset.parentId ?? "");
-          if (section?.button === current) {
+          if (section && (section.button === current || section.header === current)) {
             event.preventDefault();
             if (opens && section.expanded) visibleItems(section.panel)[0]?.focus();
             else setExpanded(section, opens, event);

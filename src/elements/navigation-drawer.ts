@@ -73,6 +73,11 @@ const declaredItems = (host: Element, tag: string, active: string | null, sectio
     };
     if (children.length) {
       item.items = children;
+      if (child.hasAttribute("selectable") || child.hasAttribute("href")) {
+        item.selectable = true;
+        item.active = id === active;
+        item.href = child.getAttribute("href") ?? undefined;
+      }
       if (child.hasAttribute("expanded")) {
         collapsedDeclarations.delete(child);
         item.expanded = true;
@@ -130,7 +135,10 @@ const updateDrawer = (host: ElementHost<NavigationDrawerComponent>, component: N
 
   const focused = (host.shadowRoot?.activeElement as HTMLElement | null)?.dataset.id;
   component.setItems(settings);
-  if (focused !== undefined) {
+  // The items feature restores the focus itself, to the same row or the
+  // same section chevron; only fall back when it found nothing to focus.
+  const still = host.shadowRoot?.activeElement;
+  if (focused !== undefined && !(still && component.element.contains(still))) {
     const item = Array.from(component.element.querySelectorAll<HTMLElement>("[data-id]")).find(
       element => element.dataset.id === focused && !element.matches('[disabled], [aria-disabled="true"]') && !element.closest("[inert]")
     );
@@ -266,6 +274,8 @@ export const navigationDrawerItemDeclaration = {
     badge: { type: "string" },
     href: { type: "string" },
     expanded: { type: "boolean" },
+    /** On a parent item: its header is a destination of its own (see `selectable` on the item config). */
+    selectable: { type: "boolean" },
     disabled: { type: "boolean" },
   },
 } as const;

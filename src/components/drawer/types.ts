@@ -50,6 +50,14 @@ export interface DrawerItemConfig {
   /** Initial section state. If omitted, an active child opens the section. */
   expanded?: boolean;
 
+  /**
+   * Makes a section's header a destination of its own: it can be selected
+   * (a `select` event, `aria-current`) and, with `href`, opens a page. Its
+   * chevron button still opens and closes the section. A section with an
+   * `href` is selectable without this flag.
+   */
+  selectable?: boolean;
+
   /** Badge text (e.g. unread count) */
   badge?: string;
 

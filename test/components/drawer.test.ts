@@ -69,13 +69,22 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
     ],
   }));
   const row = (id: string) => drawer.element.querySelector<HTMLElement>(`[data-id="${id}"]`)!;
+  const toggle = (id: string) => drawer.element.querySelector<HTMLElement>(`.mtrl-drawer__item-toggle[data-id="${id}"]`)!;
   expect(drawer.getExpandedSections()).toEqual(["auto", "open"]);
-  expect(row("auto").getAttribute("aria-expanded")).toBe("true");
+  // The header is a label (a div, no tab stop); its chevron is the control.
+  expect(row("auto").localName).toBe("div");
+  expect(row("auto").hasAttribute("tabindex")).toBe(false);
+  expect(toggle("auto").localName).toBe("button");
+  expect(toggle("auto").getAttribute("aria-label")).toBe("Automatic");
+  expect(toggle("auto").getAttribute("aria-expanded")).toBe("true");
+  // An explicit tab stop: WebKit's default Tab skips native buttons.
+  expect(toggle("auto").getAttribute("tabindex")).toBe("0");
   expect(row("auto").classList.contains("mtrl-drawer__item--has-active")).toBe(true);
   expect(drawer.element.querySelector(".mtrl-drawer__section-label")?.textContent).toBe("Static");
-  const button = row("closed");
+  const button = toggle("closed");
+  const header = row("closed");
   const panel = drawer.element.querySelector<HTMLElement>(`#${button.getAttribute("aria-controls")}`)!;
-  expect(panel.getAttribute("aria-labelledby")).toBe(button.id);
+  expect(panel.getAttribute("aria-labelledby")).toBe(header.querySelector(".mtrl-drawer__item-label")!.id);
   expect(panel.getAttribute("role")).toBe("group");
   expect(panel.hasAttribute("inert")).toBe(true);
 
@@ -89,7 +98,7 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
   expect(drawer.collapseSection("closed")).toBe(drawer);
   expect(document.activeElement).toBe(button);
   expect(panel.hasAttribute("inert")).toBe(true);
-  expect(button.classList.contains("mtrl-drawer__item--has-active")).toBe(true);
+  expect(header.classList.contains("mtrl-drawer__item--has-active")).toBe(true);
   expect(drawer.getActive()).toBe("nested");
   expect(changes).toEqual([{ id: "closed", value: "closed", label: "Explicitly closed", expanded: false }]);
   drawer.collapseSection("closed").expandSection("missing");
@@ -100,7 +109,7 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
   expect(selected).toEqual([]);
   drawer.setBadge("nested", "2").setBadge("closed", "3");
   expect(row("nested").querySelector(".mtrl-drawer__item-badge")?.textContent).toBe("2");
-  expect(button.querySelector(".mtrl-drawer__item-badge")?.nextElementSibling?.className).toBe("mtrl-drawer__item-chevron");
+  expect(header.querySelector(".mtrl-drawer__item-badge")?.nextElementSibling?.className).toBe("mtrl-drawer__item-toggle");
   expect(drawer.getItems()[1].items?.[0].badge).toBe("2");
   drawer.toggleSection("closed");
   expect(drawer.getItems()[1].expanded).toBe(false);
@@ -133,4 +142,45 @@ test("createNavigationDrawer and createDrawer build the same element", () => {
   expect(navigationDrawer.element.className).toBe(drawer.element.className);
   navigationDrawer.destroy();
   drawer.destroy();
+});
+
+test("selectable sections keep an initial selection, and a panel is named once", () => {
+  const drawer = mount(createDrawer({
+    open: true,
+    items: [
+      { type: "section", id: "perf", label: "Performance", selectable: true, active: true, items: [{ id: "genai", label: "Generative AI" }] },
+      { id: "indexing", label: "Indexing", items: [{ id: "pages", label: "Pages" }] },
+    ],
+  }));
+  const header = drawer.element.querySelector<HTMLElement>('.mtrl-drawer__item--selectable[data-id="perf"]')!;
+  expect(drawer.getActive()).toBe("perf");
+  expect(header.getAttribute("aria-current")).toBe("page");
+  // The panel takes its name from the header's label alone: the chevron's
+  // own aria-label must not repeat it ("Indexing Indexing").
+  for (const id of ["perf", "indexing"]) {
+    const toggle = drawer.element.querySelector<HTMLElement>(`.mtrl-drawer__item-toggle[data-id="${id}"]`)!;
+    const panel = drawer.element.querySelector<HTMLElement>(`#${toggle.getAttribute("aria-controls")}`)!;
+    const names = panel.getAttribute("aria-labelledby")!.split(" ").map(ref => drawer.element.querySelector(`#${ref}`)!);
+    expect(names.length).toBe(1);
+    expect(names[0].classList.contains("mtrl-drawer__item-label")).toBe(true);
+    expect(names[0].textContent).toBe(id === "perf" ? "Performance" : "Indexing");
+  }
+});
+
+test("re-rendering keeps the focus on the same chevron or header", () => {
+  const drawer = mount(createDrawer({
+    open: true,
+    items: [
+      { id: "indexing", label: "Indexing", items: [{ id: "pages", label: "Pages" }] },
+      { id: "perf", label: "Performance", selectable: true, items: [{ id: "genai", label: "Generative AI" }] },
+    ],
+  }));
+  const toggle = () => drawer.element.querySelector<HTMLElement>('.mtrl-drawer__item-toggle[data-id="indexing"]')!;
+  const perfToggle = () => drawer.element.querySelector<HTMLElement>('.mtrl-drawer__item-toggle[data-id="perf"]')!;
+  toggle().focus();
+  drawer.setItems(drawer.getItems().map(item => item.id === "indexing" ? { ...item, label: "Indexing (edited)" } : item));
+  expect(document.activeElement).toBe(toggle());
+  perfToggle().focus();
+  drawer.setItems(drawer.getItems());
+  expect(document.activeElement).toBe(perfToggle());
 });
