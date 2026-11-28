@@ -17,6 +17,81 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.11] - 2026-11-28
+
+Carousel layout and snap fixes, reliable menu keyboard focus, and corrected list and navigation geometry.
+
+### Fixed
+
+- **Carousels.** The container has 8dp of padding at the top and bottom on every layout except full-screen, and the small item beside an opening hero stays at least 40dp (m3.material.io/components/carousel/specs, read 2026-11-27).
+- **Carousels.** Advancing through a wide multi-browse carousel keeps the final group in view and reports each selected slide in order.
+- **List inset dividers** leave 16 px at both ends, matching the Compose list tokens.
+- **Lists.** A selected or disabled row paints only its own content: a standard list, a listbox or a segmented list nested in the row keeps its own unselected icon, text, radio and action-layer colours, and a disabled parent does not fade it (m3.material.io/components/lists/specs, read 2026-11-27).
+- **Menu keyboard focus** reaches the first item even when a delayed render interrupts opening.
+- **Navigation drawer.** The section divider has 16 dp above it and 28 dp side insets in both the standard and the modal drawer; the standard sheet's edge border no longer counts into the inset (m3.material.io/components/navigation-drawer/specs, read 2026-11-27).
+- **Expanded modal navigation rail.** Destinations respond to clicks across the full width of the rail and keep their inset indicators.
+
+### Size
+
+The normalized release measurement was **925,924 B** packed (**+1,303 B** since v3.16.10),
+**5,280,537 B** unpacked and **1,304 files**. The root JavaScript bundle was **136,972 B** gzip.
+
+## [3.16.10] - 2026-11-27
+
+Faster slider bubble exit, tooltip hide delay, and menu and list values matched to the spec
+
+### Fixed
+
+- **Lists.** The space between a list item's slots is 12 dp, segmented icons are 20 dp, a segmented trailing icon is on-surface, and a selected icon turns on-surface while hovered, focused, or pressed.
+- **Menu drifts against the M3 specs.** A vibrant menu's leading icon is Tertiary as the item is hovered, focused or pressed, while the rest state keeps the vibrant mapping's on-tertiary-container; a disabled item takes no hover colour, and a selected item keeps its selection colours. A baseline menu item's end padding is 12dp on every item, in both directions: the selected check and the submenu arrow sit in that padding and the content row reserves their room once (18dp check + 10dp, 24dp arrow + 12dp), so a label, a supporting line or a shortcut beside it stays clear and keeps main's width. The vertical menu keeps its own padding and marks (m3.material.io/components/menus/specs, read 2026-11-27: left/right padding 12dp, with-icon too, padding between elements 12dp, icons 24dp).
+- **Slider value indicator.** The pill stays visible while it shrinks and drops in 200 ms after release. It takes 250 ms to appear.
+- **A plain tooltip stays up for 1.5 seconds after the pointer leaves its trigger.**
+
+### Size
+
+Release CI measured **924,649 B** packed (**+466 B** since 3.16.9), **5,271,995 B**
+unpacked and **1,304 files**. The root JavaScript bundle measured **136,598 B** gzip,
+and the every-component scenario measured **133,580 B** gzip.
+[Release CI run 46038719613](https://github.com/floor/material/actions/runs/46038719613/job/140641176204)
+
+## [3.16.9] - 2026-11-27
+
+Slider value indicator, text field label and notch geometry, and coverage of the Compose tokens.
+
+### Fixed
+
+- **A radio with the press ripple turned off keeps its keyboard focus ring and its focus layer.**
+- **The select's trailing arrow inherits its colour from the icon span, so WebKit no longer eases that colour a second time, and the open rotation still animates.**
+- **Slider value indicator.** The whole pill grows and rises from above the handle, then shrinks and returns along the same path when dismissed.
+- **Slider value indicator.** The pill stays visible as it shrinks and drops back toward the handle after release.
+- **Slider value indicator.** The value appears directly above its handle without sliding into place, and stays visible over an adjacent slider's handle when they overlap.
+- **Filled text field labels float to an 8 dp top inset. Outlined text field notches leave 4 dp on each side, including when the label has a fractional width.**
+- **Extended FAB and tooltip defaults.** Options set to `undefined` now use a defined component-wide default or fall back to the built-in value. This keeps the extended FAB's default variant and width classes and gives tooltips the same variant as when the option is omitted.
+
+### Size
+
+Release CI measured **924,184 B** packed (**+665 B** since 3.16.8), **5,265,261 B**
+unpacked and **1,304 files**. The root JavaScript bundle measured **136,601 B** gzip,
+and the every-component scenario measured **133,579 B** gzip.
+[Release CI run 46015808859](https://github.com/floor/material/actions/runs/46015808859/job/140563277407)
+
+## [3.16.8] - 2026-11-27
+
+Search bars leave 16 px at the end when they have no trailing action, and cards use the correct focus elevation and state-layer opacities.
+
+### Fixed
+
+- **Search bar spacing.** With no trailing action, the browser measured 8 px between the text area and the bar’s end when the clear button was disabled, and 56 px when the default clear button was hidden. Both cases now leave 16 px in contained and divided bars, in left-to-right and right-to-left layouts ([#495](https://github.com/floor/material/pull/495)).
+- **Card focus, hover and drag.** In Chromium and WebKit, focused filled and outlined cards measured elevation Level 1 and now stay at Level 0. Elevated cards still focus at Level 1. The elevated card’s hover layer went from 0% to 8% opacity, and all three variants’ drag layers went from 0% to 16% ([#497](https://github.com/floor/material/pull/497)).
+
+The conformance matrix in the repository compares [Material Design 3](https://m3.material.io/) with Compose Material 3 1.5.0 and verifies colour, type, shape and elevation roles across three themes ([#496](https://github.com/floor/material/pull/496), [#501](https://github.com/floor/material/pull/501), [#502](https://github.com/floor/material/pull/502)). CI skips browser jobs for changes outside their scope ([#499](https://github.com/floor/material/pull/499)), and browser checks use a shared, tested helper to wait for animations and scrolling to settle ([#503](https://github.com/floor/material/pull/503), [#505](https://github.com/floor/material/pull/505), [#506](https://github.com/floor/material/pull/506)).
+
+The release PR’s package job measured **923,516 B** compressed,
+**5,264,682 B** unpacked and **1,303 files**, with **136,267 B** of
+gzip-compressed root JavaScript and **133,251 B** for the every-component
+scenario. The compressed package grew by **339 B** from 3.16.7
+([run 45938273038](https://github.com/floor/material/actions/runs/45938273038/job/140306764571)).
+
 ## [3.16.7] - 2026-11-26
 
 Menus and selects keep their items in view, hidden bottom app bars stay out of the Tab order, and keyboard focus is clearer across the library.
@@ -7479,7 +7554,11 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.7...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.11...HEAD
+[3.16.11]: https://github.com/floor/material/compare/v3.16.10...v3.16.11
+[3.16.10]: https://github.com/floor/material/compare/v3.16.9...v3.16.10
+[3.16.9]: https://github.com/floor/material/compare/v3.16.8...v3.16.9
+[3.16.8]: https://github.com/floor/material/compare/v3.16.7...v3.16.8
 [3.16.7]: https://github.com/floor/material/compare/v3.16.6...v3.16.7
 [3.16.6]: https://github.com/floor/material/compare/v3.16.5...v3.16.6
 [3.16.5]: https://github.com/floor/material/compare/v3.16.4...v3.16.5

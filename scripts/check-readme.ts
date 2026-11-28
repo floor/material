@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // scripts/check-readme.ts
 /**
- * Build first, and run size:check first (it writes analysis/package-size.json).
+ * Build first. With --sizes, run size:check first for analysis/package-size.json.
  *
  * README.md is what GitHub shows and npm-readme.md is what npm shows (publish.yml
  * packs it as the package's README.md). This checks what both say against the
@@ -49,6 +49,8 @@ import * as sass from "sass";
 import { createPackageFixture, run } from "./package-fixture";
 import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
 import { classifyLink } from "./readme-links";
+import { README_SIZE_ROWS, formatReadmeSize, readmeSizeTable } from "./readme-sizes";
+
 import { COMPONENTS } from "./size";
 
 const REPOSITORY = "https://github.com/floor/material";
@@ -93,27 +95,26 @@ for (const doc of docs) {
 // rounded to the 0.1 kB the table prints — the function below, which the failure
 // message formats with too. The release pull request refreshes the table
 // (.github/CONTRIBUTING.md).
-/** What the table prints: kB of 1,000 bytes, one decimal. */
-const tableSize = (bytes: number): string => (bytes / 1000).toFixed(1);
-const SIZE_ROWS = ["button-initial", "button", "form", "all-js", "base-css", "base-lite-css", "button-css", "full-css"] as const;
-const measuredFile = Bun.file("analysis/package-size.json");
-assert(await measuredFile.exists(), "analysis/package-size.json is missing: run `bun run size:check` first");
-const measured = await measuredFile.json() as { sizes: Record<string, { gzip: number }> };
-for (const doc of docs) {
-  const table = doc.text.split("<!-- sizes -->")[1]?.split("<!-- /sizes -->")[0];
-  if (!table) { fail(`${doc.file}: no <!-- sizes --> table`); continue; }
-  const stated = [...table.matchAll(/\| ([\d.]+) kB \|$/gm)].map(match => Number(match[1]));
-  if (stated.length !== SIZE_ROWS.length) { fail(`${doc.file}: the sizes table has ${stated.length} rows, expected ${SIZE_ROWS.length}`); continue; }
-  SIZE_ROWS.forEach((key, index) => {
-    const bytes = measured.sizes[key].gzip;
-    const printed = tableSize(bytes);
-    if (stated[index] !== Number(printed)) {
-      fail(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB; size:check measured ${bytes} bytes, ${printed} kB`);
-    }
-  });
-}
-if (docs[0].text.split("<!-- sizes -->")[1]?.split("<!-- /sizes -->")[0] !== docs[1].text.split("<!-- sizes -->")[1]?.split("<!-- /sizes -->")[0]) {
-  fail("README.md and npm-readme.md have different sizes tables");
+if (process.argv.includes("--sizes")) {
+  const measuredFile = Bun.file("analysis/package-size.json");
+  assert(await measuredFile.exists(), "analysis/package-size.json is missing: run `bun run size:check` first");
+  const measured = await measuredFile.json() as { sizes: Record<string, { gzip: number }> };
+  for (const doc of docs) {
+    const table = readmeSizeTable(doc.text);
+    if (!table) { fail(`${doc.file}: no <!-- sizes --> table`); continue; }
+    const stated = [...table.matchAll(/\| ([\d.]+) kB \|$/gm)].map(match => Number(match[1]));
+    if (stated.length !== README_SIZE_ROWS.length) { fail(`${doc.file}: the sizes table has ${stated.length} rows, expected ${README_SIZE_ROWS.length}`); continue; }
+    README_SIZE_ROWS.forEach((key, index) => {
+      const bytes = measured.sizes[key].gzip;
+      const printed = formatReadmeSize(bytes);
+      if (stated[index] !== Number(printed)) {
+        fail(`${doc.file}: sizes row ${index + 1} (${key}) says ${stated[index]} kB; size:check measured ${bytes} bytes, ${printed} kB`);
+      }
+    });
+  }
+  if (readmeSizeTable(docs[0].text) !== readmeSizeTable(docs[1].text)) {
+    fail("README.md and npm-readme.md have different sizes tables");
+  }
 }
 
 // ── Readability ───────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import type createBottomAppBar from "../src/components/bottom-app-bar";
 import type createBottomAppBarToolbar from "../src/components/bottom-app-bar-toolbar";
 import type createIconButton from "../src/components/icon-button";
 import type createToolbar from "../src/components/toolbar";
+import { settle } from "./browser-settle";
 
 type ContrastWindow = Window & {
   mtrl: {
@@ -46,10 +47,7 @@ const pressedRadiusOf = async (page: Page, id: string): Promise<string> => {
   assert(box, `${id} has no box`);
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-  await page.evaluate(async (id) => {
-    const node = document.getElementById(id) as HTMLElement;
-    await Promise.all(node.getAnimations().filter(animation => animation.effect?.getComputedTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => undefined)));
-  }, id);
+  await settle(page, { target: `#${id}` });
   const radius = await radiusOf(page, id);
   await page.mouse.up();
   await page.mouse.move(0, 0);
@@ -134,5 +132,6 @@ export async function checkBottomAppBarToolbarContrast(page: Page, check: (name:
   } finally {
     await page.emulateMedia({ forcedColors: "none" });
     await page.mouse.up();
+    await page.evaluate(() => document.getElementById("bab-contrast")?.remove());
   }
 }

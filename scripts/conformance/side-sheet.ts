@@ -9,6 +9,7 @@ type Config = {
   width?: number;
   top?: boolean;
   noClose?: boolean;
+  detached?: boolean;
 };
 
 const mount: Case["mount"] = (mtrl, host, data) => {
@@ -36,6 +37,8 @@ const prefix = `${sheet}__`;
 const close = `${prefix}close`;
 const parts = [
   part("viewport", "#sheet-viewport"), part("surface", `${prefix}container`),
+  part("actionRow", `${prefix}actions`), part("back", `${prefix}back`),
+  part("detached", `${sheet}--detached`),
   part("header", `${prefix}header`), part("title", `${prefix}title`), part("content", `${prefix}content`),
   part("close", close), part("icon", `${close} svg`), part("layer", close, "::before"),
   part("target", close, "::after"), part("scrim", `${prefix}scrim`),
@@ -64,6 +67,7 @@ for (const variant of ["standard", "modal"] as const) {
   }
   for (const density of [-1,-2,-3]) add(`density/${density}`, config, "light", density);
   add("max-width", { ...config, width: 600 });
+  if (variant === "modal") add("detached", { ...config, detached: true });
   add("no-close", { ...config, noClose: true });
 }
 

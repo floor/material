@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import { launchChromium } from "./browser-profile";
 import * as sass from "sass";
 import { componentStyles } from "./style-manifest";
+import { settle } from "./browser-settle";
 
 interface Subject { element: HTMLElement }
 interface FixtureWindow extends Window {
@@ -69,7 +70,6 @@ try {
   page.on("pageerror", error => errors.push(error.message));
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Accessibility.enable");
-  const settle = () => page.evaluate(() => new Promise<void>(done => requestAnimationFrame(() => requestAnimationFrame(() => done()))));
   const verify = async (spec: Case): Promise<void> => {
     const nodes = (await cdp.send("Accessibility.getFullAXTree")).nodes.filter(node => !node.ignored);
     const matches = nodes.filter(node => node.role?.value === spec.role);
@@ -116,7 +116,7 @@ try {
         stage.append(template.content);
       }
     }, spec);
-    await settle();
+    await settle(page);
     await test(spec.id, () => verify(spec));
     if (spec.html && spec.role === "radiogroup" && spec.required) {
       await test("element radio required removal and re-addition", async () => {
@@ -126,7 +126,7 @@ try {
             const win = window as unknown as FixtureWindow;
             if (required) win.author.required = ""; else delete win.author.required;
           }, required);
-          await settle(); await verify({ ...spec, required });
+          await settle(page); await verify({ ...spec, required });
         }
       });
     }

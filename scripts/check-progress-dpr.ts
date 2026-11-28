@@ -92,8 +92,10 @@ try {
    * (the element enters the document with a width), and a DPR change while it
    * is pending would measure at the new ratio and hide the defect.
    */
-  const settle = async (): Promise<void> => {
+  const settleDebounce = async (): Promise<void> => {
     await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    // Stays: the resize observer debounces by 100 ms, so only a wait past it
+    // proves the ratio change landed — there is no animation to await.
     await page.waitForTimeout(250);
   };
 
@@ -107,7 +109,7 @@ try {
     }, config);
     // initialize() may defer to the next frame; measure there would read the
     // ratio the document has by then, so settle before the ratio changes.
-    await settle();
+    await settleDebounce();
     return read();
   };
 
@@ -129,7 +131,7 @@ try {
   );
   await setDpr(2);
   // The width observer debounces by 100 ms; the ratio change has to land the same way.
-  await page.waitForTimeout(250);
+  await settleDebounce();
   const linear2 = await read();
   assert.deepEqual(
     { ratio: linear2.ratio, width: linear2.width, height: linear2.height },
@@ -145,7 +147,7 @@ try {
     `the circular canvas starts at DPR 2 size: ${JSON.stringify(circular1)}`,
   );
   await setDpr(3);
-  await page.waitForTimeout(250);
+  await settleDebounce();
   const circular3 = await read();
   assert.deepEqual(
     { ratio: circular3.ratio, width: circular3.width, height: circular3.height },
@@ -157,7 +159,7 @@ try {
   await page.evaluate(() => window.progress.destroy());
   const destroyed = await read();
   await setDpr(1);
-  await page.waitForTimeout(250);
+  await settleDebounce();
   const afterDestroy = await read();
   assert.deepEqual(
     { width: afterDestroy.width, height: afterDestroy.height },

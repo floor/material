@@ -325,7 +325,7 @@ try {
     menuPage = await axNodes();
     const backend = await backendOf(menuSelector);
     if (menuPage.some((item) => item.backendDOMNodeId === backend && item.ignored !== true)) break;
-    await page.waitForTimeout(50);
+    await page.waitForTimeout(50); // stays: polling the accessibility tree until the node appears
   }
   await named(menuSelector, "Cut", menuPage);
 

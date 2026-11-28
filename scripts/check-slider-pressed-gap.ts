@@ -22,6 +22,7 @@ import * as sass from "sass";
 import { chromium } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "./build-styles";
+import { settle } from "./browser-settle";
 
 const DPR = 2;
 const REST_GAP = 8;
@@ -125,7 +126,7 @@ try {
       });
       holder.append(slider.element);
     }, config);
-    await page.waitForTimeout(250);
+    await settle(page);
 
     const vertical = config.orientation === "vertical";
     const read = async () => {
@@ -187,10 +188,10 @@ try {
     });
     await page.mouse.move(point.x, point.y);
     await page.mouse.down();
-    await page.waitForTimeout(250);
+    await settle(page);
     const held = await read();
     await page.mouse.up();
-    await page.waitForTimeout(100);
+    await settle(page);
 
     for (const side of ["before", "after"] as const) {
       const restGap = rest.gaps[side];

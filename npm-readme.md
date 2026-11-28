@@ -130,19 +130,19 @@ Each built-in theme's origin is data on `material/core/theme`: `THEME_ORIGINS` r
 
 ## Sizes
 
-What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package. The table is refreshed at each release, and CI keeps every figure within 2% of the current build:
+What a bundler keeps, minified and gzipped (kB is 1,000 bytes), measured from the packed package. The table records measurements from the latest release.
 
 <!-- sizes -->
 | Import | gzip |
 |--------|-----:|
 | `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
 | `createButton`, without code splitting (the progress indicator included) | 14.0 kB |
-| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.5 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 136.3 kB |
+| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.6 kB |
+| Everything the root exports (`export * from 'material'`), without code splitting | 137.0 kB |
 | `material/styles/base` | 3.1 kB |
 | `material/styles/base-lite` | 1.7 kB |
 | `material/styles/base` and `material/styles/button` | 5.4 kB |
-| `material/styles`, the full stylesheet | 60.6 kB |
+| `material/styles`, the full stylesheet | 61.0 kB |
 <!-- /sizes -->
 
 `material` publishes ESM only, so bundlers drop what you do not import. Each component's page on [md3.io/components](https://md3.io/components/) gives its size.

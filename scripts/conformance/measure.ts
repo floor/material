@@ -44,6 +44,10 @@ import * as sass from "sass";
 import { chromium, webkit, type Browser, type BrowserType, type Page } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "../build-styles";
+import { settle } from "../browser-settle";
+import { THEME_ROLES } from "../../src/core/theme/tokens";
+import { matrixSeed, parseColour, type ThemePalettes } from "./matrix-colours";
+import { pascal, shapeOverrides, typographyRoles, type TypographyDetails } from "./matrix-metrics";
 
 const root = resolve(import.meta.dir, "..", "..");
 
@@ -76,7 +80,7 @@ export type Part = {
   bitmap?: boolean;
 };
 
-export type State = "rest" | "hover" | "focus" | "pressed" | "disabled";
+export type State = "rest" | "hover" | "focus" | "pressed" | "disabled" | "dragged";
 
 export type Case = {
   /** The row id the table uses, e.g. "filled/m/rest". */
@@ -99,6 +103,7 @@ export type Case = {
   density?: number;
   /** `documentElement.style.zoom` for a case that checks a scaled preview. */
   zoom?: number;
+  viewport?: { width: number; height: number };
   /** The theme mode for the colour rows: `light` (default) or `dark`. */
   scheme?: "light" | "dark";
   /**
@@ -107,6 +112,8 @@ export type Case = {
    * aimed at a part still at width 0 has nowhere to land.
    */
   before?: number;
+  /** Wait for CSS transitions on the first part before reading its settled state. */
+  settleTransitions?: boolean;
   /** Properties to read in place of the default set. */
   properties?: readonly string[];
 };
@@ -131,6 +138,17 @@ export type CaseResult = {
   density: number;
   zoom: number;
   parts: Record<string, PartResult | null>;
+  themes?: {
+    palettes: ThemePalettes;
+    light: CaseResult["parts"];
+    dark: CaseResult["parts"];
+    seed: CaseResult["parts"];
+  };
+  metrics?: {
+    compact: CaseResult["parts"];
+    shapeProfile: CaseResult["parts"];
+    typography: Record<string, TypographyDetails>;
+  };
 };
 
 export type Harness = {
@@ -165,6 +183,14 @@ export const fixtureEngine = (): "chromium" | "webkit" =>
 
 export const selectFixtureCases = <T extends { id: string }>(cases: T[]): T[] => {
   const args = process.argv.slice(2);
+  const exact = args.find(arg => arg.startsWith("--cases="));
+  if (exact) {
+    const ids = new Set<string>(JSON.parse(exact.slice("--cases=".length)));
+    const selected = cases.filter(row => ids.has(row.id));
+    for (const row of selected) ids.delete(row.id);
+    if (ids.size || !selected.length) throw new Error(`Missing fixture cases: ${JSON.stringify([...ids])}`);
+    return selected;
+  }
   const flag = args.find(arg => arg.startsWith("--case="));
   const filter = flag ? flag.slice("--case=".length) : args.find(arg => !arg.startsWith("--"));
   const selected = filter === undefined ? cases : cases.filter(row => filter && row.id.includes(filter));
@@ -215,7 +241,7 @@ const PAGE = `<!doctype html><html data-theme="baseline"><head>
   window.__ready = true;
 </script></body></html>`;
 
-const serve = () =>
+const serve = (entryCode: string, themeCode: string | undefined) =>
   Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -223,11 +249,10 @@ const serve = () =>
       const path = new URL(request.url).pathname;
       if (path === "/__styles.css") return new Response(loadStyles(), { headers: { "Content-Type": "text/css" } });
       if (path === "/__component.js") return new Response(entryCode, { headers: { "Content-Type": "text/javascript" } });
+      if (path === "/__theme.js" && themeCode) return new Response(themeCode, { headers: { "Content-Type": "text/javascript" } });
       return new Response(PAGE, { headers: { "Content-Type": "text/html" } });
     },
   });
-
-let entryCode = "";
 
 const applyState = async (page: Page, selector: string, state: State, focusTarget?: string) => {
   if (state === "hover") await page.hover(selector);
@@ -254,16 +279,21 @@ const applyState = async (page: Page, selector: string, state: State, focusTarge
   }
   else if (state === "disabled") {
     // The case's mount built it disabled; the state names the row.
-  } else if (state === "pressed") {
+  } else if (state === "pressed" || state === "dragged") {
     const box = await page.locator(selector).first().boundingBox();
-    if (!box) throw new Error(`pressed: ${selector} has no box`);
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    if (!box) throw new Error(`${state}: ${selector} has no box`);
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
     await page.mouse.down();
+    // A native drag starts only after the pointer moves past the platform
+    // threshold. The button stays down through the read; release ends it.
+    if (state === "dragged") await page.mouse.move(x + 40, y + 40, { steps: 10 });
   }
 };
 
 const releaseState = async (page: Page, state: State) => {
-  if (state === "pressed") await page.mouse.up();
+  if (state === "pressed" || state === "dragged") await page.mouse.up();
   if (state !== "rest") await page.mouse.move(0, 0);
 };
 
@@ -273,8 +303,19 @@ const releaseState = async (page: Page, state: State) => {
  */
 export const createConformanceHarness = async (options: HarnessOptions): Promise<Harness> => {
   const entry = await loadEntry(options);
-  entryCode = entry.code;
-  const server = serve();
+  const selectedCases = (flag: string) => {
+    const arg = process.argv.find(arg => arg.startsWith(flag));
+    return new Set<string>(arg ? JSON.parse(arg.slice(flag.length)) : []);
+  };
+  const themeCases = selectedCases("--theme-cases=");
+  const metricCases = selectedCases("--metric-cases=");
+  let themeCode: string | undefined;
+  if (themeCases.size) {
+    const bundle = await Bun.build({ entrypoints: [join(root, "dist", "theme", "index.js")], target: "browser", format: "esm" });
+    if (!bundle.success) throw new Error(`bundling the runtime theme: ${bundle.logs.join("\n")}`);
+    themeCode = await bundle.outputs[0]!.text();
+  }
+  const server = serve(entry.code, themeCode);
   const url = `http://127.0.0.1:${server.port}`;
   const engines: BrowserType[] = (options.engines ?? [options.engine ?? "chromium"]).map((engine) =>
     engine === "webkit" ? webkit : chromium,
@@ -290,9 +331,15 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     pages.push(page);
   }
 
-  const measureOn = async (page: Page, cases: Case[]): Promise<CaseResult[]> => {
+  const measureOn = async (page: Page, cases: Case[], scheme?: "light" | "dark", densityOverride?: number, themeLabel?: string): Promise<CaseResult[]> => {
     const rows: CaseResult[] = [];
+    const defaultViewport = page.viewportSize()!;
     for (const testCase of cases) {
+      const viewport = testCase.viewport ?? defaultViewport;
+      const currentViewport = page.viewportSize();
+      if (currentViewport?.width !== viewport.width || currentViewport.height !== viewport.height) {
+        await page.setViewportSize(viewport);
+      }
       const state = testCase.state ?? "rest";
       // The mount is a function, so it crosses as source and is rebuilt
       // inside the page, where the module namespace lives.
@@ -318,9 +365,9 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
         {
           mountSource: testCase.mount.toString(),
           mountConfig: testCase.config ?? null,
-          density: testCase.density ?? null,
+          density: densityOverride ?? testCase.density ?? null,
           zoom: testCase.zoom ?? 1,
-          scheme: testCase.scheme ?? "light",
+          scheme: scheme ?? testCase.scheme ?? "light",
         },
       );
       if (testCase.before) await page.waitForTimeout(testCase.before);
@@ -332,11 +379,45 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
       } catch {
         // A part that cannot take the state is read at rest.
       }
-      // A state that runs a spring settles before it is read: the conformance
-      // value is the resting one, not a frame of the transition.
-      await page.waitForTimeout(500);
-      const parts = await page.evaluate(
-        ({ parts, properties }) => {
+      // A keyboard state lands after its key: a menu's ArrowDown opens the menu
+      // and moves focus to its first item a frame or more later, and a read
+      // taken at the first quiet frame sees an unfocused item -- in WebKit on a
+      // cold page that was an `outline-style: none` ring in the seed theme,
+      // which resolved to transparent (#00000000). The case's own state
+      // selector is the contract that the state landed; wait for it before
+      // settling, so the read is of the state the case names.
+      const verified = testCase.parts.find((part) => part.name === "verifiedState");
+      if (verified) {
+        // The same resolver and scope the read uses: the part's document flag,
+        // and `>>>` crossing into a shadow root.
+        const landed = await page.waitForFunction(
+          ({ selector, documentScope }) => {
+            const mount = document.querySelector("#mount");
+            if (!mount) return false;
+            if (selector === ":root") return true;
+            let scope: ParentNode = documentScope ? document : mount;
+            let found: Element | null = null;
+            for (const step of selector.split(">>>").map((entry) => entry.trim())) {
+              found = scope.querySelector(step);
+              if (!found) return false;
+              scope = found.shadowRoot ?? found;
+            }
+            return found !== null;
+          },
+          { selector: verified.selector, documentScope: verified.document ?? false },
+          { timeout: 5000, polling: 100 },
+        ).catch(() => null);
+        if (!landed) {
+          const theme = themeLabel ?? testCase.scheme ?? "light";
+          throw new Error(`${testCase.id} (${theme}): the verified state never landed: no element matches ${verified.selector}`);
+        }
+      }
+      // Settle running animations, including a colour transition that starts on
+      // a later frame, then the scrollers and the measured parts. Indefinite
+      // loading indicators redraw their canvas on every frame and are excluded
+      // from the frame-to-frame bitmap stability poll.
+      const readParts = (excludeIndefinite = false) => page.evaluate(
+        ({ parts, properties, excludeIndefinite }) => {
           const root = document.querySelector<HTMLElement>("#mount")!;
           // `a >>> b` enters a's shadow root for b, then b's for the next.
           const resolve = (selector: string, documentScope = false): HTMLElement | null => {
@@ -413,13 +494,29 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
             for (const property of properties) {
               style[property] = computed.getPropertyValue(property) || computed[property as keyof CSSStyleDeclaration]?.toString() || "";
             }
-            const bitmap = part.bitmap && element instanceof HTMLCanvasElement ? readBitmap(element, rect) : undefined;
+            const isIndefinite = excludeIndefinite && !!element.closest(".mtrl-loading-indicator:not(.mtrl-loading-indicator--determinate)");
+            const bitmap = !isIndefinite && part.bitmap && element instanceof HTMLCanvasElement ? readBitmap(element, rect) : undefined;
             result[part.name] = { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }, style, bitmap };
           }
           return result;
         },
-        { parts: testCase.parts, properties: testCase.properties ?? [...CONFORMANCE_PROPERTIES] as string[] },
+        { parts: testCase.parts, properties: testCase.properties ?? [...CONFORMANCE_PROPERTIES] as string[], excludeIndefinite },
       );
+      const isIndefiniteLoading = options.component === "loading-indicator" && testCase.id.includes("indeterminate");
+      if (!isIndefiniteLoading) {
+        await settle(page, { read: () => readParts(true) });
+      } else {
+        await settle(page);
+      }
+      const parts = await readParts(false);
+      // The state can also go away between the wait and this read: a finite
+      // animation that carries the marker can complete during the settle.
+      // The read is the state the case names only if the marker is still
+      // there, so a vanished one throws with the same diagnostics.
+      if (verified && !parts[verified.name]) {
+        const theme = themeLabel ?? testCase.scheme ?? "light";
+        throw new Error(`${testCase.id} (${theme}): the verified state vanished before the read: no element matches ${verified.selector}`);
+      }
       await releaseState(page, state);
       rows.push({
         id: testCase.id,
@@ -432,13 +529,91 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
     return rows;
   };
 
+  async function readTheme(
+    browser: Browser, viewport: { width: number; height: number }, cases: Case[],
+    theme: "dark" | "seed" | "compact" | "shapeProfile",
+  ) {
+    const page = await browser.newPage({ viewport });
+    try {
+      await page.goto(url);
+      await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+      const palette = async () => {
+        const values = await page.evaluate(roles => {
+          const style = getComputedStyle(document.documentElement);
+          return roles.map(role => style.getPropertyValue(`--mtrl-sys-color-${role}`).trim());
+        }, THEME_ROLES);
+        return Object.fromEntries(THEME_ROLES.map((key, index) => [
+          pascal(key),
+          parseColour(values[index]!).hex,
+        ]));
+      };
+      const light = await palette();
+      if (theme === "seed") {
+        await page.evaluate(async seed => {
+          const path = "/__theme.js";
+          const { applyScheme, createScheme } = await import(path);
+          applyScheme(createScheme(seed), document.documentElement);
+        }, matrixSeed);
+      } else if (theme === "shapeProfile") {
+        await page.evaluate(overrides => {
+          for (const [property, value] of Object.entries(overrides)) document.documentElement.style.setProperty(property, value);
+        }, shapeOverrides);
+      }
+      const rows = await measureOn(page, cases, theme === "dark" ? "dark" : "light", theme === "compact" ? -2 : undefined, theme);
+      const typography = theme === "compact" ? await page.evaluate(roles => {
+        const style = getComputedStyle(document.documentElement);
+        return roles.map(role => {
+          const value = (key: string) => style.getPropertyValue(`--mtrl-sys-typescale-${role}-${key}`).trim();
+          return { size: value("font-size"), weight: value("font-weight"), lineHeight: value("line-height"), tracking: value("letter-spacing") };
+        });
+      }, typographyRoles) : [];
+      return {
+        light, palette: await palette(), rows,
+        typography: Object.fromEntries(typography.map((metrics, i) => [pascal(typographyRoles[i]!), metrics])),
+      };
+    } finally {
+      await page.close();
+    }
+  }
+
   return {
     source: entry.source,
     url,
     page: pages[0]!,
     measure: async (cases: Case[]): Promise<CaseResult[]> => {
       const all: CaseResult[] = [];
-      for (const page of pages) all.push(...(await measureOn(page, cases)));
+      const selected = cases.filter(testCase => themeCases.has(testCase.id));
+      const metrics = selected.filter(testCase => metricCases.has(testCase.id));
+      for (const [index, page] of pages.entries()) {
+        if (!selected.length) {
+          all.push(...await measureOn(page, cases));
+          continue;
+        }
+        if (selected.some(testCase => testCase.scheme === "dark")) {
+          throw new Error("Three-theme cases must start in the baseline light theme");
+        }
+        const viewport = page.viewportSize()!;
+        const browser = browsers[index]!;
+        const [rows, dark, seed, compact, shape] = await Promise.all([
+          measureOn(page, cases),
+          readTheme(browser, viewport, selected, "dark"),
+          readTheme(browser, viewport, selected, "seed"),
+          metrics.length ? readTheme(browser, viewport, metrics, "compact") : undefined,
+          metrics.length ? readTheme(browser, viewport, metrics, "shapeProfile") : undefined,
+        ]);
+        const palettes = { light: dark.light, dark: dark.palette, seed: seed.palette };
+        const byId = new Map(rows.map(row => [row.id, row]));
+        for (const [i, testCase] of selected.entries()) {
+          const row = byId.get(testCase.id)!;
+          row.themes = { palettes, light: row.parts, dark: dark.rows[i]!.parts, seed: seed.rows[i]!.parts };
+        }
+        if (compact && shape) for (const [i, testCase] of metrics.entries()) {
+          byId.get(testCase.id)!.metrics = {
+            compact: compact.rows[i]!.parts, shapeProfile: shape.rows[i]!.parts, typography: compact.typography,
+          };
+        }
+        all.push(...rows);
+      }
       return all;
     },
     close: async () => {

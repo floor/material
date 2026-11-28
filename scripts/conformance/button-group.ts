@@ -43,20 +43,31 @@ type MountOptions = {
   selection?: string;
   count?: number;
   selectFirst?: boolean;
+  mixed?: boolean;
 };
 
 /** One mount for every case, taking its options as the case's data. */
 const mount = (mtrl: Record<string, (...args: never[]) => unknown>, host: HTMLElement, config?: unknown) => {
-  const { kind, size, variant, shape, density, orientation, selection, count, selectFirst } = (config ?? {}) as MountOptions;
+  const { kind, size, variant, shape, density, orientation, selection, count, selectFirst, mixed } = (config ?? {}) as MountOptions;
   const create = mtrl.createButtonGroup as unknown as (settings: Record<string, unknown>) => { element: HTMLElement };
-  const buttons = Array.from({ length: count ?? 3 }, (_, index) => ({ text: `B${index + 1}`, value: `b${index + 1}` }));
+  const buttons = Array.from({ length: count ?? 3 }, (_, index) => ({
+    text: `B${index + 1}`, value: `b${index + 1}`,
+    ...(mixed && index === 0 ? { variant: "filled", size: "l", width: "wide" } : {}),
+  }));
   const group = create({ kind, size, variant, shape, density, orientation, selection, buttons });
   host.append(group.element);
   // A selected button is the group's first: a click toggles it.
   if (selectFirst) group.element.querySelector<HTMLElement>(".mtrl-button")?.click();
 };
 
-const cases: Case[] = [];
+const cases: Case[] = [{
+  id: "standard/mixed-options", mount, config: { kind: "standard", variant: "tonal", size: "s", mixed: true },
+  properties, parts: [
+    ...parts, { name: "filledItem", selector: ".mtrl-button-group > .mtrl-button--filled:first-child" },
+    { name: "largeItem", selector: ".mtrl-button-group > .mtrl-button--large:first-child" },
+    { name: "wideItem", selector: ".mtrl-button-group > .mtrl-button--wide:first-child" },
+  ],
+}];
 
 // Standard groups: the padding between buttons per size (18/12/8/8/8 dp).
 for (const size of SIZES) {

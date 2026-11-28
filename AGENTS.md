@@ -256,6 +256,8 @@ prefix orders it within its section.
 
 ## Size budgets and pins
 
+The four combined stylesheet pins are checked nightly and before publishing.
+
 - `scripts/budgets.ts` — the explicit byte ceilings (packed package, tarball, unpacked, CSS).
 - `scripts/size.ts` — the per-component gzip budgets in `kb(n)` steps, and the `SIZES.md` table
   that must match its measurement.

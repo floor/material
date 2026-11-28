@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>tooltip</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createTooltip } from "../../../../dist/components/tooltip/index.js";
+import { setComponentDefaults } from "../../../../dist/core/config/global.js";
+await initPage({ name: "tooltip" });
+const main = document.getElementById("tp-main");
+
+const variantOf = (element) => {
+  if (element.classList.contains("mtrl-tooltip--rich")) return "rich";
+  if (element.classList.contains("mtrl-tooltip--plain")) return "plain";
+  if (element.classList.contains("mtrl-tooltip--default")) return "default";
+  return "none";
+};
+
+const trigger = (label) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  return button;
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Plain label",
+  lookFor: "a short label on the icon button",
+  expected: "the plain tooltip names the button",
+  measure: () => {
+    const tip = document.querySelector("#plain-tooltip");
+    return tip ? `text "${tip.textContent.replace(/\s+/g, " ").trim()}"` : "no tooltip";
+  },
+  mount: (body) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Save";
+    body.append(button);
+    const tooltip = createTooltip({ target: button, text: "Save", variant: "plain", showDelay: 0 });
+    tooltip.element.id = "plain-tooltip";
+  },
+});
+scenario(variants, {
+  title: "Omitted variant",
+  lookFor: "the default tooltip class",
+  expected: "an omitted variant is default",
+  measure: () => {
+    const tip = document.getElementById("tip-omitted");
+    return tip ? `variant ${variantOf(tip)}` : "no tooltip";
+  },
+  mount: (body) => {
+    const button = trigger("Omitted");
+    body.append(button);
+    const tooltip = createTooltip({ text: "Save", target: button });
+    tooltip.element.id = "tip-omitted";
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Keyboard focus",
+  lookFor: "the tooltip while the button is focused, and its absence after blur",
+  expected: "focus shows it; blur hides it at once",
+  measure: () => {
+    const button = document.getElementById("focus-trigger");
+    const tip = document.getElementById("focus-tooltip");
+    if (!button || !tip) return "no tooltip";
+    const visible = tip.classList.contains("mtrl-tooltip--visible");
+    return button.matches(":focus")
+      ? (visible ? "focused, shown" : "focused, not shown yet")
+      : (visible ? "blurred, still shown" : "blurred, hidden");
+  },
+  mount: (body) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = "focus-trigger";
+    button.textContent = "Focus me";
+    body.append(button);
+    const tooltip = createTooltip({ target: button, text: "Save", variant: "plain", showDelay: 0 });
+    tooltip.element.id = "focus-tooltip";
+  },
+});
+scenario(states, {
+  title: "Explicit rich",
+  lookFor: "the rich variant class",
+  expected: "an explicit variant replaces the default",
+  measure: () => {
+    const tip = document.getElementById("tip-rich");
+    return tip ? `variant ${variantOf(tip)}` : "no tooltip";
+  },
+  mount: (body) => {
+    const button = trigger("Rich");
+    body.append(button);
+    const tooltip = createTooltip({ text: "Save", target: button, variant: "rich" });
+    tooltip.element.id = "tip-rich";
+  },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Hide after the pointer leaves",
+  lookFor: "the tooltip still up at 1,400 ms, then gone once 1,500 ms and the exit have passed; Escape closes it at once",
+  expected: "the pointer leaving starts a 1.5 s wait; Escape does not wait",
+  measure: () => {
+    const tip = document.getElementById("delay-tooltip");
+    if (!tip) return "no tooltip";
+    const visible = tip.classList.contains("mtrl-tooltip--visible");
+    const opacity = Number(getComputedStyle(tip).opacity);
+    const state = window.__tooltipDelay;
+    if (!state) return "hover the trigger";
+    if (state.escapeAt !== null) {
+      const since = Math.round(performance.now() - state.escapeAt);
+      return visible || opacity > 0.05
+        ? `Escape ${since} ms ago, still shown`
+        : "Escape closed it at once";
+    }
+    if (state.leftAt === null) return visible ? "shown — leave the trigger" : "hover the trigger, then leave it";
+    const ms = Math.round(performance.now() - state.leftAt);
+    if (visible) return `still shown at ${ms} ms`;
+    if (opacity > 0.05) return `exit running at ${ms} ms`;
+    return ms < 1400
+      ? `hidden at ${ms} ms, before 1,400`
+      : `gone after 1,500 ms plus the exit (${ms} ms)`;
+  },
+  mount: (body) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Save";
+    body.append(button);
+    const tooltip = createTooltip({ target: button, text: "Save", variant: "plain", showDelay: 0 });
+    tooltip.element.id = "delay-tooltip";
+    const state = { leftAt: null, escapeAt: null };
+    window.__tooltipDelay = state;
+    const shown = () => tooltip.element.classList.contains("mtrl-tooltip--visible");
+    const arm = () => {
+      if (!shown()) return;
+      state.leftAt = performance.now();
+      state.escapeAt = null;
+    };
+    const cancel = () => { state.leftAt = null; };
+    button.addEventListener("mouseenter", cancel);
+    button.addEventListener("mouseleave", arm);
+    tooltip.element.addEventListener("mouseenter", cancel);
+    tooltip.element.addEventListener("mouseleave", arm);
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !shown()) return;
+      state.escapeAt = performance.now();
+      state.leftAt = null;
+    });
+  },
+});
+scenario(interaction, {
+  title: "Hover",
+  lookFor: "the label while the pointer is on the button",
+  expected: "hover shows the default tooltip",
+  measure: () => {
+    const tip = document.getElementById("tip-hover");
+    if (!tip) return "no tooltip";
+    const shown = tip.classList.contains("mtrl-tooltip--visible");
+    return `${variantOf(tip)} · ${shown ? "shown" : "hidden"}`;
+  },
+  mount: (body) => {
+    const button = trigger("Hover");
+    body.append(button);
+    const tooltip = createTooltip({ text: "Save", target: button });
+    tooltip.element.id = "tip-hover";
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "The pointer comes back",
+  lookFor: "the tooltip staying when the pointer returns during the wait",
+  expected: "re-entering the trigger cancels the hide",
+  measure: () => {
+    const tip = document.getElementById("return-tooltip");
+    const state = window.__tooltipReturn;
+    if (!tip || !state) return "hover the trigger, leave, then come back";
+    const visible = tip.classList.contains("mtrl-tooltip--visible");
+    if (state.returned && visible) return "came back, still shown";
+    if (state.leftAt === null) return visible ? "shown — leave, then come back" : "hover the trigger";
+    return visible ? `waiting ${Math.round(performance.now() - state.leftAt)} ms` : "hidden before the pointer came back";
+  },
+  mount: (body) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Save";
+    body.append(button);
+    const tooltip = createTooltip({ target: button, text: "Save", variant: "plain", showDelay: 0 });
+    tooltip.element.id = "return-tooltip";
+    const state = { leftAt: null, returned: false };
+    window.__tooltipReturn = state;
+    const shown = () => tooltip.element.classList.contains("mtrl-tooltip--visible");
+    button.addEventListener("mouseleave", () => {
+      if (!shown()) return;
+      state.leftAt = performance.now();
+      state.returned = false;
+    });
+    button.addEventListener("mouseenter", () => {
+      if (state.leftAt !== null) state.returned = true;
+      state.leftAt = null;
+    });
+  },
+});
+scenario(edge, {
+  title: "Undefined variant",
+  lookFor: "a variant key left undefined, beside the omitted tooltip and a global default",
+  expected: "undefined matches omitted; a global rich default wins",
+  measure: () => {
+    const omitted = document.getElementById("tip-edge-omitted");
+    const blank = document.getElementById("tip-edge-undefined");
+    const global = document.getElementById("tip-edge-global");
+    if (!omitted || !blank || !global) return "no tooltips";
+    const leaked = blank.className.includes("undefined") || global.className.includes("undefined");
+    const same = variantOf(omitted) === variantOf(blank);
+    return `omitted ${variantOf(omitted)} · undefined ${same ? "matches omitted" : variantOf(blank)} · global ${variantOf(global)}${leaked ? " · class contains undefined" : ""}`;
+  },
+  mount: (body) => {
+    const omittedButton = trigger("Omitted");
+    const blankButton = trigger("Undefined");
+    const globalButton = trigger("Global");
+    body.append(omittedButton, blankButton, globalButton);
+    const omitted = createTooltip({ text: "Save", target: omittedButton });
+    const blank = createTooltip({ text: "Save", target: blankButton, variant: undefined });
+    setComponentDefaults("tooltip", { variant: "rich" });
+    const global = createTooltip({ text: "Save", target: globalButton, variant: undefined });
+    omitted.element.id = "tip-edge-omitted";
+    blank.element.id = "tip-edge-undefined";
+    global.element.id = "tip-edge-global";
+  },
+});
+</script>
+</body>
+</html>

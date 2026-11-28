@@ -223,6 +223,8 @@ export const withAPI =
 
     // Event handlers
     const handleTargetMouseEnter = () => {
+      // Re-entering the trigger cancels a pending hide. show() clears that
+      // timer, so the tooltip stays up instead of closing on the old deadline.
       if (touchExpiry === undefined) api.show();
     };
     const handleTargetMouseLeave = () => {
@@ -298,7 +300,9 @@ export const withAPI =
     const handleTargetFocus = () => {
       if (!pressed && touchExpiry === undefined) api.show();
     };
-    const handleTargetBlur = () => api.hide();
+    // Keyboard dismissal is immediate. The 1.5 s wait is only after the pointer
+    // leaves the target region; Escape already hides at once, and so does blur.
+    const handleTargetBlur = () => api.hide(true);
 
     // Create the API object
     const api: TooltipComponent = {

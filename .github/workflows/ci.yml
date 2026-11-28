@@ -4,12 +4,17 @@
 # tests were never run in CI.
 #
 # The work is split into parallel jobs, so a run takes as long as its slowest job
-# rather than the sum of every step. `check` waits for all of them and is the one
-# status the main ruleset requires, so the jobs can change without touching it.
+# rather than the sum of every step. `changes` classifies a pull request's diff.
+# Browser groups and comparators run only when that diff can affect them, or when
+# the run is on main, on the nightly schedule, or the package version changed. `ci-ok`
+# waits for every job and passes when each one succeeded or was skipped, so a
+# skipped browser job does not leave a required check pending. `check` mirrors
+# `ci-ok` and is still the status the main ruleset requires; branch protection
+# can move to `ci-ok` and drop `check` afterwards.
 #
-# A push to main runs the same checks on the merge commit itself, so the commit a
-# tag publishes carries a green run of its own instead of relying on the pull
-# request's. The nightly run on main stays as the safety net.
+# A push to main can reuse green PR checks after proving the tested tree and
+# size gate inputs match. Other pushes and the nightly run the full checks.
+# Tag publishing still builds and verifies the tagged commit.
 #
 # Benchmarks are excluded by default (test/benchmarks/bench.ts): they compare
 # elapsed time to fixed thresholds and fail on a busy runner, which would make
@@ -21,21 +26,145 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened, edited]
   schedule:
     - cron: "17 3 * * *"
 
 permissions:
   contents: read
 
-# A newer push to the same pull request cancels the run it replaces. A run on main
-# is never cancelled: each merge commit keeps a verdict of its own.
+# A newer push to the same pull request cancels the run it replaces. A push to
+# main and the nightly do not share a group, so neither cancels or waits on the
+# other. cancel-in-progress is true only for a pull request.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  group: "${{ github.event_name == 'pull_request' && format('ci-{0}', github.event.pull_request.number) || format('ci-{0}', github.run_id) }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # First. A pull request is classified from its diff against the base, with a
+  # shallow fetch of that commit and no third-party action. Push and schedule
+  # runs set run_all: the filter does not apply on main. A release is a change
+  # to package.json's version, read as JSON. A fetch of the base that fails
+  # runs every job instead of exiting.
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      covered: ${{ steps.proof.outcome == 'success' && steps.proof.outputs.covered == 'true' }}
+      library: ${{ steps.classify.outputs.library }}
+      checks: ${{ steps.classify.outputs.checks }}
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+      run_all: ${{ steps.classify.outputs.run_all }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          emit() { echo "$1=$2" >> "$GITHUB_OUTPUT"; echo "$1=$2"; }
+          run_all_outputs() {
+            echo "no path filter"
+            emit library true
+            emit checks true
+            emit docs_only false
+            emit run_all true
+            exit 0
+          }
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "event $EVENT_NAME: no path filter"
+            run_all_outputs
+          fi
+          # A missing base must not fail the job (git fetch exits 128). Run every check.
+          if ! git fetch --quiet --depth=1 origin "$BASE_SHA"; then
+            echo "base fetch failed: running every job"
+            run_all_outputs
+          fi
+          if git merge-base --is-ancestor "$BASE_SHA" HEAD 2>/dev/null; then
+            echo "diff $BASE_SHA...HEAD"
+            status=$(git diff -M --name-status "$BASE_SHA...HEAD")
+          else
+            echo "shallow checkout has no merge base; comparing $BASE_SHA to HEAD"
+            status=$(git diff -M --name-status "$BASE_SHA" HEAD)
+          fi
+          names=$(printf '%s\n' "$status" | awk -F '\t' '$1 ~ /^[RC]/ { print $2; print $3; next } NF >= 2 { print $2 }')
+          library=false
+          checks=false
+          docs_only=true
+          run_all=false
+          counted=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            counted=$((counted + 1))
+            doc=false
+            # README.md and npm-readme.md are not docs: check-readme-browser.ts
+            # runs the fences they mark `example: run`.
+            case "$file" in
+              README.md|npm-readme.md) ;;
+              *.md|CHARTER.md|AGENTS.md|.github/ISSUE_TEMPLATE/*|docs/*) doc=true ;;
+            esac
+            hit_library=false
+            case "$file" in
+              src/*|package.json|bun.lock|bun.lockb|tsconfig*|scripts/build.ts|scripts/build-*|scripts/style-manifest.ts|scripts/button-style-profile.ts|scripts/optional-style-profiles.ts|scripts/bottom-app-bar-toolbar-style.ts|scripts/generate-token-catalogue.ts|scripts/generate-themes.ts|scripts/token-catalogue/*|scripts/svelte-package.ts|scripts/consolidate-declarations.ts|scripts/prune-declarations.ts|scripts/strip-internal-declaration-docs.ts|scripts/dist-modules.ts|scripts/element-modules.ts|scripts/package-styles.ts|scripts/component-exports.ts)
+                hit_library=true ;;
+            esac
+            hit_checks=false
+            case "$file" in
+              README.md|npm-readme.md|test/*|scripts/check-*|scripts/generate-adapters.ts|scripts/fixtures/*|scripts/conformance/*|scripts/comparators/*|.github/workflows/*|.github/actions/*)
+                hit_checks=true ;;
+            esac
+            if [ "$hit_library" = true ]; then library=true; fi
+            if [ "$hit_checks" = true ]; then checks=true; fi
+            if [ "$hit_library" = false ] && [ "$hit_checks" = false ] && [ "$doc" = false ]; then
+              echo "unclassified $file: running the browser jobs"
+              checks=true
+            fi
+            if [ "$doc" = false ]; then docs_only=false; fi
+            if [ "$file" = package.json ]; then
+              old=$(git show "$BASE_SHA:package.json" 2>/dev/null | jq -r '.version // empty' || true)
+              new=$(git show "HEAD:package.json" 2>/dev/null | jq -r '.version // empty' || true)
+              if [ -n "$old" ] && [ -n "$new" ] && [ "$old" != "$new" ]; then
+                run_all=true
+                echo "version bump $old -> $new: no path filter"
+              fi
+            fi
+            echo "file $file library=$hit_library checks=$hit_checks doc=$doc"
+          done <<< "$names"
+          if [ "$counted" -eq 0 ]; then
+            echo "empty diff: running the browser jobs"
+            checks=true
+            docs_only=false
+          fi
+          emit library "$library"
+          emit checks "$checks"
+          emit docs_only "$docs_only"
+          emit run_all "$run_all"
+
+      # Missing evidence or tooling leaves the full CI jobs enabled.
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        with:
+          bun-version: "1.4.2"
+      - name: Check for green PR CI on the same tree
+        id: proof
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bun scripts/main-ci-proof.ts check
+
   # Types, the strictness ratchets, lint and test-file naming, run side by side.
   static:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.covered != 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -83,6 +212,8 @@ jobs:
         run: bun run name:check
 
   tests:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.covered != 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -102,6 +233,8 @@ jobs:
 
   # The build alone, so the jobs that read dist/ start as soon as it exists.
   build:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.covered != 'true') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -114,19 +247,59 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
       - name: Build
+        env:
+          MTRL_CATALOGUE_INPUT_GRAPH: analysis/catalogue-identity-inputs.json
         run: bun run build
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
           path: dist
           retention-days: 1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: catalogue-identity-inputs
+          path: analysis/catalogue-identity-inputs.json
+          if-no-files-found: error
+          retention-days: 1
 
   # The checks that read the built package, on the build's dist/.
   package:
     needs: build
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      size-report: ${{ steps.size-report.outputs.available }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Find the previous release on the base history
+        id: release
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          base="$BASE_SHA"
+          if [[ "$base" =~ ^0+$ ]]; then base="$GITHUB_SHA"; fi
+          tag=$(git describe --tags --match 'v*' --abbrev=0 "$base")
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse "$tag^{commit}")" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            base_version=$(git show "$base:package.json" | jq -er .version)
+            head_version=$(jq -er .version package.json)
+            if [[ "$PR_TITLE" == release:* || "$base_version" != "$head_version" ]]; then
+              echo 'candidate=true' >> "$GITHUB_OUTPUT"
+            fi
+          fi
+      - name: Check out the size baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.release.outputs.sha }}
+          path: .size-release-base
+          persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.4.2"
@@ -135,6 +308,11 @@ jobs:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - run: bun install --frozen-lockfile
+      - name: Build the previous release
+        working-directory: .size-release-base
+        run: |
+          bun install --frozen-lockfile
+          bun run scripts/build.ts
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
@@ -164,11 +342,22 @@ jobs:
         run: bun run ssr-comments:check
       - name: Packed SSR on Node and Bun, and browser isolation
         run: bun run ssr-consumer:check
-      - name: Packed imports and size budgets
+      - name: Measure the previous release
+        working-directory: .size-release-base
+        run: |
+          # Use the same pack and Vite measurements on both checkouts.
+          bun "$GITHUB_WORKSPACE/scripts/check-package-size.ts"
+          if [ -f scripts/size-policy.ts ]; then
+            bun scripts/size.ts
+          else
+            # The first baseline predates the JSON emitters.
+            MTRL_SIZE_ROOT="$PWD" bun "$GITHUB_WORKSPACE/scripts/size.ts"
+          fi
+      - name: Packed imports and size measurements
         run: bun run size:check
       - name: Public Sass entries compile from the packed package
         run: bun run styles-package:check
-      - name: README examples, specifiers, sizes and links against the packed package
+      - name: README examples, specifiers and links against the packed package
         run: bun run readme:check
       - name: The third-party notice is packed, and names the glyphs it covers
         run: bun run notice:check
@@ -178,10 +367,88 @@ jobs:
         run: bun run declaration-docs:check
       - name: Every packed declaration entry resolves to declarations a consumer can name and compile
         run: bun run declaration-exports:check
-      - name: Per-component gzip budgets
+      - name: Per-component gzip measurements
         run: bun run size
       - name: One adapter component ships only its element
         run: bun run adapters:size
+      - name: Find the merged PR size explanation on main
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" |
+            jq -r --arg sha "$GITHUB_SHA" '[.[] | select(.merged_at != null and .merge_commit_sha == $sha and .base.ref == "main") | .body // ""][0] // ""' \
+            > analysis/size-push-pr-body.txt
+      - name: Report and gate growth since the previous release
+        env:
+          MTRL_SIZE_BASE: .size-release-base
+          MTRL_SIZE_TAG: ${{ steps.release.outputs.tag }}
+          MTRL_SIZE_RELEASE: ${{ steps.release.outputs.candidate }}
+        run: bun run size:report
+      - name: Check for a size report
+        id: size-report
+        if: always()
+        run: |
+          if [ -s analysis/size-report.md ]; then echo 'available=true' >> "$GITHUB_OUTPUT"; fi
+      - name: Upload size report and release tables
+        if: always() && steps.size-report.outputs.available == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package-sizes
+          path: |
+            analysis/size-report.md
+            analysis/component-size.json
+            analysis/package-size.json
+            analysis/release-sizes
+          retention-days: 7
+
+      - name: Record PR merge and size evidence
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          MTRL_SIZE_TAG: ${{ steps.release.outputs.tag }}
+          MTRL_SIZE_BASE_SHA: ${{ steps.release.outputs.sha }}
+        run: bun scripts/main-ci-proof.ts record
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        with:
+          name: pr-merge-proof
+          path: analysis/pr-merge-proof.json
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 7
+
+  # The token can write only in this job, which never runs PR code. Forks
+  # keep the job summary because their pull request tokens are read-only.
+  size-comment:
+    needs: package
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.package.outputs.size-report == 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: package-sizes
+          path: reports
+      - name: Update the package size comment
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          report=reports/size-report.md
+          marker='<!-- material-ci-size-report -->'
+          [ -s "$report" ] && [ "$(head -n 1 "$report")" = "$marker" ] || exit 0
+          issue="repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER"
+          comment=$(gh api --paginate "$issue/comments?per_page=100" --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- material-ci-size-report -->"))) | .id' | sed -n '1p')
+          if [ -n "$comment" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment" -F "body=@$report" --silent
+          else
+            gh api --method POST "$issue/comments" -F "body=@$report" --silent
+          fi
 
   # The browser checks, in groups that run side by side, on the build's dist/.
   # A run takes as long as its slowest group, so a check that grows moves to a
@@ -191,7 +458,10 @@ jobs:
   # package.json allows, and put the installed version back before they return
   # (scripts/check-at-peer-floor.ts), so their place in a group does not matter.
   browser:
-    needs: build
+    needs: [build, changes]
+    # A group whose check script changed sets checks, so that group still runs
+    # (the whole matrix does: a false skip is worse than a slow run).
+    if: "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')"
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     container:
@@ -217,17 +487,38 @@ jobs:
             browsers: chromium
             checks: react:check react-ssr:check vue:check svelte:check svelte-ssr:check vue-ssr:check solid-ssr:check solid:check solid-ssr:floor vue-ssr:floor react-types:check vue-types:check solid-types:check svelte-types:check react-types:floor vue-types:floor solid-types:floor svelte-types:floor
           - group: components-a
-            browsers: chromium
+            browsers: chromium webkit
             checks: core:check carousel:check a11y-svg:check
+          - group: carousel-reference
+            browsers: chromium webkit
+            checks: carousel-reference:check
           - group: components-b
             browsers: chromium
-            checks: consumer:check tabs:check slider:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check navigation-rail:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check dialog-small-viewport:check switch-transition:check bottom-sheet:check
+            checks: consumer:check tabs:check tooltip:check tooltip-menu:check drawer:check navigation-bar:check toolbar-card:check split-button:check select:check datepicker-deferred:check readme-browser:check rtl:check progress:check dialog-afteropen:check dialog-reduced-motion:check dialog-small-viewport:check switch-transition:check bottom-sheet:check
+          - group: navigation-rail
+            browsers: chromium webkit
+            checks: navigation-rail:check
+          - group: tooltip-hide-delay
+            browsers: chromium webkit
+            checks: tooltip-hide-delay:check
+          - group: drawer-divider
+            browsers: chromium webkit
+            checks: drawer-divider:check
+          - group: slider
+            browsers: chromium webkit
+            checks: slider:check
           - group: menu-deferred
             browsers: chromium
             checks: menu-deferred:check menu-container-space:check
           - group: menu-item-checked
             browsers: chromium
             checks: menu-item-checked:check
+          - group: menu-focus-ring
+            browsers: webkit
+            checks: menu-focus-ring:check
+          - group: menu-drifts
+            browsers: chromium webkit
+            checks: menu-drifts:check menu-opening-focus:check
           - group: fab-menu-ripple
             browsers: chromium
             checks: fab-menu-ripple:check
@@ -247,11 +538,18 @@ jobs:
             browsers: chromium
             checks: divider-sheet-conformance:check
           - group: list-conformance
-            browsers: chromium
+            browsers: chromium webkit
             checks: list-conformance:check
+          - group: list-drifts
+            browsers: chromium webkit
+            checks: list-drifts:check
           - group: search-trailing-space
             browsers: chromium webkit
             checks: search-trailing-space:check
+          - group: conformance-matrix
+            browsers: chromium webkit
+            checks: conformance
+            args: --matrix --check
           - group: bottom-app-bar-toolbar
             browsers: chromium
             checks: bottom-app-bar-toolbar:check
@@ -261,6 +559,12 @@ jobs:
           - group: listbox
             browsers: chromium firefox webkit
             checks: listbox:check
+          - group: card-state-layers
+            browsers: chromium webkit
+            checks: card-state-layers:check
+          - group: settle-helper
+            browsers: chromium webkit
+            checks: browser-settle:check
           - group: styles
             browsers: chromium
             checks: preupgrade:check tokens:check tokens:catalogue-browser:check contrast-emit:check theme-root-scope:check theme-runtime:check theme-roles:check theme-origins:check spring-tokens:check base-lite:check base-elements:check typescale-consumers:check component-sheets:check density:check
@@ -346,6 +650,9 @@ jobs:
         run: |
           bun install --frozen-lockfile
           bun run scripts/build.ts
+      - name: Compose token coverage matches the committed report
+        if: matrix.group == 'conformance-matrix'
+        run: bun run scripts/conformance/coverage.ts --check
       - name: Checks (${{ matrix.checks }})
         # A check that hangs must fail on its own, and name itself. On
         # 2026-11-03 this step held the adapters job for 30 minutes until the
@@ -366,10 +673,11 @@ jobs:
             cd "$BROWSER_CHECKOUT"
             runner=(setpriv --reuid "$(stat -c %u /github/home)" --regid "$(stat -c %g /github/home)" --clear-groups bun)
           fi
+          read -r -a arguments <<< "${{ matrix.args }}"
           for script in ${{ matrix.checks }}; do
             start=$SECONDS
             echo "::group::$script (start)"
-            "${runner[@]}" run "$script" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
+            "${runner[@]}" run "$script" "${arguments[@]}" || { echo "::endgroup::"; echo "::error::$script failed"; exit 1; }
             echo "::endgroup::"
             echo "$script: passed in $((SECONDS - start))s"
           done
@@ -392,6 +700,8 @@ jobs:
             analysis/navigation-rail
             analysis/core
             analysis/listbox
+            analysis/conformance-matrix-actual.json
+            analysis/conformance-*.log
             analysis/catalogue-full.json
             analysis/token-catalogue-evidence.json
             analysis/ssr-parity-chromium.json
@@ -408,10 +718,9 @@ jobs:
   # single byte of the default surface. The step no-ops itself when no
   # catalogue input changed (the scope test is inside the step, not an `if`, so
   # the gate can never be silently skipped by the workflow). On a pull request
-  # the checkout is the merge commit, so the base it compares against is the
-  # main tip that merge was computed from: bytes main itself moved since the
-  # branch started are not this change's to answer for, and the comparison sees
-  # exactly this pull request's delta. On a main push HEAD is that tip, the
+  # the checkout is the merge commit, so its first parent is the base for the
+  # package comparison and the component source diff. The comparison sees
+  # exactly this pull request's delta. On a main push HEAD is the base, the
   # scope test is empty, and the step rests.
   identity:
     needs: build
@@ -433,13 +742,20 @@ jobs:
         with:
           name: dist
           path: dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: catalogue-identity-inputs
+          path: analysis
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22.23.3"
       - name: Catalogue identity, when a catalogue input changed
         run: |
-          base="$(git rev-parse origin/main)"
-          changed="$(git diff --name-only "$base" HEAD -- scripts/token-catalogue scripts/generate-token-catalogue.ts scripts/check-token-catalogue.ts scripts/check-token-catalogue-browser.ts scripts/check-catalogue-identity.ts scripts/style-manifest.ts scripts/optional-style-profiles.ts scripts/button-style-profile.ts)"
+          base="$(git rev-parse HEAD)"
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            base="$(git rev-parse HEAD^1)"
+          fi
+          changed="$(git diff --name-only "$base" HEAD -- scripts/token-catalogue scripts/generate-token-catalogue.ts scripts/check-token-catalogue.ts scripts/check-token-catalogue-browser.ts scripts/check-catalogue-identity.ts scripts/catalogue-scope.ts scripts/catalogue-input-graph.ts scripts/style-manifest.ts scripts/optional-style-profiles.ts scripts/button-style-profile.ts)"
           if [ -z "$changed" ]; then
             echo "no catalogue input changed against main $base; the identity gate does not apply"
             exit 0
@@ -456,15 +772,23 @@ jobs:
           git worktree add ../material-base "$base"
           cd ../material-base
           bun install --frozen-lockfile
+          export MTRL_CATALOGUE_INPUT_GRAPH=analysis/catalogue-identity-inputs.json
           bun run build
           npm pack --silent
           cd "$GITHUB_WORKSPACE"
+          export MTRL_CATALOGUE_BASE_REVISION="$base"
+          export MTRL_CATALOGUE_BASE_INPUT_GRAPH=../material-base/analysis/catalogue-identity-inputs.json
           bun run catalogue:identity:check
 
   # Tooling-only comparators. Dependencies and builds never enter the published package.
   comparators:
-    needs: build
+    needs: [build, changes]
+    if: "needs.build.result == 'success' && needs.changes.result == 'success' && (needs.changes.outputs.library == 'true' || needs.changes.outputs.checks == 'true' || needs.changes.outputs.run_all == 'true')"
     runs-on: ubuntu-24.04
+    container:
+      # Playwright 1.63.0 Noble (linux/amd64), with Chromium and its system libraries.
+      image: mcr.microsoft.com/playwright@sha256:bc6ab0d6d44ff4826e4cb8c1e6d801e185bfc42bb0753f8e2a30efc70db054c7
+      options: --ipc=host
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -476,9 +800,10 @@ jobs:
       COMPARATOR_REVIEW_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: "1.4.2"
+      - name: Install pinned Bun in the Playwright container
+        run: |
+          npm install --prefix "$RUNNER_TEMP/material-bun" --no-save --no-package-lock --no-audit --no-fund @oven/bun-linux-x64@1.4.2
+          install "$RUNNER_TEMP/material-bun/node_modules/@oven/bun-linux-x64/bin/bun" /usr/local/bin/bun
       - run: bun install --frozen-lockfile
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -488,12 +813,25 @@ jobs:
         with:
           node-version: "22.23.3"
       - name: Install locked comparator tooling (CI only)
+        run: npm ci --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
+      - name: Check the comparator's Playwright image version
         run: |
-          npm ci --ignore-scripts --no-audit --no-fund --prefix scripts/fixtures/comparators
-          scripts/fixtures/comparators/node_modules/.bin/playwright install --with-deps chromium
+          node <<'NODE'
+          const assert = require('node:assert/strict')
+          const { readFileSync } = require('node:fs')
+          const { driverVersion } = JSON.parse(readFileSync(process.env.PLAYWRIGHT_BROWSERS_PATH + '/.docker-info', 'utf8'))
+          const { version } = require('./scripts/fixtures/comparators/node_modules/playwright/package.json')
+          assert.equal(driverVersion, version, 'Update the Playwright image digest to match the comparator lockfile')
+          console.log(`Playwright image and comparator package both use ${version}`)
+          NODE
       - name: Rendered fixture and per-asset comparison
         timeout-minutes: 10
-        run: bun run comparators:check
+        env:
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: safe.directory
+        run: |
+          export GIT_CONFIG_VALUE_0="$GITHUB_WORKSPACE"
+          bun run comparators:check
       - name: Comparator evidence (including failed setup)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -541,18 +879,47 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
-  # The status the main ruleset requires: green only when every job above is.
-  check:
+  # Green when every job succeeded or was skipped on purpose. A failed or
+  # cancelled job fails this one. Branch protection should require `ci-ok`.
+  ci-ok:
     if: always()
-    needs: [static, tests, build, package, browser, identity, comparators, ssr-worker]
+    needs: [changes, static, tests, build, package, size-comment, browser, identity, comparators, ssr-worker]
     runs-on: ubuntu-24.04
     steps:
-      - name: Every job passed
+      - name: Every job passed or was skipped
         run: |
-          echo 'static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }} comparators=${{ needs.comparators.result }} ssr-worker=${{ needs.ssr-worker.result }}'
-          [ '${{ needs.static.result }}' = success ] && [ '${{ needs.tests.result }}' = success ] \
-            && [ '${{ needs.build.result }}' = success ] && [ '${{ needs.package.result }}' = success ] \
-            && [ '${{ needs.browser.result }}' = success ] \
-            && [ '${{ needs.identity.result }}' = success ] \
-            && [ '${{ needs.comparators.result }}' = success ] \
-            && [ '${{ needs.ssr-worker.result }}' = success ]
+          echo 'changes=${{ needs.changes.result }} static=${{ needs.static.result }} tests=${{ needs.tests.result }} build=${{ needs.build.result }} package=${{ needs.package.result }} size-comment=${{ needs.size-comment.result }} browser=${{ needs.browser.result }} identity=${{ needs.identity.result }} comparators=${{ needs.comparators.result }} ssr-worker=${{ needs.ssr-worker.result }}'
+          accept() {
+            case "$1" in
+              success|skipped) ;;
+              *) echo "::error::$2 is $1"; exit 1 ;;
+            esac
+          }
+          accept "${{ needs.changes.result }}" changes
+          accept "${{ needs.static.result }}" static
+          accept "${{ needs.tests.result }}" tests
+          accept "${{ needs.build.result }}" build
+          accept "${{ needs.package.result }}" package
+          accept "${{ needs.size-comment.result }}" size-comment
+          accept "${{ needs.browser.result }}" browser
+          accept "${{ needs.identity.result }}" identity
+          accept "${{ needs.comparators.result }}" comparators
+          accept "${{ needs.ssr-worker.result }}" ssr-worker
+          if [ '${{ needs.changes.result }}:${{ needs.changes.outputs.covered }}' != success:true ]; then
+            if [ '${{ needs.static.result }}:${{ needs.tests.result }}:${{ needs.build.result }}:${{ needs.package.result }}' != success:success:success:success ]; then
+              echo '::error::Full CI requires successful static, tests, build and package jobs'
+              exit 1
+            fi
+          fi
+
+  # The status the main ruleset requires today. It follows ci-ok, so a skipped
+  # browser job stays green here until branch protection moves to ci-ok.
+  check:
+    if: always()
+    needs: [ci-ok]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: ci-ok passed
+        run: |
+          echo 'ci-ok=${{ needs.ci-ok.result }}'
+          [ '${{ needs.ci-ok.result }}' = success ]

@@ -35,6 +35,7 @@ import * as sass from "sass";
 import { chromium, webkit, type Browser, type Page } from "playwright";
 
 import { directionArmsPrelude, sassOptions } from "./build-styles";
+import { settle } from "./browser-settle";
 
 const bundle = await Bun.build({
   entrypoints: [resolve("scripts/search-avatar-entry.ts")],
@@ -215,17 +216,9 @@ const centerOf = async (page: Page, which: string, part: "avatar" | "trailing" =
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   }, { which, part });
 
-/** Reads until two consecutive readings agree: the layer fades in over a transition. */
-const settle = async <T extends { alpha: number }>(page: Page, read: () => Promise<T>): Promise<T> => {
-  let last = await read();
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    await page.waitForTimeout(50);
-    const next = await read();
-    if (next.alpha === last.alpha) return next;
-    last = next;
-  }
-  return last;
-};
+/** The settled reading: the shared helper, with this check's reading. */
+// A reading is always returned when one is asked for: the helper throws instead.
+const settleOn = async <T>(page: Page, read: () => Promise<T>): Promise<T> => (await settle(page, { read })) as T;
 
 const focusByKey = async (page: Page, which: string): Promise<boolean> => {
   // A key press first makes the next focus a keyboard one, so :focus-visible
@@ -301,14 +294,14 @@ const run = async (browser: Browser, engine: string): Promise<string[]> => {
     // Hover: the state layer, the same one the trailing icon paints.
     const center = await centerOf(page, which);
     await page.mouse.move(center.x, center.y);
-    const hover = await settle(page, () => readAvatar(page, which));
+    const hover = await settleOn(page, () => readAvatar(page, which));
     await page.mouse.move(0, 0);
-    await settle(page, () => readAvatar(page, which));
+    await settleOn(page, () => readAvatar(page, which));
     const trailingCenter = await centerOf(page, which, "trailing");
     await page.mouse.move(trailingCenter.x, trailingCenter.y);
-    const trailing = await settle(page, () => readTrailingIcon(page, which));
+    const trailing = await settleOn(page, () => readTrailingIcon(page, which));
     await page.mouse.move(0, 0);
-    await settle(page, () => readAvatar(page, which));
+    await settleOn(page, () => readAvatar(page, which));
     assert.ok(hover.alpha > 0, `${engine} ${which}: the avatar paints a hover layer (${hover.background})`);
     // `appearance: none` is the avatar's: the icon buttons keep theirs.
     assert.equal(trailing.appearance, referenceAppearance, `${engine} ${which}: the trailing icon's appearance is untouched (${trailing.appearance} vs a bare button's ${referenceAppearance})`);

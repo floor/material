@@ -8,10 +8,11 @@
 // cross into the shadow root shows as a difference.
 //
 //   bun run build && bun run scripts/check-elements.ts
+//   bun run scripts/check-elements.ts b --webkit
 
 import { checkCheckableValues } from "./check-checkable-values";
 import assert from "node:assert/strict";
-import { type Page } from "playwright";
+import { webkit, type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
 import { checkDeclarativeUpgrade } from "./check-elements-ssr";
 import { checkPickers } from "./check-elements-pickers";
@@ -34,9 +35,11 @@ import { checkSheetVariant } from "./check-sheet-variant-browser";
 import { checkButtonToggle } from "./check-button-toggle";
 import { checkButtonGroupPress } from "./check-button-group-press-browser";
 import { checkFocusVisibility } from "./check-focus-visibility";
+import { checkMenuConsumerFocus, checkStalledMenuFocus } from "./check-menu-opening-focus";
 import { checkCardActions } from "./check-card-actions-browser";
 import { checkShapeCorners } from "./check-shape-corners";
 import { DEFAULT_OFFSET } from "../src/components/tooltip/types";
+import { settle } from "./browser-settle";
 
 // Runs against the build: `bun run build` first, as CI does.
 const bundle = await Bun.build({
@@ -108,7 +111,8 @@ const server = Bun.serve({
 type Win = Window & Record<string, unknown>;
 /** Icon markup for the icon-only elements, quoted with ' in attributes. */
 const ICON = '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z"/></svg>';
-const browser = await launchChromium({ headless: true });
+const webkitBrowser = process.argv.includes("--webkit") ? await webkit.launch({ headless: true }) : null;
+const browser = webkitBrowser ? await webkitBrowser.newContext() : await launchChromium({ headless: true });
 let checks = 0;
 const check = (name: string): void => {
   checks++;
@@ -177,11 +181,21 @@ try {
   // no argument, every part runs -- what a local `bun run elements:check` does.
   // The bodies keep the indentation they had, so the diff of a part boundary is
   // the boundary itself.
-  const parts = process.argv.slice(2);
+  const parts = process.argv.slice(2).filter((part) => part !== "--webkit");
   const selected = (part: string): boolean => parts.length === 0 || parts.includes(part);
 
   if (selected("a")) await checkDeclarativeUpgrade(browser.browser()!);
-  const page = await browser.browser()!.newPage({ viewport: { width: 900, height: 700 } });
+  const defaultViewport = { width: 900, height: 700 };
+  if (selected("menu-opening-focus")) {
+    const consumerPage = await browser.browser()!.newPage({ viewport: defaultViewport });
+    try {
+      await consumerPage.goto(`http://127.0.0.1:${server.port}`);
+      await checkMenuConsumerFocus(consumerPage, !!webkitBrowser, check);
+    } finally {
+      await consumerPage.close();
+    }
+  }
+  const page = await browser.browser()!.newPage({ viewport: defaultViewport });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
@@ -1275,7 +1289,6 @@ try {
     }
     return false;
   };
-  const settle = (): Promise<unknown> => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))));
   for (const dir of ["ltr", "rtl"] as const) {
     for (const [kind, tag] of [["fab", "m-fab"], ["extended-fab", "m-extended-fab"]] as const) {
       const label = (corner: string): string => (kind === "fab" ? `Fab ${corner}` : `Ext ${corner}`);
@@ -1301,7 +1314,7 @@ try {
               document.getElementById("factory")?.append(made.element);
             }
           }, { kind, corners: [...corners], icon: ICON });
-          await settle();
+          await settle(page);
         }
         for (const [index] of corners.entries()) {
           const id = ids[index]!;
@@ -1310,7 +1323,7 @@ try {
           const [left, top, width, height] = rest.box;
           const centre = { x: left + width / 2, y: top + height / 2 };
           await page.mouse.move(centre.x, centre.y);
-          await settle();
+          await settle(page);
           const hovered = await fabState(id);
           assert.deepEqual(hovered, rest, `${id} left its corner while hovered: ${JSON.stringify(hovered)}`);
           await page.mouse.move(450, 350);
@@ -2329,7 +2342,7 @@ try {
       (document.getElementById("nb") as HTMLElement).append(factory.element);
     });
     // placement, the label's float and the border-colour transition
-    await page.waitForTimeout(500);
+    await settle(page);
     type Box = { left: number; right: number; top: number; bottom: number; width: number };
     const notches = await page.evaluate(() => {
       // A missing segment measures as nothing, so the label is judged first
@@ -2867,7 +2880,6 @@ try {
   );
   {
     await page.getByRole("tab", { name: "Flights", exact: true }).focus();
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const before = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { component: unknown };
       (window as unknown as Record<string, unknown>).__tabs = { component: t.component, focused: t.shadowRoot?.activeElement };
@@ -2881,7 +2893,7 @@ try {
       tabs[2].textContent = "Stays";
       tabs[2].setAttribute("disabled", "");
     });
-    await settle();
+    await settle(page);
     const after = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & {
         component: { getTabs: () => Array<{ getBadge: () => string }> };
@@ -2913,7 +2925,7 @@ try {
       t.insertBefore(tab, t.children[1]);
       t.children[3].remove();
     });
-    await settle();
+    await settle(page);
     const reordered = await page.evaluate(() => {
       const t = document.getElementById("t") as HTMLElement & { value: string };
       const buttons = [...(t.shadowRoot?.querySelectorAll('[role="tab"]') ?? [])] as HTMLElement[];
@@ -2973,7 +2985,6 @@ try {
   );
   {
     type Radios = HTMLElement & { value: string | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const group = page.getByRole("radiogroup", { name: "Size" });
     assert.equal(await group.count(), 1);
     const radios = group.getByRole("radio");
@@ -3096,7 +3107,7 @@ try {
       return null;
     });
     assert.equal(before, null);
-    await settle();
+    await settle(page);
     const updated = await page.evaluate(() => {
       const g = document.getElementById("g") as Radios;
       const inputs = [...(g.shadowRoot?.querySelectorAll("input") ?? [])];
@@ -3214,7 +3225,6 @@ try {
   );
   {
     type Group = HTMLElement & { value: string | string[] | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const alignment = page.getByRole("group", { name: "Alignment" });
     assert.equal(await alignment.count(), 1);
     for (const [name, pressed] of [["Left", false], ["Center", true], ["Right", false]] as const) {
@@ -3306,7 +3316,7 @@ try {
     await page.getByRole("group", { name: "Actions" }).getByRole("button", { name: "Paste" }).click({ force: true });
     assert.deepEqual(await events(), [], "a disabled button dispatches nothing");
     await page.evaluate(() => document.querySelector('#ac [value="paste"]')?.removeAttribute("disabled"));
-    await settle();
+    await settle(page);
     const reenabled = await page.evaluate(() => {
       const ac = document.getElementById("ac") as HTMLElement;
       const states = (): boolean[] => [...(ac.shadowRoot?.querySelectorAll("button") ?? [])].map((b) => b.disabled);
@@ -3768,7 +3778,6 @@ try {
   );
   {
     type Chips = HTMLElement & { value: string | string[] | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const filters = page.getByRole("grid", { name: "Filters" });
     assert.equal(await filters.count(), 1);
     for (const [name, selected] of [["Vegetarian", true], ["Fish", true], ["Gluten free", false], ["Unavailable", false]] as const) {
@@ -3858,10 +3867,10 @@ try {
 
     await filters.getByRole("gridcell", { name: "Unavailable" }).click({ force: true });
     await page.evaluate(() => document.querySelector('#ch [value="na"]')?.removeAttribute("disabled"));
-    await settle();
+    await settle(page);
     const enabled = await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled");
     await page.evaluate(() => document.querySelector('#ch [value="na"]')?.setAttribute("disabled", ""));
-    await settle();
+    await settle(page);
     assert.deepEqual({ events: await events(), enabled }, { events: [], enabled: "false" });
     assert.equal(await filters.getByRole("gridcell", { name: "Unavailable" }).getAttribute("aria-disabled"), "true");
     check("chips: a disabled chip dispatches nothing; disabled updates in place");
@@ -3873,7 +3882,7 @@ try {
       const ada = document.querySelector('#to [value="ada"]') as HTMLElement;
       ada.textContent = "Ada L.";
     });
-    await settle();
+    await settle(page);
     const lingering = await page.evaluate(() => [...(document.getElementById("to")?.shadowRoot?.querySelectorAll('[role="gridcell"]') ?? [])].map((c) => c.textContent));
     assert.deepEqual(lingering, ["Ada L."], "a removed chip stays removed while its <m-chip> is there");
     await recipients.getByRole("button", { name: "Remove Ada L." }).focus();
@@ -4906,7 +4915,6 @@ try {
   );
   {
     type Rail = HTMLElement & { value: string | null; component: unknown; expanded: boolean };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const nav = page.getByRole("navigation", { name: "Main" });
     assert.equal(await nav.count(), 1);
     assert.equal(await nav.getByRole("button", { name: "Inbox", exact: true }).count(), 1);
@@ -4973,7 +4981,7 @@ try {
       added.textContent = "Archive";
       r.append(added);
     });
-    await settle();
+    await settle(page);
     const updated = await page.evaluate(() => {
       const r = document.getElementById("nr") as Rail;
       const items = [...(r.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
@@ -5007,7 +5015,7 @@ try {
       fab.textContent = "Compose";
       document.getElementById("nr")?.prepend(fab);
     });
-    await settle();
+    await settle(page);
     const header = await page.evaluate(() => {
       const r = document.getElementById("nr") as Rail;
       const slot = r.querySelector("button")?.assignedSlot;
@@ -5061,7 +5069,6 @@ try {
   );
   {
     type Drawer = HTMLElement & { value: string | null; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const nav = page.getByRole("navigation", { name: "Mail" });
     assert.equal(await nav.count(), 1);
     assert.equal(await nav.getByRole("button", { name: /^Inbox/ }).getAttribute("aria-current"), "page");
@@ -5151,7 +5158,7 @@ try {
       added.textContent = "Work";
       d.append(added);
     });
-    await settle();
+    await settle(page);
     const updated = await page.evaluate(() => {
       const d = document.getElementById("dr") as Drawer;
       const items = [...(d.shadowRoot?.querySelectorAll("[data-id]") ?? [])] as HTMLElement[];
@@ -5228,7 +5235,6 @@ try {
   );
   {
     type Bar = HTMLElement & { component: unknown; setScrollState: (scrolled: boolean) => unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const banner = page.getByRole("banner", { name: "Mail bar" });
     assert.equal(await banner.count(), 1);
     assert.equal(await page.getByRole("heading", { level: 1, name: "Inbox" }).count(), 1);
@@ -5249,7 +5255,7 @@ try {
       const bar = document.getElementById("tb") as Bar;
       for (const node of [...bar.childNodes]) if (node.nodeType === Node.TEXT_NODE) node.remove();
     });
-    await settle();
+    await settle(page);
     assert.equal(await page.getByRole("heading", { level: 1, name: "Fallback" }).count(), 1);
     await page.evaluate(() => document.getElementById("tb")?.setAttribute("headline", "Updated"));
     assert.equal(await page.getByRole("heading", { level: 1, name: "Updated" }).count(), 1);
@@ -5333,7 +5339,6 @@ try {
   );
   {
     type Bar = HTMLElement & { component: unknown; hide: () => unknown; show: () => unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const toolbar = page.getByRole("toolbar", { name: "Actions" });
     assert.equal(await toolbar.count(), 1);
     const regions = await page.evaluate(() => {
@@ -5350,7 +5355,7 @@ try {
     check("bottom app bar: a toolbar; actions and the FAB in their regions");
 
     await page.evaluate(() => document.querySelector("#bb m-fab")?.remove());
-    await settle();
+    await settle(page);
     const without = await page.evaluate(() => {
       const bar = document.getElementById("bb") as Bar;
       return (bar.shadowRoot?.firstElementChild as HTMLElement).className.includes("--with-fab");
@@ -5421,7 +5426,6 @@ try {
   );
   {
     type Tb = HTMLElement & { component: { overflowButton: HTMLElement | null } | null; hide: () => unknown; show: () => unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     assert.equal(await page.getByRole("toolbar", { name: "Formatting" }).count(), 1);
     // Where focus is: an item's host, the FAB's, or the overflow button inside the toolbar.
     const focused = (): Promise<string | null> =>
@@ -5430,7 +5434,7 @@ try {
         if (active?.id === "tb") return `overflow:${active.shadowRoot?.activeElement?.getAttribute("aria-label")}`;
         return active?.getAttribute("aria-label") ?? active?.id ?? null;
       });
-    await settle();
+    await settle(page);
 
     await page.focus("#before");
     await page.keyboard.press("Tab");
@@ -5479,10 +5483,10 @@ try {
       const menu = (document.getElementById("tb") as HTMLElement).querySelector("m-menu") as HTMLElement;
       return { focused: !!menu.shadowRoot?.activeElement?.closest('[role="menu"]'), open: menu.hasAttribute("open") };
     });
-    for (const end = Date.now() + 5000; Date.now() < end && !(await overflowMenu()).focused;) await settle();
+    for (const end = Date.now() + 5000; Date.now() < end && !(await overflowMenu()).focused;) await settle(page);
     assert.equal((await overflowMenu()).focused, true, "toolbar: the open overflow menu takes focus");
     await page.keyboard.press("Escape");
-    for (const end = Date.now() + 5000; Date.now() < end && (await overflowMenu()).open;) await settle();
+    for (const end = Date.now() + 5000; Date.now() < end && (await overflowMenu()).open;) await settle(page);
     assert.equal((await overflowMenu()).open, false, "toolbar: Escape closes the overflow menu");
     check("toolbar: slot=overflow's <m-menu> is anchored to the overflow button, opens from it and closes on Escape");
 
@@ -5635,7 +5639,6 @@ try {
   );
   {
     type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const fruits = page.getByRole("list", { name: "Fruits" });
     assert.equal(await fruits.count(), 1);
     assert.equal(await fruits.getByRole("listitem").count(), 3);
@@ -5776,7 +5779,7 @@ try {
     assert.equal(removed, null);
     check("list: removing the selected item clears it from the selection");
 
-    await settle();
+    await settle(page);
     const renamed = await page.evaluate(() => {
       const l = document.getElementById("l") as List;
       const before = l.component;
@@ -6925,7 +6928,6 @@ try {
     type List = HTMLElement & { value: string | null; values: string[]; component: unknown };
     const markup = `<m-list id="x" aria-label="Dirty"><m-list-item value="a">Alpha</m-list-item>
       <m-list-item value="b">Beta</m-list-item><m-list-item value="c">Gamma</m-list-item></m-list>`;
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const live = (): Promise<string | null> => page.evaluate(() => (document.getElementById("x") as List).value);
     const attribute = (value: string): Promise<string | null> =>
       page.evaluate((v) => {
@@ -6938,7 +6940,7 @@ try {
         const x = document.getElementById("x") as HTMLElement;
         for (const item of x.querySelectorAll("m-list-item")) item.toggleAttribute("selected", item.getAttribute("value") === v);
       }, value);
-      await settle();
+      await settle(page);
       return live();
     };
 
@@ -6946,7 +6948,7 @@ try {
     assert.equal(await attribute("b"), "b");
     assert.equal(await selectItem("c"), "b", "the value attribute wins over an item's selected in a single list");
     await page.evaluate(() => document.getElementById("x")?.removeAttribute("value"));
-    await settle();
+    await settle(page);
     assert.equal(await selectItem("a"), "a", "a clean list follows its items' selected");
     check("list: before any interaction, the value attribute and the items' selected move the selection");
 
@@ -6989,7 +6991,6 @@ try {
   );
   {
     type Card = HTMLElement & { component: unknown };
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const regions = (id: string): Promise<Record<string, string | number>> =>
       page.evaluate((cardId) => {
         const root = (document.getElementById(cardId) as HTMLElement).shadowRoot as ShadowRoot;
@@ -7074,7 +7075,7 @@ try {
     check("card: aria-label replaces the headline's name in place, and its removal gives it back");
 
     await page.evaluate(() => document.getElementById("k")?.setAttribute("headline", "Open this"));
-    await settle();
+    await settle(page);
     assert.equal(await page.getByRole("button", { name: "Open this" }).count(), 1);
     check("card: the headline attribute is the slot's fallback text");
 
@@ -7118,9 +7119,7 @@ try {
   );
   {
     type Carousel = HTMLElement & { index: number; component: unknown };
-    const settle = (): Promise<unknown> =>
-      page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null)))));
-    await settle();
+    await settle(page);
     const photos = page.getByRole("region", { name: "Photos" });
     assert.equal(await photos.count(), 1);
     assert.equal(await photos.getAttribute("aria-roledescription"), "carousel");
@@ -7273,7 +7272,7 @@ try {
          ${[["a", "Alpha"], ["b", "Beta"], ["c", "Gamma"], ["d", "Delta"], ["e", "Epsilon"]].map(([v, l]) => slide(v, l)).join("")}
        </m-carousel></section><section id="factory" class="tall"></section>`
     );
-    await settle();
+    await settle(page);
     const parity = await page.evaluate(() => {
       const w = window as unknown as Win & { mtrl: { createCarousel: (c: object) => { element: HTMLElement } } };
       const factory = w.mtrl.createCarousel({
@@ -7320,15 +7319,18 @@ try {
       return event.defaultPrevented;
     });
     assert.equal(await wheel(), true, "wheel attribute enables scrolling at creation");
-    await page.waitForTimeout(700);
-    assert((await scroller.evaluate(el => el.scrollLeft)) > 0);
+    // The wheel scroll runs on the carousel's own frames, which Web Animations
+    // cannot see: wait for it to reach its end, then for rest.
+    const scrollLeft = () => scroller.evaluate(el => el.scrollLeft);
+    const scrolled = await settle(page, { until: async () => (await scrollLeft()) > 0, read: scrollLeft });
+    assert((scrolled ?? 0) > 0);
     assert.equal(await host.evaluate(el => {
       const host = el as HTMLElement & { component: unknown };
       const before = host.component;
       host.removeAttribute("wheel");
       return host.component === before;
     }), true, "removing wheel keeps the component");
-    await page.waitForTimeout(200);
+    await settle(page);
     const position = await scroller.evaluate(el => el.scrollLeft);
     assert.equal(await wheel(), false, "removing wheel disables interception");
     assert.equal(await scroller.evaluate(el => el.scrollLeft), position);
@@ -7339,8 +7341,8 @@ try {
       return host.component === before;
     }), true, "adding wheel keeps the component");
     assert.equal(await wheel(), true, "adding wheel enables interception again");
-    await page.waitForTimeout(700);
-    assert((await scroller.evaluate(el => el.scrollLeft)) > position);
+    const scrolledAgain = await settle(page, { until: async () => (await scrollLeft()) > position, read: scrollLeft });
+    assert((scrolledAgain ?? 0) > position);
     check("carousel: wheel attribute scrolls horizontally and toggles in place");
   }
 
@@ -7508,12 +7510,12 @@ try {
       );
     const live = (spec: DefaultCase): Promise<Live> =>
       page.evaluate((property) => (document.getElementById("x") as HTMLElement & Record<string, Live>)[property], spec.property);
-    // The slider binds its handles a task after creation.
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+    // The slider binds its handles a task after creation; the helper's frame
+    // is a later task, so it covers the bind.
 
     for (const spec of cases) {
       await fresh(page, `<form id="df">${spec.markup}</form>`);
-      await settle();
+      await settle(page);
       assert.notEqual(await live(spec), spec.a);
       assert.equal(await attribute(spec, spec.a), spec.a, `${spec.name}: a clean element follows its attribute`);
       check(`${spec.name}: before any interaction, the ${spec.attribute} attribute moves the live state`);
@@ -7527,14 +7529,14 @@ try {
 
       if (!spec.noForm) {
         await page.evaluate(() => (document.getElementById("df") as HTMLFormElement).reset());
-        await settle();
+        await settle(page);
         assert.equal(await live(spec), spec.b, `${spec.name}: reset returns to the current attribute`);
         assert.equal(await attribute(spec, spec.c), spec.c, `${spec.name}: reset makes it clean again`);
         check(`${spec.name}: form.reset() returns to the ${spec.attribute} attribute and clears the dirty flag`);
       }
 
       await fresh(page, `<form id="df">${spec.markup}</form>`);
-      await settle();
+      await settle(page);
       await page.evaluate(
         ({ property, value }) => {
           (document.getElementById("x") as HTMLElement & Record<string, Live>)[property] = value;
@@ -7652,7 +7654,6 @@ try {
   // is the shadow host when focus is inside a shadow root. The rail and the
   // drawer carried their own key handlers for it; these run on the factories'.
   {
-    const settle = (): Promise<unknown> => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
     const focusedIn = (id: string): Promise<string | null | undefined> =>
       page.evaluate((id) => {
         const active = document.getElementById(id)?.shadowRoot?.activeElement as HTMLElement | null | undefined;
@@ -7725,7 +7726,7 @@ try {
     await people.getByRole("gridcell", { name: "Ben" }).locator("button").first().focus();
     const beforeDelete = await focusedIn("kc");
     await page.keyboard.press("Delete");
-    await settle();
+    await settle(page);
     assert.deepEqual({ beforeDelete, afterDelete: await focusedIn("kc") }, { beforeDelete: "Ben", afterDelete: "Cy" });
     await page.getByRole("grid", { name: "Kinds" }).getByRole("gridcell", { name: "Ex" }).focus();
     await page.keyboard.press("ArrowRight");
@@ -7760,7 +7761,7 @@ try {
     assert.deepEqual(list, ["Beta", "Gamma", "Alpha"]);
     assert.deepEqual(((await events()) as { value: string }[]).map((e) => e.value), ["b", "c"]);
     await page.evaluate(() => document.querySelector('#kl [value="a"]')?.setAttribute("supporting-text", "First"));
-    await settle();
+    await settle(page);
     assert.equal(await rowName(), "Gamma", "the list renders again and keeps the focused row");
     check("focus in a shadow root: the list's arrows, Home and End move focus, Space and Enter select; a render keeps focus");
   }
@@ -8548,8 +8549,9 @@ try {
 
   // A [dir=rtl] ancestor outside a shadow root does not reach the
   // menu sheet. The arrow sits at the item's inline end, as the factory
-  // already does: 12px from the right left-to-right, 16px from the left
-  // right-to-left. The item is clicked before the submenu's side is read.
+  // already does: 12px from the right left-to-right and 12px from the
+  // left right-to-left -- the 12dp left/right padding the baseline menu
+  // measurements give (m3.material.io/components/menus/specs). The item is clicked before the submenu's side is read.
   // That side is the placement script's physical right at the first level,
   // in both directions, including the factory under dir="rtl"; the element
   // matches the factory. The inline end would be a new side. A top-layer
@@ -8716,7 +8718,7 @@ try {
     for (const row of menuRtl.arrows) {
       console.log(`  rtl menu ${row.name}: arrow ${row.inset}px from the ${row.side} (padding ${row.paddingLeft}/${row.paddingRight}), submenu ${row.submenuSide}`);
       const end = row.dir === "rtl" ? "left" : "right";
-      const inset = row.dir === "rtl" ? 16 : 12;
+      const inset = 12;
       if (row.side !== end || Math.abs(row.inset - inset) > 1)
         menuFailures.push(`${row.name}: arrow ${row.inset}px from the ${row.side}, expected ${inset}px from the ${end}`);
       if (row.submenuSide === "missing")
@@ -8746,6 +8748,8 @@ try {
 
   // Part b starts here: from the menu in the top layer to the end.
   if (selected("b")) {
+  // WebKit's Alt+Tab includes buttons in sequential focus navigation.
+  const tabKey = webkitBrowser ? "Alt+Tab" : "Tab";
 
   // ---------------------------------------------------------------- menu in the top layer
   // `layer: "top"` renders the menu next to its opener and shows it as a
@@ -8979,7 +8983,13 @@ try {
       await page.mouse.click(outside.x, outside.y, { delay: 70 });
       await wait(450);
       await settled({ closes: 4, connected: false });
-      assert.deepEqual(await state(), { open: false, closes: 4, connected: false, focus: "tl-outside" }, `${where}: blur and click`);
+      const { open, closes, connected } = await state();
+      const focusLeft = await page.evaluate(() => {
+        const { menu, root } = (window as unknown as TopWin).__tl;
+        const active = root.activeElement;
+        return active !== root.querySelector("#tl-opener") && !menu.element.contains(active);
+      });
+      assert.deepEqual({ open, closes, connected, focusLeft }, { open: false, closes: 4, connected: false, focusLeft: true }, `${where}: blur and click`);
 
       // Taken out of the top layer by something else
       await openMenu();
@@ -9106,6 +9116,7 @@ try {
   }
 
   // ---------------------------------------------------------------- FAB menu
+  await page.setViewportSize(defaultViewport);
   await fresh(
     page,
     `<div class="stage" style="padding-top:260px"><button id="fm-before">Before</button>
@@ -9119,6 +9130,8 @@ try {
        <m-fab-menu-item value="sheet">Sheet</m-fab-menu-item>
      </m-fab-menu></div><div class="stage" id="fmstage"></div>`
   );
+  // The previous menu cases scroll the document to exercise top-layer positioning.
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
   {
     type Fm = HTMLElement & { show: () => void; hide: () => void };
     const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
@@ -9153,10 +9166,12 @@ try {
       };
     });
     assert.deepEqual(opened, { open: true, visible: "visible", items: 3, colour: true });
-    assert.equal(await focused(), "fab:Compose", "focus stays on the close button");
     assert.equal(await page.getByRole("menuitem", { name: "Reply" }).count(), 1);
-    check("FAB menu: the FAB opens a menu of menuitems; open reflects; focus stays on the close button");
+    check("FAB menu: a click on the FAB opens a menu of menuitems and reflects open");
 
+    // A pointer click does not focus a button in WebKit. Start the keyboard
+    // sequence on the FAB, then check where focus goes as each key is handled.
+    await button.focus();
     await page.keyboard.press("ArrowDown");
     assert.equal(await focused(), "Reply");
     await page.keyboard.press("ArrowUp");
@@ -9166,9 +9181,10 @@ try {
     assert.equal(await page.evaluate(() => document.getElementById("fm")!.hasAttribute("open")), false);
     await page.keyboard.press("Enter");
     await wait(100);
-    await page.keyboard.press("Tab");
+    assert.equal(await focused(), "fab:Compose", "opening with Enter keeps focus on the close button");
+    await page.keyboard.press(tabKey);
     assert.equal(await focused(), "Reply", "Tab goes into the open list");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tabKey);
     assert.equal(await focused(), "fab:Compose", "Tab out closes it on the FAB");
     check("FAB menu: arrows and Tab into the list, wrapping; Escape and Tab out close it on the FAB");
 
@@ -9211,15 +9227,21 @@ try {
       if (!surface) return null;
       const s = surface.getBoundingClientRect();
       const f = fab.getBoundingClientRect();
+      const above = s.bottom <= f.top;
       return {
         open: fm.hasAttribute("open"),
         visible: getComputedStyle(surface).visibility,
         styled: getComputedStyle(surface).backgroundColor !== "rgba(0, 0, 0, 0)",
-        gap: Math.round(f.top - s.bottom),
+        gap: Math.round(above ? f.top - s.bottom : s.top - f.bottom),
+        spaceToEdge: above ? s.top : window.innerHeight - s.bottom,
+        side: above ? "above" : "below",
         expanded: fab.getAttribute("aria-expanded"),
       };
     });
-    assert.deepEqual(menu, { open: true, visible: "visible", styled: true, gap: 4, expanded: "true" });
+    assert(menu, "menu presentation creates a surface in the FAB's shadow root");
+    const { spaceToEdge, side, ...appearance } = menu;
+    assert.deepEqual(appearance, { open: true, visible: "visible", styled: true, gap: 4, expanded: "true" });
+    assert(spaceToEdge >= 0, `the menu fits ${side} the FAB with ${spaceToEdge}px to the viewport edge`);
     const picked = await page.evaluate(async () => {
       const fm = document.getElementById("fm2") as Fm;
       const seen: unknown[] = [];
@@ -9233,7 +9255,7 @@ try {
       return { seen, open: fm.hasAttribute("open") };
     });
     assert.deepEqual(picked, { seen: ["sheet"], open: false });
-    check("FAB menu: presentation=menu loads the baseline menu into its shadow root, 4px above the FAB");
+    check("FAB menu: presentation=menu loads the baseline menu into its shadow root, fits the viewport, and keeps a 4px gap");
 
     // `open` by attribute or property is applied in the attribute
     // callback and dispatches nothing; show() and hide() dispatch one event
@@ -9513,7 +9535,7 @@ try {
         return (active?.textContent ?? "").trim();
       });
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tabKey);
     await page.evaluate(() => {
       const host = document.getElementById("rtl-chips") as HTMLElement;
       (host.shadowRoot?.querySelector('[tabindex="0"]') as HTMLElement | null)?.focus();
@@ -9536,7 +9558,7 @@ try {
   {
     await page.evaluate(() => new Promise((r) => setTimeout(r, 100)));
     await page.focus("#m-before");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tabKey);
     assert.equal(await page.evaluate(() => document.activeElement?.id), "m-after");
     const hidden = await page.evaluate(() => {
       const surface = document.querySelector("m-menu")?.shadowRoot?.querySelector(".mtrl-menu") as HTMLElement;
@@ -9715,17 +9737,19 @@ try {
         async () => ({ menu: await menuState(), focusable: await focusableItem(label) }));
       await focusIs(step, label);
     };
-    await page.focus("#mb");
-    await page.keyboard.press("Enter");
-    await focusedByKey("menu, opened with Enter", "Copy");
-    assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
-    await page.keyboard.press("Escape");
-    await closed("menu, Escape, opened with Enter");
-    await settle();
-    await focusIs("menu, Escape, opened with Enter", "mb");
-    assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
-    assert.equal(await focused(), "mb");
-    check("menu: Enter on the anchor focuses the first item; Escape closes once and returns focus");
+    for (const reducedMotion of ["no-preference", "reduce"] as const) {
+      await page.emulateMedia({ reducedMotion });
+      await checkStalledMenuFocus(page, "#mm", page.locator("#mb"), "copy", `menu (${reducedMotion})`);
+      assert.equal(await focused(), "Copy", "opened with a key, the first item has focus");
+      await page.keyboard.press("Escape");
+      await closed("menu, Escape, opened with Enter");
+      await settle();
+      await focusIs("menu, Escape, opened with Enter", "mb");
+      assert.deepEqual(await log(), [{ type: "open", detail: {} }, { type: "close", detail: {} }]);
+      assert.equal(await focused(), "mb");
+      check(`menu: Enter focuses the first item after a stall and Escape returns focus (${reducedMotion})`);
+    }
+    await page.emulateMedia({ reducedMotion: null });
 
     // ArrowUp on the anchor opens the menu on its last item. The anchor puts
     // focus there 100ms after the key, and the menu's own initial focus, which runs
@@ -9844,9 +9868,8 @@ try {
       try {
         await page.focus("#mb");
         await page.keyboard.press("Enter");
-        // The menu is placed and shown 20ms after the key; its focus timer is held.
-        // (Not `wait(100)`: that is a 100ms timer in the page, and would be held too.)
-        await wait(60);
+        // Wait for placement while the initial focus timer is still held.
+        await page.locator("#mm .mtrl-menu--visible").waitFor({ state: "visible", timeout: 5000 });
         assert.equal((await menuState()).open, true, "the menu opened with Enter");
         for (const key of ["ArrowDown", "ArrowDown"]) await page.keyboard.press(key);
         before = await focused();
@@ -10277,7 +10300,7 @@ try {
       await restorePage.goto(`http://127.0.0.1:${server.port}/restore-select`);
       await restorePage.waitForFunction(() => (window as unknown as Win).ready === true);
       await restorePage.locator("#rs").click();
-      await restorePage.waitForTimeout(450);
+      // The option click waits for the menu to be actionable; no timer does.
       await restorePage.getByRole("option", { name: "Beta", exact: true }).click();
       await restorePage.click("#go");
       await restorePage.waitForURL(/\/away$/);
@@ -10594,18 +10617,20 @@ try {
       __pop: { root: ShadowRoot; events: string[] };
     };
     const wait = (ms: number): Promise<unknown> => page.evaluate((ms) => new Promise((r) => setTimeout(r, ms)), ms);
-    const client = await page.context().newCDPSession(page);
+    const client = webkitBrowser ? null : await page.context().newCDPSession(page);
 
-    /** The description Chrome computes, and whether Playwright's own matches the text. */
-    const description = async (selector: string, name: string, text: string): Promise<{ chrome: unknown; playwright: boolean }> => {
-      const locator = page.locator(selector);
-      const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
-        nodes: Array<{ role?: { value: string }; name?: { value: string }; description?: { value: string } }>;
-      };
-      const button = nodes.find((n) => n.role?.value === "button" && n.name?.value === name);
+    /** Verify the description with Playwright in both engines and with Chromium's native tree. */
+    const checkDescription = async (selector: string, name: string, text: string): Promise<void> => {
+      if (client) {
+        const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
+          nodes: Array<{ role?: { value: string }; name?: { value: string }; description?: { value: string } }>;
+        };
+        const button = nodes.find((n) => n.role?.value === "button" && n.name?.value === name);
+        assert.equal(button?.description?.value, text, "the tooltip description in Chromium's accessibility tree");
+      }
       // What `expect(locator).toHaveAccessibleDescription()` runs; `playwright`
       // has the matcher without the test runner's expect
-      const matcher = locator as unknown as {
+      const matcher = page.locator(selector) as unknown as {
         _expect: (name: string, options: object) => Promise<{ matches: boolean }>;
       };
       const { matches } = await matcher._expect("to.have.accessible.description", {
@@ -10613,7 +10638,7 @@ try {
         isNot: false,
         timeout: 1000,
       });
-      return { chrome: button?.description?.value, playwright: matches };
+      assert(matches, `the tooltip description matches "${text}" in Playwright`);
     };
 
     // ------------------------------------------------ tooltip
@@ -10703,10 +10728,11 @@ try {
     assert.equal(shown.aboveCover, true, "the tooltip is above the z-index 9999 sibling");
     check("tooltip top layer in a shadow root: shown on hover in its element's root, styled, at the unlayered position with the page scrolled, above z-index 9999");
 
-    // Leaving hides it: the hide delay, then the exit transition
+    // Leaving hides it after the 1.5 s delay, then the exit transition and the
+    // top-layer removal. 1,800 ms is past 1,500 + 150.
     const outside = await centerOf("pt-outside");
     await page.mouse.move(outside.x, outside.y);
-    await wait(400);
+    await wait(1800);
     const left = await tipState();
     // Focus shows it, blur hides it
     await page.evaluate(() => ((window as unknown as PopWin).__pop.root.getElementById("pt-save") as HTMLElement).focus());
@@ -10729,9 +10755,8 @@ try {
     );
     check("tooltip top layer in a shadow root: shown on focus, hidden on leave, blur and Escape, out of the top layer after");
 
-    const described = await description("#pt-save", "Save", "Save the file");
-    assert.deepEqual(described, { chrome: "Save the file", playwright: true }, "the target is described by the tooltip text");
-    check("tooltip: the target's accessible description is the text, in Chrome and in Playwright");
+    await checkDescription("#pt-save", "Save", "Save the file");
+    check("tooltip: the target's accessible description is the tooltip text");
 
     // Attributes: text in place, for in place, variant recreates
     const tipChanges = await page.evaluate(async () => {
@@ -10763,7 +10788,7 @@ try {
       property: "pt-save",
       save: "pt-tip",
     });
-    assert.deepEqual(await description("#pt-save", "Save", "Save to disk"), { chrome: "Save to disk", playwright: true });
+    await checkDescription("#pt-save", "Save", "Save to disk");
     check("tooltip: text and for change in place, variant recreates, the target property wins, the description follows");
 
     // ------------------------------------------------ snackbar
@@ -10839,13 +10864,13 @@ try {
     assert.deepEqual(await snackState(), { open: false, home: true, events: ["open", "close:api"] });
     check("snackbar top layer in a shadow root: shown in its element's root at the unlayered place, styled as the factory in light DOM");
 
-    // Over a modal dialog: Save inside it shows the snackbar, which opens
-    // inside the dialog, above it, and takes the action
+    // Activate Save by keyboard so it is the focus restoration target when
+    // the snackbar opens inside the modal and takes the action.
     await page.evaluate(() => {
       (window as unknown as PopWin).__pop.events.length = 0;
       (document.getElementById("ps-modal") as HTMLDialogElement).showModal();
     });
-    await page.locator("#ps-save").click();
+    await page.locator("#ps-save").press("Enter");
     await wait(500);
     const overModal = await page.evaluate(() => {
       const bar = (window as unknown as PopWin).__pop.root.getElementById("ps-bar") as Host;
@@ -11028,7 +11053,7 @@ try {
           closeInner: () => inner.close(),
         })[fn]();
       }, fn);
-    /** Where the surface is, whether it is on top at its action, and whether Chrome exposes its live region */
+    /** Where the surface is, whether it is on top at its action, and whether its live region is exposed */
     const where = async (): Promise<{ open: boolean; place: string; above: boolean; live: boolean; events: string[] }> => {
       const state = await page.evaluate(() => {
         const { root, events } = (window as unknown as PopWin).__pop;
@@ -11046,11 +11071,13 @@ try {
         }
         return { open: surface.matches(":popover-open"), place, above: !!hit && action.contains(hit), events: [...events] };
       });
+      // A closed one's node may linger in the tree.
+      if (!state.open) return { ...state, live: false };
+      if (!client) return { ...state, live: await page.getByRole("status").count() > 0 };
       const { nodes } = (await client.send("Accessibility.getFullAXTree")) as {
         nodes: Array<{ role?: { value: string }; ignored?: boolean }>;
       };
-      // Asked only while it shows: a closed one's node may linger in the tree
-      return { ...state, live: state.open && nodes.some((n) => n.role?.value === "status" && !n.ignored) };
+      return { ...state, live: nodes.some((n) => n.role?.value === "status" && !n.ignored) };
     };
 
     // 1. The modal it opened in closes: it goes home, still open and on top,
@@ -11255,7 +11282,7 @@ try {
       });
     };
     const openIt = async (): Promise<void> => {
-      await page.locator("#wrap").getByRole("button", { name: "Open", exact: true }).click();
+      await page.locator("#wrap").getByRole("button", { name: "Open", exact: true }).press("Enter");
       await wait(700);
     };
     /** The inner <dialog>, whether it is open and modal, and the host's reflected state. */
@@ -11325,7 +11352,7 @@ try {
 
       const stops: Array<{ inside: boolean; label: string }> = [];
       for (let i = 0; i < 6; i++) {
-        await page.keyboard.press(i % 3 === 2 ? "Shift+Tab" : "Tab");
+        await page.keyboard.press(i % 3 === 2 ? `Shift+${tabKey}` : tabKey);
         stops.push(await focus());
       }
       assert.ok(
@@ -11530,7 +11557,7 @@ try {
       });
       const reached: string[] = [];
       for (let i = 0; i < 4; i++) {
-        await page.keyboard.press("Tab");
+        await page.keyboard.press(tabKey);
         reached.push(await page.evaluate(() => {
           let active = document.activeElement;
           while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
@@ -11986,7 +12013,14 @@ try {
       await wait(300);
       const hovered = await visible();
       await page.mouse.move(600, 600);
-      await wait(400);
+      // The pointer leaving starts the 1.5 s hide. A 400 ms wait still saw the
+      // tooltip, so the focus read blamed no-show-on-focus. Wait until it is
+      // hidden, capped above that delay plus the 150 ms exit. The delay stays.
+      await settle(page, {
+        target: "#gt",
+        until: async () => !(await visible()),
+        untilCapMs: 2_200,
+      });
       await page.focus("#gtb");
       await wait(300);
       const focused = await visible();
@@ -12420,7 +12454,7 @@ try {
       document.documentElement.style.setProperty("--mtrl-sys-shape-corner-medium", "3px");
     });
     // the square button eases its corner; wait past the transition
-    await page.waitForTimeout(600);
+    await settle(page);
     const set = await read();
     await page.evaluate(() => {
       document.documentElement.style.removeProperty("--mtrl-ref-typeface-plain");
@@ -12688,7 +12722,8 @@ try {
   // asserts its own page errors above and fails its row on them.
   if (selected("a")) check("no page errors");
 } finally {
-  await browser.close();
+  if (webkitBrowser) await webkitBrowser.close();
+  else await browser.close();
   server.stop(true);
 }
 

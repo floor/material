@@ -85,18 +85,24 @@ describe('slider motion', () => {
     }
   });
 
-  test('under --settling the handle, the track and the indicator move on the default spatial spring', () => {
+  test('under --settling the handle, the track and the visible indicator move on the default spatial spring', () => {
     expect(value(`${root}--settling ${root}__handle`, 'transition')).toMatch(spring);
     expect(value(`${root}--settling ${root}__segment`, 'transition')).toMatch(/^left 450ms linear\(.*\), width 450ms linear\(/);
-    expect(value(`${root}--settling ${root}__value`, 'transition')).toMatch(spring);
     expect(value(`${root}--settling ${root}__value--visible`, 'transition')).toMatch(spring);
+    expect(value(`${root}--settling ${root}__value`, 'transition')).toBeUndefined();
   });
 
-  test('the value indicator grows from the handle: in 400ms decelerate, out 150ms accelerate', () => {
-    expect(value(`${root}__value`, 'scale')).toBe('0');
-    expect(value(`${root}__value`, 'transform-origin')).toBe('50% 100%');
-    expect(value(`${root}__value`, 'transition')).toMatch(/^scale 150ms cubic-bezier\(0\.3, 0, 0\.8, 0\.15\)/);
-    expect(value(`${root}__value--visible`, 'scale')).toBe('1');
-    expect(value(`${root}__value--visible`, 'transition')).toMatch(/^scale 400ms cubic-bezier\(0\.05, 0\.7, 0\.1, 1\)/);
+  test('the entire value indicator grows and rises around its bottom centre', () => {
+    const indicator = `${root}__value`;
+    const visible = `${indicator}--visible`;
+    expect(value(indicator, 'clip-path')).toBeUndefined();
+    expect(value(indicator, 'translate')).toBe('-50%');
+    expect(value(indicator, 'transform-origin')).toBe('50% 100%');
+    expect(value(indicator, 'transform')).toBe('translate(var(--mtrl-slider-value-entry-offset, 0px, 5px)) scale(0)');
+    expect(value(visible, 'transform')).toBe('translate(0, 0) scale(1)');
+    const motion = /^transform 250ms cubic-bezier\(0\.3, 0, 0, 1\), opacity 175ms linear\(/;
+    expect(value(indicator, 'transition')).toBe('transform 200ms cubic-bezier(0.3, 0, 0.8, 0.15), opacity 0s linear 200ms, visibility 0s linear 200ms');
+    expect(value(visible, 'transition')).toMatch(motion);
+    expect(value(`${root}--vertical ${indicator}`, 'transform-origin')).toBe('100% 50%');
   });
 });

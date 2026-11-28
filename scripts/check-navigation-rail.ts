@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import assert from 'node:assert/strict';
+import { webkit, type Page } from 'playwright';
 import { checkRailHeaderFab } from './check-rail-header-fab';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -73,6 +75,51 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   document.querySelector('#outside').onclick=()=>window.rail.expand();
   </script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
     } });
+async function checkModalHitWidth(page: Page, url: string, engine: string): Promise<string[]> {
+    const failures: string[] = [];
+    await page.goto(url);
+    await page.waitForFunction(() => !!window.mountRail);
+    for (const viewport of [900, 300]) {
+        await page.setViewportSize({ width: viewport, height: 720 });
+        for (const dir of ['ltr', 'rtl']) {
+            await page.evaluate(direction => {
+                document.documentElement.dir = direction;
+                window.mountRail({ layout: 'modal', expanded: true });
+            }, dir);
+            const dialog = page.locator('dialog[open]');
+            await dialog.waitFor();
+            await settle(page, { target: 'dialog[open]' });
+            const rail = await dialog.boundingBox();
+            const inbox = await dialog.locator('[data-id="inbox"]').boundingBox();
+            const sent = await dialog.locator('[data-id="sent"]').boundingBox();
+            const indicator = await dialog.locator('[data-id="inbox"] .mtrl-navigation-rail__indicator').boundingBox();
+            assert(rail && inbox && sent && indicator);
+
+            const expectedWidth = Math.min(280, viewport - 56);
+            const padding = await dialog.evaluate(el => {
+                const style = getComputedStyle(el);
+                return [style.paddingLeft, style.paddingRight].join('/');
+            });
+            const geometry = `${rail.width}/${inbox.width}/${sent.width}, padding ${padding}`;
+            const expected = `${expectedWidth}/${expectedWidth}/${expectedWidth}, padding 0px/0px`;
+            const label = `${engine} ${viewport}px ${dir}`;
+            if (geometry !== expected || inbox.x !== rail.x || sent.x !== rail.x)
+                failures.push(`${label}: expected full-width items (${expected}), measured ${geometry}`);
+            if (indicator.x - rail.x !== 34 || indicator.width !== expectedWidth - 68 || indicator.height !== 56)
+                failures.push(`${label}: indicator should keep its 34px inset and 56px height`);
+
+            await page.mouse.click(rail.x + 8, sent.y + sent.height / 2);
+            const leftSelects = await page.evaluate(() => window.rail.getActive() === 'sent');
+            await page.mouse.click(rail.x + rail.width - 8, inbox.y + inbox.height / 2);
+            const rightSelects = await page.evaluate(() => window.rail.getActive() === 'inbox');
+            if (!leftSelects || !rightSelects)
+                failures.push(`${label}: clicks at both rail edges should select their destination`);
+        }
+    }
+    if (failures.length === 0) console.log(`${engine}: modal rail destinations span 280px and 244px in LTR and RTL with unchanged indicators`);
+    return failures;
+}
+
 const browser = await launchChromium();
 try {
     // One page for both stylesheets: two pages rasterise text differently on
@@ -81,6 +128,18 @@ try {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     const urls = [`http://127.0.0.1:${server.port}/`, `http://127.0.0.1:${server.port}/?selective`];
+    const modalFailures: string[] = [];
+    const webkitBrowser = await webkit.launch({ headless: true });
+    try {
+        const webkitPage = await webkitBrowser.newPage({ reducedMotion: 'reduce' });
+        for (const url of urls) {
+            modalFailures.push(...await checkModalHitWidth(page, url, 'chromium'));
+            modalFailures.push(...await checkModalHitWidth(webkitPage, url, 'webkit'));
+        }
+    } finally {
+        await webkitBrowser.close();
+    }
+    assert.deepEqual(modalFailures, []);
     let count = 0;
     for (const expanded of [false, true])
         for (const direction of ['ltr', 'rtl'])
@@ -173,8 +232,7 @@ try {
         { id: 'dotlabel', label: 'Dotlabel', icon, badge: true, badgeLabel: 'New messages' },
         { id: 'link', label: 'Link', icon, badge: 5, href: '/x' },
     ] }), itemIcon);
-    await page.waitForTimeout(200);
-    const expected = ['Count, 8', 'Thousand, 1000', 'Tenthousand, 999+', 'Dot, New notification', 'Dotlabel, New messages', 'Link, 5', 'Open navigation'];
+    await settle(page);const expected = ['Count, 8', 'Thousand, 1000', 'Tenthousand, 999+', 'Dot, New notification', 'Dotlabel, New messages', 'Link, 5', 'Open navigation'];
     assert.deepEqual(await namesOf(page), expected, 'the badge\'s displayed label is in the name, capped as the badge caps it, the dot announcing New notification');
     // Placement, collapsed: the badges spec states the distance "from top
     // trailing icon corner to bottom leading badge corner" — 14x12dp for the
@@ -193,8 +251,7 @@ try {
             `${id === 'count' ? 'the large badge' : 'the small dot'} sits ${inset}x${under}dp from the icon's top trailing corner (spec), measured ${insetMeasured.toFixed(1)}x${underMeasured.toFixed(1)}`);
     }
     await page.evaluate(() => window.rail.expand());
-    await page.waitForTimeout(500);
-    assert.deepEqual(await namesOf(page), expected, 'expansion keeps the badged names');
+    await settle(page);assert.deepEqual(await namesOf(page), expected, 'expansion keeps the badged names');
     const badgeState = () => page.evaluate(() => {
         const item = document.querySelector('.mtrl-navigation-rail__item[data-id="count"]')!;
         const badge = item.querySelector('.mtrl-navigation-rail__badge');
@@ -213,11 +270,9 @@ try {
     elementPage.on('pageerror', (error) => elementErrors.push(error.message));
     await elementPage.goto(`${server.url.href}element`);
     await elementPage.waitForFunction(() => (window as unknown as { navigationElementsReady?: boolean }).navigationElementsReady === true);
-    await elementPage.waitForTimeout(80);
-    assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 1000'], 'a declared badge names its item through the shadow root; the dot announces New notification; a zero clears');
+    await settle(elementPage);assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 1000'], 'a declared badge names its item through the shadow root; the dot announces New notification; a zero clears');
     await elementPage.evaluate(() => document.querySelector('m-navigation-rail-item[value="spam"]')!.setAttribute('badge', '10000'));
-    await elementPage.waitForTimeout(120);
-    assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 999+'], 'an attribute change updates the capped name in place');
+    await settle(elementPage);assert.deepEqual(await namesOf(elementPage), ['Inbox', 'Trips, 8', 'Saved, New notification', 'Alerts', 'Spam, 999+'], 'an attribute change updates the capped name in place');
     assert.deepEqual(elementErrors, []);
     await elementPage.close();
 

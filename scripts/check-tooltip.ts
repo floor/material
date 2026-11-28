@@ -7,6 +7,7 @@ import { resolve } from "node:path";
 import { launchChromium } from "./browser-profile";
 import type { TooltipComponent, TooltipConfig, TooltipPosition } from "../src/components/tooltip/types";
 import { TOOLTIP_POSITIONS } from "../src/components/tooltip/constants";
+import { settle } from "./browser-settle";
 
 declare global {
   interface Window {
@@ -83,7 +84,7 @@ try {
         position, variant,
         text: variant === "rich" ? "Rich tooltip with two lines of text to show" : "Search, and filter",
       }), { variant, position });
-      await page.waitForTimeout(30);
+      await settle(page);
       const name = `${variant}-${mode}-${position}`;
       const seen = await page.evaluate(() => {
         const tooltip = document.querySelector(".mtrl-tooltip")!;
@@ -154,7 +155,7 @@ try {
     await page.waitForFunction(() => window.ready);
     for (const position of positions) {
       await page.evaluate(({ position }) => window.mountTooltip({ position, text: "Search, and filter" }), { position });
-      await page.waitForTimeout(30);
+      await settle(page);
       const seen = await page.evaluate(() => {
         const box = (element: Element) => {
           const r = element.getBoundingClientRect();
@@ -225,7 +226,7 @@ try {
       target.style.top = `${y}px`;
       window.mountTooltip({ position, text });
     }, { position, text, x, y });
-    await page.waitForTimeout(30);
+    await settle(page);
     return page.evaluate(() => {
       const box = (element: Element) => {
         const r = element.getBoundingClientRect();
@@ -358,7 +359,7 @@ try {
     await page.evaluate(({ position, layer }) => window.mountTooltip({
       position, layer, text: "Search, and filter",
     }), { position, layer });
-    await page.waitForTimeout(30);
+    await settle(page);
     return boxes();
   };
 
@@ -416,12 +417,12 @@ try {
       document.querySelector("#panel")!.scrollTop = 100;
       window.mountPanelTooltip({ position, layer, text: "Search, and filter" });
     }, { position, layer });
-    await page.waitForTimeout(30);
+    await settle(page);
     const before = await panelBox();
     // 80px keeps the target inside the panel's visible box, so no viewport
     // clamp fires and the section measures following, not clamping
     await page.evaluate(() => { document.querySelector("#panel")!.scrollTop = 180; });
-    await page.waitForTimeout(30);
+    await settle(page);
     const after = await panelBox();
     const moved = { dx: after.target.left - before.target.left, dy: after.target.top - before.target.top };
     const followed = { dx: after.tip.left - before.tip.left, dy: after.tip.top - before.tip.top };

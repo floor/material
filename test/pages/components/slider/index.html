@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en" data-theme="baseline" data-theme-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>slider</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+<style>
+  #sound-panel { display: grid; gap: 16px; width: 360px; max-width: 100%; }
+  #sound-panel h1 { margin: 0; font-size: 22px; line-height: 28px; }
+</style>
+</head>
+<body>
+<main id="sound-panel">
+  <h1>Sound</h1>
+</main>
+<script type="module">
+  import { createSlider } from "../../../../dist/index.js";
+
+  const panel = document.querySelector("#sound-panel");
+  if (new URLSearchParams(location.search).get("dir") === "rtl") panel.dir = "rtl";
+  for (const [id, label, value] of [["media-slider", "Media volume", 25], ["alarm-slider", "Alarm volume", 20]]) {
+    const slider = createSlider({ label, ariaLabel: label, value, showValue: true });
+    slider.element.id = id;
+    panel.append(slider.element);
+  }
+</script>
+<div id="indicator-motion">
+  <dl>
+    <dt>Scale on entry</dt><dd id="indicator-scale">—</dd>
+    <dt>Rise on entry</dt><dd id="indicator-rise">—</dd>
+    <dt>Maximum horizontal alignment error</dt><dd id="indicator-alignment">—</dd>
+    <dt>Exit scale, drop and midsize opacity</dt><dd id="indicator-exit">—</dd>
+    <dt>Transform timing</dt><dd id="indicator-timing">—</dd>
+  </dl>
+<script type="module">
+  const panel = document.querySelector("#sound-panel");
+  const scaleOutput = document.querySelector("#indicator-scale");
+  const riseOutput = document.querySelector("#indicator-rise");
+  const alignmentOutput = document.querySelector("#indicator-alignment");
+  const exitOutput = document.querySelector("#indicator-exit");
+  const timingOutput = document.querySelector("#indicator-timing");
+  let motionFrame = 0;
+  let exitFrame = 0;
+  let release;
+  const readTransform = ({ transform }) => {
+    return new DOMMatrixReadOnly(transform === "none" ? undefined : transform);
+  };
+
+  const transformDuration = ({ transitionProperty, transitionDuration }) => {
+    const index = transitionProperty.split(",").map(property => property.trim()).lastIndexOf("transform");
+    const durations = transitionDuration.split(",");
+    const time = index < 0 ? "" : durations[index % durations.length].trim();
+    return time ? `${parseFloat(time) * (time.endsWith("ms") ? 1 : 1000)} ms` : "—";
+  };
+
+  panel.addEventListener("pointerdown", event => {
+    const slider = event.target.closest(".mtrl-slider");
+    if (!slider) return;
+    cancelAnimationFrame(motionFrame);
+    cancelAnimationFrame(exitFrame);
+    release?.abort();
+    release = new AbortController();
+    const handle = slider.querySelector(".mtrl-slider__handle");
+    const indicator = slider.querySelector(".mtrl-slider__value");
+    const initial = readTransform(getComputedStyle(indicator));
+    let maximumError = 0;
+    let entranceDuration = "—";
+    timingOutput.textContent = "—";
+    const measure = () => {
+      const style = getComputedStyle(indicator);
+      const transform = readTransform(style);
+      entranceDuration = transformDuration(style);
+      timingOutput.textContent = `${entranceDuration} in`;
+      const pill = indicator.getBoundingClientRect();
+      const thumb = handle.getBoundingClientRect();
+      maximumError = Math.max(maximumError, Math.abs(pill.x + pill.width / 2 - thumb.x - thumb.width / 2));
+      scaleOutput.textContent = `${initial.a.toFixed(2)} → ${transform.a.toFixed(2)}`;
+      riseOutput.textContent = `${(initial.f - transform.f).toFixed(2)} px`;
+      alignmentOutput.textContent = `${maximumError.toFixed(2)} px`;
+      if (indicator.getAnimations().some(animation => animation.playState === "running")) {
+        motionFrame = requestAnimationFrame(measure);
+      }
+    };
+    motionFrame = requestAnimationFrame(measure);
+    document.addEventListener("pointerup", () => {
+      exitOutput.textContent = "Waiting for the value to dismiss";
+      let midpoint;
+      const measureExit = () => {
+        const style = getComputedStyle(indicator);
+        const transform = readTransform(style);
+        if (!indicator.classList.contains("mtrl-slider__value--visible")) {
+          const distance = Math.abs(transform.a - 0.5);
+          if (style.visibility === "visible" && transform.a > 0 && transform.a < 1 &&
+              (!midpoint || distance < midpoint.distance)) {
+            midpoint = { distance, opacity: Number(style.opacity) };
+          }
+          const opacity = midpoint ? `${Math.round(midpoint.opacity * 100)}%` : "—";
+          timingOutput.textContent = `${entranceDuration} in · ${transformDuration(style)} out`;
+          exitOutput.textContent = `${transform.a.toFixed(2)} · ${transform.f.toFixed(2)} px · ${opacity}`;
+        }
+        if (style.visibility !== "hidden") exitFrame = requestAnimationFrame(measureExit);
+      };
+      exitFrame = requestAnimationFrame(measureExit);
+    }, { once: true, signal: release.signal });
+  });
+</script>
+</div>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createSlider } from "../../../../dist/index.js";
+await initPage({ name: "slider" });
+const main = document.getElementById("tp-main");
+
+const sizes = ["xs", "s", "m", "l", "xl"];
+// The handle's range, and with it every tick, sits 6 px inside the track's
+// ends at every size — not the corner radius (owner decision, 2026-11-25).
+const END_INSET = 6;
+
+// One slider cell: the slider, the tick guides drawn over it (green lines,
+// red at the ends) and a per-slider readout of the handle against its tick.
+const items = [];
+const cell = (body, config, group = "root") => {
+  const box = document.createElement("div");
+  box.style.cssText = "position:relative;padding:20px 16px";
+  body.append(box);
+  if (config.vertical) box.style.height = "260px";
+  if (config.direction) box.dir = config.direction;
+  const { vertical, direction, topToBottom, press, ...sliderConfig } = config;
+  const slider = createSlider({
+    ...sliderConfig,
+    ...(vertical ? { orientation: "vertical" } : {}),
+    ...(topToBottom ? { topToBottom: true } : {}),
+  });
+  box.append(slider.element);
+  const guides = document.createElement("div");
+  guides.className = "tp-guides";
+  box.append(guides);
+  const readout = document.createElement("div");
+  readout.className = "tp-readout";
+  box.append(readout);
+  const item = { slider, box, guides, readout, config, group };
+  items.push(item);
+  return item;
+};
+
+const verticalOf = (element) => element.classList.contains("mtrl-slider--vertical");
+const topToBottomOf = (element) => element.classList.contains("mtrl-slider--top-to-bottom");
+
+/** The handle's centre and the tick stops, as distances from the track's start. */
+const geometryOf = (item) => {
+  const { slider, config } = item;
+  const element = slider.element;
+  const track = element.querySelector(".mtrl-slider__track");
+  const handle = element.querySelector('[role="slider"]');
+  if (!track || !handle) return null;
+  const vertical = verticalOf(element);
+  const topToBottom = topToBottomOf(element);
+  const rtl = getComputedStyle(element).direction === "rtl";
+  const t = track.getBoundingClientRect();
+  const hb = handle.getBoundingClientRect();
+  const along = (x, y) => {
+    if (vertical) return topToBottom ? y - t.top : t.bottom - y;
+    return rtl ? t.right - x : x - t.left;
+  };
+  const handleAt = along(hb.x + hb.width / 2, hb.y + hb.height / 2);
+  const min = config.min ?? 0;
+  const max = config.max ?? 100;
+  const step = config.step ?? 1;
+  const length = vertical ? t.height : t.width;
+  const span = length - 2 * END_INSET;
+  const count = Math.max(1, Math.round((max - min) / step));
+  const stops = [...Array(count + 1)].map((_, k) => END_INSET + (span * k) / count);
+  const nearest = stops.reduce((best, s) => (Math.abs(s - handleAt) < Math.abs(best - handleAt) ? s : best), stops[0]);
+  // The rendered state, not the config: a slider may have its ticks turned on
+  // after creation, and the guides must follow what is painted.
+  const ticksElement = element.querySelector(".mtrl-slider__ticks");
+  const ticks = ticksElement ? !ticksElement.hidden : false;
+  return { element, t, hb, vertical, topToBottom, rtl, handleAt, stops, nearest, length, ticks };
+};
+
+const drawGuides = (item) => {
+  const g = geometryOf(item);
+  if (!g) return null;
+  const { box, guides } = item;
+  const bb = box.getBoundingClientRect();
+  const originX = g.t.left - bb.left;
+  const originY = g.t.top - bb.top;
+  guides.replaceChildren();
+  for (let k = 0; k < g.stops.length; k++) {
+    const guide = document.createElement("div");
+    guide.className = "tp-guide" + (k === 0 || k === g.stops.length - 1 ? " tp-guide-end" : "");
+    if (g.vertical) {
+      guide.style.top = (originY + (g.topToBottom ? g.stops[k] : g.t.height - g.stops[k])) + "px";
+      guide.style.left = (originX - 12) + "px";
+      guide.style.width = "28px";
+      guide.style.height = "1px";
+    } else {
+      guide.style.left = (originX + (g.rtl ? g.t.width - g.stops[k] : g.stops[k])) + "px";
+      guide.style.top = (originY + g.t.height / 2 - 14) + "px";
+      guide.style.height = "28px";
+    }
+    guides.append(guide);
+  }
+  const delta = Math.abs(g.nearest - g.handleAt);
+  const endMiss = Math.min(Math.abs(g.handleAt - END_INSET), Math.abs(g.length - END_INSET - g.handleAt));
+  return {
+    delta,
+    endMiss,
+    readout: g.ticks
+      ? `handle ${g.handleAt.toFixed(1)} · tick ${g.stops.indexOf(g.nearest)} ${g.nearest.toFixed(1)} · |Δ| ${delta.toFixed(2)} px`
+      : `handle ${g.handleAt.toFixed(1)} · end inset ${endMiss.toFixed(2)} px (no ticks)`,
+  };
+};
+
+const worstOf = (group) => {
+  let worst = 0;
+  const per = [];
+  for (const item of items) {
+    if (item.group !== group) continue;
+    const result = drawGuides(item);
+    if (!result) continue;
+    worst = Math.max(worst, result.delta);
+    per.push(result.readout);
+  }
+  return { worst, text: per.join(" · ") };
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Discrete tick scale, every size",
+  lookFor: "the handle's centre sits on its tick; the green guides mark every tick, red at the ends",
+  expected: "|Δ| under 0.5 px, with the first and last ticks 6 px inside the track",
+  measure: () => {
+    const { worst, text } = worstOf("variants");
+    return `${text} · worst |Δ| ${worst.toFixed(2)} px`;
+  },
+  mount: (body) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-direction:column;gap:8px";
+    body.append(row);
+    for (const size of sizes) {
+      const label = document.createElement("p");
+      label.style.cssText = "margin:0;font-size:12px;color:var(--mtrl-sys-color-on-surface-variant,#555)";
+      label.textContent = size.toUpperCase();
+      row.append(label);
+      cell(row, { min: 0, max: 10, value: 4, ticks: true, size }, "variants");
+    }
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Pressed and focused handle",
+  lookFor: "the pressed handle's state layer; the focus ring",
+  expected: "the layers do not clip at the track's ends; a press anywhere narrows the handle to 2 dp",
+  measure: () => {
+    const item = items.find((entry) => entry.group === "states" && entry.config.press);
+    if (!item) return "no press sample";
+    const handle = item.slider.element.querySelector('[role="slider"]');
+    return `bar ${getComputedStyle(handle, "::before").width} · pressed ${handle.classList.contains("mtrl-slider__handle--pressed")}`;
+  },
+  mount: (body) => {
+    const focused = cell(body, { min: 0, max: 10, value: 2 }, "states");
+    const pressed = cell(body, { min: 0, max: 10, value: 8, ticks: true, press: true }, "states");
+    // Nothing takes focus on load: the first arrow key would land in the
+    // slider before the reader chose a control. The sample focuses on a press.
+    const focusButton = document.createElement("button");
+    focusButton.textContent = "Focus the sample";
+    focusButton.addEventListener("click", () => focused.slider.element.querySelector('[role="slider"]')?.focus({ preventScroll: false }));
+    const pressButton = document.createElement("button");
+    pressButton.textContent = "Press the sample";
+    const sampleHandle = () => pressed.slider.element.querySelector('[role="slider"]');
+    pressButton.addEventListener("pointerdown", () => sampleHandle()?.classList.add("mtrl-slider__handle--pressed"));
+    // The release may land anywhere: a pointer lifted off the button never
+    // reaches it, and the sample would stay pressed.
+    const release = () => sampleHandle()?.classList.remove("mtrl-slider__handle--pressed");
+    document.addEventListener("pointerup", release);
+    document.addEventListener("pointercancel", release);
+    const controls = document.createElement("div");
+    controls.style.cssText = "display:flex;gap:8px;margin:0 0 8px";
+    controls.append(focusButton, pressButton);
+    body.prepend(controls);
+  },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Value indicator entrance and exit",
+  lookFor: "press either handle, or the track after the pill has hidden: the whole pill grows from scale 0 to 1, rises 5 px, and stays horizontally centred within 0.5 px",
+  expected: "the pill grows in 250 ms, lingers for one second after release, then visibly shrinks and drops 5 px in 200 ms",
+  measure: () => {
+    const text = (id) => document.getElementById(id)?.textContent ?? "—";
+    return `scale ${text("indicator-scale")} · rise ${text("indicator-rise")} · alignment ${text("indicator-alignment")} · exit ${text("indicator-exit")} · timing ${text("indicator-timing")}`;
+  },
+  mount: (body) => {
+    // The Sound script has already filled #sound-panel, and the readout is
+    // already listening. Moving them here puts that demo in this section
+    // instead of ahead of Variants & sizes.
+    const panel = document.getElementById("sound-panel");
+    const readout = document.getElementById("indicator-motion");
+    if (panel) body.append(panel);
+    if (readout) body.append(readout);
+  },
+});
+scenario(interaction, {
+  title: "Keyboard, drag, and a press anywhere",
+  lookFor: "the arrows step a tick; the drag follows the pointer; a press on the track narrows the handle",
+  expected: "the value bubble reads the same as the handle position; the bar is 4 px at rest and 2 px while held",
+  measure: () => {
+    const item = items.filter((entry) => entry.group === "interaction").at(-1);
+    const result = item ? drawGuides(item) : null;
+    if (!result) return "no slider mounted";
+    const handle = item.slider.element.querySelector('[role="slider"]');
+    return `${result.readout} · bar ${getComputedStyle(handle, "::before").width}`;
+  },
+  mount: (body) => {
+    cell(body, { min: 0, max: 10, value: 6, ticks: true, size: "m" }, "interaction");
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "The ends, both axes, both directions",
+  lookFor: "the handle's centre 6 px inside the track at both ends; vertical and RTL guide lines follow",
+  expected: "the handle sits on the first and last tick, and a continuous slider keeps the same 6 px",
+  measure: () => {
+    const { worst, text } = worstOf("edge");
+    return `${text} · worst |Δ| ${worst.toFixed(2)} px`;
+  },
+  mount: (body) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-direction:column;gap:8px";
+    body.append(row);
+    cell(row, { min: 0, max: 10, value: 0, ticks: true, size: "xs" }, "edge");
+    cell(row, { min: 0, max: 10, value: 10, ticks: true, size: "xl" }, "edge");
+    cell(row, { min: 0, max: 100, value: 100, size: "xl" }, "edge");
+    cell(row, { min: 0, max: 100, value: 100, size: "xl", direction: "rtl" }, "edge");
+    cell(row, { min: 20, max: 120, value: 120, step: 10, ticks: true, size: "m" }, "edge");
+    cell(row, { min: 0, max: 10, value: 10, ticks: true, size: "m", vertical: true }, "edge");
+    cell(row, { min: 0, max: 10, value: 0, ticks: true, size: "m", vertical: true, topToBottom: true }, "edge");
+    // Ticks turned on after the slider was made: the handle was placed first.
+    const late = cell(row, { min: 0, max: 10, value: 0, size: "m" }, "edge");
+    setTimeout(() => late.slider.showTicks(true), 400);
+  },
+});
+</script>
+</body>
+</html>

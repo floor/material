@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import { parseHTML } from "linkedom";
 import "./fixtures/ssr-css";
 import { renderElement } from "../src/ssr/index.ts";
@@ -89,8 +90,7 @@ try {
     assert.deepEqual(order.sources, order.adopted, `${fixture.element}: inline source/adoption order`);
     if (!fallback) assert.equal(ssr["host/shadow/css"], order.expected, `${fixture.element}: inline sheet is the pruned join`);
     await page.evaluate(async () => { for (let frame = 0; frame < 3; frame++) await new Promise(requestAnimationFrame); });
-    await page.waitForTimeout(400);
-    const settled = await page.evaluate(ids => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids), authoredIds);
+    await settle(page);const settled = await page.evaluate(ids => window.ssrParity.snapshot(document.querySelector("main")!.firstElementChild!, ids), authoredIds);
     const row = { element: fixture.element, equal: 0, exceptions: 0, failures: [] as Array<Difference & { phase: string }> };
     for (const [phase, actual] of (fallback ? [] : [["immediate", immediate], ["settled", settled]]) as Array<[string, Snapshot]>) {
       const differences = compare(ssr, actual);

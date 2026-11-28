@@ -19,6 +19,7 @@
  * clipped.
  */
 import assert from "node:assert/strict";
+import { settle } from "./browser-settle";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -224,8 +225,7 @@ try {
         }
         // Decided once: nothing moves while it is open.
         const before = JSON.stringify(state.box);
-        await page.waitForTimeout(350);
-        const after = JSON.stringify((await listState(page)).box);
+        await settle(page);const after = JSON.stringify((await listState(page)).box);
         assert.equal(after, before, `${label}: the list does not move while open`);
       }
     }
@@ -300,8 +300,7 @@ try {
         return h.box(h.root().querySelector(".mtrl-fab-menu__close") as HTMLElement);
       });
       const closeOpen = await closeBox();
-      await page.waitForTimeout(350);
-      assert.equal(JSON.stringify((await listState(page)).box), JSON.stringify(state.box), `${label}: the shifted list does not move while open`);
+      await settle(page);assert.equal(JSON.stringify((await listState(page)).box), JSON.stringify(state.box), `${label}: the shifted list does not move while open`);
       await page.evaluate(() => { (window as unknown as { h: { fab: () => HTMLElement } }).h.fab().click(); });
       const closeShut = await closeBox();
       assert.deepEqual(closeShut, closeOpen, `${label}: the close holds its position through the shift and the close`);
@@ -499,8 +498,7 @@ try {
     await page.evaluate((direction) => { document.documentElement.dir = direction; }, dir);
     await mountCorner(page, corner, "factory");
     await openFab(page);
-    await page.waitForTimeout(700);
-    const track = await page.evaluate(async () => {
+    await settle(page);const track = await page.evaluate(async () => {
       const h = (window as unknown as { h: { fab: () => HTMLElement; root: () => HTMLElement } }).h;
       const root = h.root();
       const labels = Array.from(root.querySelectorAll<HTMLElement>(".mtrl-fab-menu__item-text"));

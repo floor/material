@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 /** Build first. Check a packed production Vite app and compare CSS in Chromium. */
 import assert from "node:assert/strict";
+import { settle } from "./browser-settle";
 import { mkdir, readFile, writeFile, copyFile, rm, symlink } from "node:fs/promises";
 import { resolve, join } from "node:path";
-import { gzipSync } from "node:zlib";
 import { build, preview, type Manifest } from "vite";
 import { chromium, type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
-import { CONSUMER_INITIAL_GZIP } from "./budgets";
+import { measureConsumerSizes } from "./size-fixtures";
 import { createPackageFixture } from "./package-fixture";
 
 const fixture = await createPackageFixture();
@@ -34,8 +34,6 @@ const scenarios = [
   { name: "dialog", component: "dialog" },
   { name: "snackbar", component: "snackbar" },
 ];
-/** The 2025 role table's own error text; only `material/theme/2025` reaches it. */
-const SPEC_2025_MARKER = "Attempting to extend color";
 try {
   // The types-only JSX entries resolve from the installed package, through its
   // exports: a.tsx per framework opts in and uses a bare tag.
@@ -120,68 +118,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
     "names the README imported from material/core/compose/features that material/core/compose does not export");
   console.log(`material/core/compose exports what was taught from core/compose/features: ${taught.join(", ")}`);
 
-  // Library mode retains exports for measurement; an HTML fixture below tests
-  // actual application mode, CSS extraction, network loading, and rendering.
-  const sizes: Record<string, { initialGzip: number; totalGzip: number }> = {};
-  // text field 9,600 to 9,700 with no headroom left: next c7858870 measures 9,604 locally
-  // (the multiline SSR fix), the forward merge 9,603; CI read just under 9,600.
-  // text field 9,000 to 9,600 with the asterisk, the live error, the trailing button:
-  // 8,953 to 9,520 against 7cd57a6.
-  // addClass from its subpath since 3.0.0 removed it from the root
-  // addClass 603 and button 8,447 tightened before 3.0.0 against 3d942098, Node 22.23.3 / npm 10.9.9.
-  // addClass 603; 100 B floor, 750 against b9dab36e, Node 22.23.3 / npm 10.9.9.
-  // The nearest-boundary direction module costs the packed text field 9,875
-  // against 9,700; measured +1% (9,974) rounded to the next 50 is 10,000.
-  // The same module costs the packed button 8,595-8,597 across two local runs
-  // against 8,550; measured +1% (8,683) rounded to the next 50 is 8,700.
-  for (const [name, code, budget] of [
-    ["addClass", "export { addClass } from 'material/core/dom';", CONSUMER_INITIAL_GZIP.addClass],
-    ["text-field", "export { createTextField } from 'material';", CONSUMER_INITIAL_GZIP["text-field"]],
-    ["button", "export { createButton } from 'material';", CONSUMER_INITIAL_GZIP.button],
-    // Runtime colour: the scheme alone, and the scheme with the image path a
-    // page also asks for when its source colour comes from an image.
-    ["theme", "export { createScheme, applyScheme } from 'material/theme';", CONSUMER_INITIAL_GZIP.theme],
-    ["theme-image", "export { createScheme, applyScheme } from 'material/theme';\nexport { sourceColorFromImage } from 'material/theme/image';", CONSUMER_INITIAL_GZIP["theme-image"]],
-    // The opt-in 2025 colour spec: the same scheme, from its own entry.
-    ["theme-2025", "export { createScheme, applyScheme } from 'material/theme/2025';", CONSUMER_INITIAL_GZIP["theme-2025"]],
-    ["theme-2025-image", "export { createScheme, applyScheme } from 'material/theme/2025';\nexport { sourceColorFromImage } from 'material/theme/image';", CONSUMER_INITIAL_GZIP["theme-2025-image"]],
-  ] as const) {
-    const entry = join(directory, `${name}.ts`);
-    await writeFile(entry, code);
-    const result = await build({
-      root: directory, configFile: false, envFile: false, logLevel: "error",
-      build: { write: false, minify: true, lib: { entry, formats: ["es"] } },
-    });
-    assert(!("on" in result), "Unexpected Vite watcher");
-    const outputs = (Array.isArray(result) ? result : [result]).flatMap(output => output.output);
-    const chunks = outputs.filter(output => output.type === "chunk");
-    const initial = new Set<string>();
-    const visit = function visit(filename: string) {
-      if (initial.has(filename)) return;
-      initial.add(filename);
-      const chunk = chunks.find(chunk => chunk.fileName === filename);
-      assert(chunk, `Missing Vite chunk: ${filename}`);
-      chunk.imports.forEach(visit);
-    }
-    chunks.filter(chunk => chunk.isEntry).forEach(chunk => visit(chunk.fileName));
-    sizes[name] = { initialGzip: 0, totalGzip: 0 };
-    for (const chunk of chunks) {
-      const size = gzipSync(chunk.code, { level: 9 }).length;
-      sizes[name].totalGzip += size;
-      if (initial.has(chunk.fileName)) sizes[name].initialGzip += size;
-    }
-    assert(sizes[name].initialGzip < budget, `${name} Vite initial gzip exceeds ${budget}: ${sizes[name].initialGzip}`);
-    // The plain entry must not ship the 2025 spec, and the 2025 entry must: a
-    // tree-shaking regression and a broken registration read the same in the
-    // size row otherwise. The marker is spec_extensions.js's own error text,
-    // which only the 2025 role table reaches.
-    const chunkText = chunks.map(chunk => chunk.code).join("\n");
-    if (name === "theme") assert(!chunkText.includes(SPEC_2025_MARKER), "the plain theme entry ships the 2025 colour spec");
-    if (name === "theme-2025") assert(chunkText.includes(SPEC_2025_MARKER), "the 2025 theme entry does not ship the 2025 colour spec");
-    if (name === "button") assert(chunks.some(chunk => !initial.has(chunk.fileName)), "Vite did not split lazy progress");
-  }
-  console.log("Vite packed-consumer sizes:");
-  console.table(sizes);
+  const { sizes } = await measureConsumerSizes(directory);
 
   await copyFile("test/browser/fixture.ts", join(directory, "fixture.ts"));
   await copyFile("test/browser/fixture.css", join(directory, "fixture.css"));
@@ -301,7 +238,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
   await flatPage.goto(`${origin}/menu.html`);
   await flatPage.locator('body[data-ready="true"]').waitFor();
   await flatPage.getByRole("menuitem", { name: "Copy" }).waitFor();
-  await flatPage.waitForTimeout(300);
+  await flatPage.waitForTimeout(300); // stays: a chunk request lands over the network
   assert(!flatRequested.has(submenuChunk), "A menu without nested items requested the submenu chunk");
   const afterSetItems = submenuRequested(flatPage);
   await flatPage.evaluate(() => (window as unknown as { nest: () => void }).nest());
@@ -387,7 +324,7 @@ console.log(JSON.stringify(${JSON.stringify(taught)}.filter((name) => typeof com
       if (settled && JSON.stringify(full) === JSON.stringify(selective) && !fullPNG.equals(selectivePNG)) {
         await writeFile(join(artifacts, `${label}-first-full.png`), fullPNG);
         await writeFile(join(artifacts, `${label}-first-selective.png`), selectivePNG);
-        await pages[0].waitForTimeout(250);
+        await settle(pages[0]);
         [fullPNG, selectivePNG] = await capture();
         if (fullPNG.equals(selectivePNG)) {
           retaken.push(label);

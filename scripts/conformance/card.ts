@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { CONFORMANCE_PROPERTIES, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part, type State } from "./measure";
+import { CONFORMANCE_PROPERTIES, createConformanceHarness, fixtureEngine, selectFixtureCases, type Case, type Part } from "./measure";
 import type { CardComponent, CardConfig } from "../../src/components/card/types";
 
 type CardCase = { variant: CardConfig["variant"]; dragged?: boolean; disabled?: boolean };
@@ -19,10 +19,7 @@ const mount: Case["mount"] = (mtrl, host, data) => {
   card.addContent(content);
   host.append(card.element);
   if (!card.element.classList.contains(`mtrl-card--${variant}`)) throw new Error(`Wrong card variant: ${variant}`);
-  if (dragged) {
-    card.element.dispatchEvent(new DragEvent("dragstart", { bubbles: true, dataTransfer: new DataTransfer() }));
-    if (!card.element.classList.contains("mtrl-card--dragging")) throw new Error("Card did not enter dragging state");
-  }
+  if (dragged && card.element.getAttribute("draggable") !== "true") throw new Error("Card is not draggable");
 };
 
 const parts: Part[] = [
@@ -38,8 +35,8 @@ const variants = ["elevated", "filled", "outlined"] as const;
 const cases: Case[] = variants.flatMap(variant =>
   (["light", "dark"] as const).flatMap(scheme => states.map(state => ({
     id: `${variant}/${scheme}/${state}`,
-    mount, scheme, properties: [...CONFORMANCE_PROPERTIES, "textAlign"],
-    state: state === "dragged" ? "rest" : state as State,
+    mount, scheme, settleTransitions: true, properties: [...CONFORMANCE_PROPERTIES, "textAlign"],
+    state,
     config: { variant, dragged: state === "dragged", disabled: state === "disabled" },
     parts: [...parts, ...(state === "hover" || state === "pressed" || state === "focus"
       ? [{ name: "activeState", selector: `.mtrl-card:${state === "pressed" ? "active" : state === "focus" ? "focus-visible" : "hover"}` }]

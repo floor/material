@@ -33,7 +33,7 @@ try {
       document.body.append(state.picker.element);
       state.picker.open();
     });
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(600); // stays: the transition's own timing is what this check asserts
   };
   const snapshot = async (mode?: string) => page.evaluate(mode => {
     if (mode) document.querySelector<HTMLElement>(`[data-type="${mode}"]`)!.click();
@@ -87,12 +87,12 @@ try {
         check(`${mode}: arriving digits scale to one and fade in`, !!scales(incoming) && !!fades(incoming, false) && !!incoming?.motions.some(m => (mode === "hour" ? m.frames[0].scale > 1 : m.frames[0].scale < 1) && m.frames.at(-1)!.scale === 1));
       }
       if (!reduced) {
-        await page.waitForTimeout(50);
+        await page.waitForTimeout(50); // stays: the transition's own timing is what this check asserts
         const mid = await snapshot();
         const leaving = mid.digits.find(g => g.first === oldFirst);
         check(`${mode}: leaving digits remain visible during fade`, !!leaving && leaving.opacity > 0 && leaving.opacity < 1 && (mode === "hour" ? leaving.scale < 1 : leaving.scale > 1));
       }
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(600); // stays: the transition's own timing is what this check asserts
       const settled = await snapshot();
       check(`${reduced}/${mode}: old digits cleaned up`, settled.digits.length === 1 && settled.digits[0].first === newFirst && settled.all === 0);
       markup.push(await page.locator(".mtrl-time-picker__dialog").evaluate(el => el.outerHTML));
@@ -129,33 +129,33 @@ try {
     const jitter = await snapshot();
     console.log(`jitter/${reduced}: ${JSON.stringify(jitter)}`);
     check(`${reduced}: one-pixel click noise keeps hand animation`, reduced ? jitter.all === 0 : jitter.hand > 0);
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(600); // stays: the transition's own timing is what this check asserts
     await mount();
     await page.mouse.click(three.x, three.y);
     if (!reduced) {
-      await page.waitForTimeout(40);
+      await page.waitForTimeout(40); // stays: the transition's own timing is what this check asserts
       await page.mouse.click(three.x, three.y);
       check("same value during a spring preserves motion", (await snapshot()).hand > 0);
     }
-    await page.waitForTimeout(reduced ? 30 : 220);
+    await page.waitForTimeout(reduced ? 30 : 220); // stays: the transition's own timing is what this check asserts
     const six = await point(await face.getAttribute("aria-label") === "Hour" ? "6 o'clock" : "30 minutes");
     await page.mouse.click(six.x, six.y);
     const second = await snapshot();
     check(`${reduced}: quick second selection animates`, reduced ? second.all === 0 : second.hand > 0);
     if (!reduced) {
-      await page.waitForTimeout(270);
+      await page.waitForTimeout(270); // stays: the transition's own timing is what this check asserts
       const mid = await snapshot();
       console.log(`second-selection-mid: ${JSON.stringify(mid)}`);
       check("earlier click cannot interrupt the later hour spring", await face.getAttribute("aria-label") === "Hour" && mid.hand > 0);
     }
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(600); // stays: the transition's own timing is what this check asserts
     check(`${reduced}: completed hour selection advances to minutes`, await face.getAttribute("aria-label") === "Minute");
     if (!reduced) {
       await mount();
       await page.mouse.click(three.x, three.y);
-      await page.waitForTimeout(100);
+      await page.waitForTimeout(100); // stays: the transition's own timing is what this check asserts
       await snapshot("hour");
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(500); // stays: the transition's own timing is what this check asserts
       check("explicit field choice cancels pending automatic mode switch", await face.getAttribute("aria-label") === "Hour" && (await snapshot()).hand === 0);
     }
     await mount();
@@ -166,7 +166,7 @@ try {
     await page.mouse.click(box.x + box.width / 2 + 75, box.y + box.height / 2);
     const track = await snapshot();
     check(`${reduced}: track click just after mode change animates hand`, reduced ? track.all === 0 : track.hand > 0);
-    await page.waitForTimeout(600);
+    await page.waitForTimeout(600); // stays: the transition's own timing is what this check asserts
     // Re-selecting a settled value has zero distance: it must stay still,
     // rather than invent a full turn to manufacture a transition.
     const angle = await face.evaluate(el => getComputedStyle(el).getPropertyValue("--mtrl-time-picker-angle"));
@@ -184,7 +184,7 @@ try {
   for (const mode of ["hour", "minute"]) {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await mount();
-    if (mode === "minute") { await snapshot("minute"); await page.waitForTimeout(600); }
+    if (mode === "minute") { await snapshot("minute"); await page.waitForTimeout(600); } // stays: the transition's own timing is what this check asserts
     for (const [value, delay] of [[3, 50], [12, 100], [8, 200], [2, 50], [10, 150], [1, 50]]) {
       await face.evaluate(el => {
         const read = () => parseFloat(getComputedStyle(el).getPropertyValue("--mtrl-time-picker-angle"));
@@ -207,7 +207,7 @@ try {
       check(`${mode}/${value}: retarget begins at the on-screen angle`, Math.abs(sample.before - sample.after) < 0.1);
       check(`${mode}/${value}: new destination takes shortest rendered path`, Math.abs(sample.target - sample.before) <= 180.1);
       check(`${mode}/${value}: retarget has active hand motion`, sample.active);
-      await page.waitForTimeout(delay);
+      await page.waitForTimeout(delay); // stays: the transition's own timing is what this check asserts
       const visible = await face.evaluate(el => parseFloat(getComputedStyle(el).getPropertyValue("--mtrl-time-picker-angle")));
       check(`${mode}/${value}: visible hand moves toward new number`, Math.abs(nearest) < 0.1 || (visible - sample.before) * nearest > 0);
       console.log(`retarget/${mode}/${value}/${delay}ms: ${JSON.stringify({ ...sample, visible, nearest })}`);

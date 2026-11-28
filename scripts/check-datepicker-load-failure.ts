@@ -97,7 +97,7 @@ try {
       return event.defaultPrevented;
     });
     check(`${intent}: the failed modal releases Escape`, escaped, false);
-    await page.waitForTimeout(50);
+    await page.waitForTimeout(50); // stays: the window in which no retry may happen
     check(`${intent}: no automatic retry or duplicate import`, requests, 1);
     await page.evaluate(() => { const lab = window as unknown as LabWindow; lab.picker.close(); lab.picker.open(); });
     // Browsers may cache the failed module URL. Either a successful retry or a
