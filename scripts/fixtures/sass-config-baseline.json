@@ -402,7 +402,7 @@
     "core/utils/mobile.js": "819fba14207b8f6bcd650a2fc4110a8007ba9e0f6a6e47947626d97b02de8fca",
     "core/utils/object.js": "f65e24ccabb49db6eb901006a6d03b25d8f99ea2bda6ccce6b72aecbb5206106",
     "core/utils/performance.js": "b7da45052a06e97b1fee4f47aa842eb1d3ef05a9518e6ec5dd0f53e1ad2a5b0c",
-    "core/utils/theme.js": "1142ebb48ce17750ae1180fa4ec757228a57a5292e65380dc8f53f8aa7e15fb2",
+    "core/utils/theme.js": "345ffd184217edf8166c16bdc4d8a69f2cbde69b55a321fb37a3ddd1019efefe",
     "core/utils/url.js": "8aeaaa74dfe47b4b6cfb7516a1facb0604899af3739ab918885dadc9a22d6dd9",
     "core/utils/warn.js": "2d0cf196d6b966e063e6a901946ebb6daf041a84b3d266c2923fb18189622762",
     "elements/adapter.js": "1a372ed526c2869c3dfbb782fc8297f38632ef0b2efb77ef9f2c48b6c61d10d7",
