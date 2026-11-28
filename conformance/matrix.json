@@ -19363,7 +19363,7 @@
             "value": "52dp",
             "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
             "section": "Density",
-            "read": "2026-11-26"
+            "read": "2026-11-28"
           },
           "compose": {
             "value": null,
@@ -19373,14 +19373,14 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "56px",
+            "value": "52px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
-          "note": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+          "note": "An explicit density reduces the 56 dp default by 4 dp per step.",
           "issue": null
         },
         {
@@ -19394,7 +19394,7 @@
             "value": "48dp",
             "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
             "section": "Density",
-            "read": "2026-11-26"
+            "read": "2026-11-28"
           },
           "compose": {
             "value": null,
@@ -19404,14 +19404,14 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "56px",
+            "value": "48px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
-          "note": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+          "note": "An explicit density reduces the 56 dp default by 4 dp per step.",
           "issue": null
         },
         {
@@ -19425,7 +19425,7 @@
             "value": "44dp",
             "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
             "section": "Density",
-            "read": "2026-11-26"
+            "read": "2026-11-28"
           },
           "compose": {
             "value": null,
@@ -19435,14 +19435,138 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "56px",
+            "value": "44px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
-          "note": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+          "note": "An explicit density reduces the 56 dp default by 4 dp per step.",
+          "issue": null
+        },
+        {
+          "id": "split-button/hit-target-height/filled-s-leading",
+          "property": "Centred pointer target height",
+          "aspect": "size",
+          "variant": "filled, size s, leading",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "48dp minimum",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Target areas",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "Measure the part of the pointer target that extends equally above and below the visual centre.",
+          "issue": null
+        },
+        {
+          "id": "split-button/hit-target-height/filled-s-trailing",
+          "property": "Centred pointer target height",
+          "aspect": "size",
+          "variant": "filled, size s, trailing",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "48dp minimum",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Target areas",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "Measure the part of the pointer target that extends equally above and below the visual centre.",
+          "issue": null
+        },
+        {
+          "id": "split-button/hit-target-height/filled-xs-leading",
+          "property": "Centred pointer target height",
+          "aspect": "size",
+          "variant": "filled, size xs, leading",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "48dp minimum",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Target areas",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "Measure the part of the pointer target that extends equally above and below the visual centre.",
+          "issue": null
+        },
+        {
+          "id": "split-button/hit-target-height/filled-xs-trailing",
+          "property": "Centred pointer target height",
+          "aspect": "size",
+          "variant": "filled, size xs, trailing",
+          "state": "rest",
+          "density": 0,
+          "spec": {
+            "value": "48dp minimum",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Target areas",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "Measure the part of the pointer target that extends equally above and below the visual centre.",
           "issue": null
         },
         {

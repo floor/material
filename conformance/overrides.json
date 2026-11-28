@@ -2029,30 +2029,66 @@
     }
   },
   "split-button/height/filled-m/density-minus-1": {
-    "reason": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+    "reason": "An explicit density reduces the 56 dp default by 4 dp per step.",
     "spec": {
       "value": "52dp",
       "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
       "section": "Density",
-      "read": "2026-11-26"
+      "read": "2026-11-28"
     }
   },
   "split-button/height/filled-m/density-minus-2": {
-    "reason": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+    "reason": "An explicit density reduces the 56 dp default by 4 dp per step.",
     "spec": {
       "value": "48dp",
       "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
       "section": "Density",
-      "read": "2026-11-26"
+      "read": "2026-11-28"
     }
   },
   "split-button/height/filled-m/density-minus-3": {
-    "reason": "The website density step is 4 dp from the 56 dp base. The release has no density scale input.",
+    "reason": "An explicit density reduces the 56 dp default by 4 dp per step.",
     "spec": {
       "value": "44dp",
       "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
       "section": "Density",
-      "read": "2026-11-26"
+      "read": "2026-11-28"
+    }
+  },
+  "split-button/hit-target-height/filled-s-leading": {
+    "reason": "Measure the part of the pointer target that extends equally above and below the visual centre.",
+    "spec": {
+      "value": "48dp minimum",
+      "url": "https://m3.material.io/components/buttons/specs",
+      "section": "Target areas",
+      "read": "2026-11-28"
+    }
+  },
+  "split-button/hit-target-height/filled-s-trailing": {
+    "reason": "Measure the part of the pointer target that extends equally above and below the visual centre.",
+    "spec": {
+      "value": "48dp minimum",
+      "url": "https://m3.material.io/components/buttons/specs",
+      "section": "Target areas",
+      "read": "2026-11-28"
+    }
+  },
+  "split-button/hit-target-height/filled-xs-leading": {
+    "reason": "Measure the part of the pointer target that extends equally above and below the visual centre.",
+    "spec": {
+      "value": "48dp minimum",
+      "url": "https://m3.material.io/components/buttons/specs",
+      "section": "Target areas",
+      "read": "2026-11-28"
+    }
+  },
+  "split-button/hit-target-height/filled-xs-trailing": {
+    "reason": "Measure the part of the pointer target that extends equally above and below the visual centre.",
+    "spec": {
+      "value": "48dp minimum",
+      "url": "https://m3.material.io/components/buttons/specs",
+      "section": "Target areas",
+      "read": "2026-11-28"
     }
   },
   "split-button/menu-icon-offset/filled-l/rest": {

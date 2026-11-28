@@ -60,10 +60,12 @@ describe('split button stylesheet', () => {
     expect(value('.mtrl-split-button', 'align-items')).toBe('stretch');
   });
 
-  test('heights follow the button scale', () => {
+  test('heights follow the button scale and inherited density', () => {
     const heights: Record<string, string> = { xs: '32px', s: '40px', m: '56px', l: '96px', xl: '136px' };
     for (const [size, height] of Object.entries(heights)) {
-      expect(value(`.mtrl-split-button--${size} .mtrl-button`, 'height')).toBe(height);
+      const expected = `max(32px, ${height} + 4px * var(--mtrl-density, 0))`;
+      expect(value(`.mtrl-split-button--${size} .mtrl-button`, 'height')).toBe(expected);
+      expect(value(`.mtrl-split-button--${size} .mtrl-button`, 'min-height')).toBe(expected);
     }
   });
 
@@ -74,9 +76,11 @@ describe('split button stylesheet', () => {
     // The pill is a custom property, so a state or a direction changes only
     // values and the physical pairs below keep choosing the sides.
     const outer: Record<string, string> = { xs: '16px', s: '20px', m: '28px', l: '48px', xl: '68px' };
-    expect(value('.mtrl-split-button', '--mtrl-split-button-pill')).toBe('20px');
+    expect(value('.mtrl-split-button', '--mtrl-split-button-pill')).toBe('max(16px, 20px + 2px * var(--mtrl-density, 0))');
     for (const [size, corner] of Object.entries(outer)) {
-      expect(value(`.mtrl-split-button--${size}`, '--mtrl-split-button-pill')).toBe(corner);
+      expect(value(`.mtrl-split-button--${size}`, '--mtrl-split-button-pill')).toBe(
+        `max(16px, ${corner} + 2px * var(--mtrl-density, 0))`,
+      );
     }
     expect(value('.mtrl-split-button .mtrl-button', 'border-radius')).toBe('var(--mtrl-split-button-pill)');
     expect(css).not.toContain('9999px');
@@ -230,6 +234,7 @@ describe('split button stylesheet', () => {
     expect(value(selector, 'height')).toBe('48px');
     expect(value(selector, 'min-height')).toBe('100%');
     expect(value(selector, 'position')).toBe('absolute');
+    expect(value(selector, 'translate')).toBeUndefined();
   });
 
   test('filled and tonal halves stay flat, so neither casts a shadow on the other', () => {
