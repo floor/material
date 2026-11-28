@@ -31,8 +31,9 @@
 // anywhere else reads no direction at all. Two things are still paid on a
 // callback, and both are named where they live: up to sixteen liveness checks
 // while factory roots that were created detached stay detached past their
-// task (`waiting`), and, when content changes inside a `dir="auto"` element,
-// a read of the element hosts under one. A factory root is marked on the
+// task (`waiting`; the rest of them are checked after the callback, off the
+// change's own path), and, when content changes inside a `dir="auto"`
+// element, a read of the element hosts under one. A factory root is marked on the
 // element itself: past the task that creates it, nothing here keeps a
 // component alive, destroyed or not.
 import { PREFIX } from "../config";
@@ -82,15 +83,58 @@ const noop = (): void => {};
 const waiting = new Set<WeakRef<Seen>>();
 
 /**
- * How many waiting roots one callback checks, taking up where the last one
- * stopped. A pool of components kept detached then costs a callback this
- * much whatever its size (checked on every callback, 1,000 of them cost one
- * DOM change more than twice what the scan this module replaced did), and a
- * root that connects where no record reports it is read within
- * `waiting.size / WAITING_CHECKS` callbacks.
+ * How many waiting roots one callback checks. A pool of components kept
+ * detached then costs a callback this much whatever its size: checked whole
+ * on every callback, 1,000 of them cost one DOM change more than twice what
+ * the scan this module replaced did.
  */
 const WAITING_CHECKS = 16;
-let waitingCursor: IterableIterator<WeakRef<Seen>> | undefined;
+
+/** How many a step checks after the callback, between tasks. */
+const WAITING_STEP = 256;
+
+/** Where the pass over the waiting roots stands; none when the last one finished. */
+let waitingPass: IterableIterator<WeakRef<Seen>> | undefined;
+
+/** Carries the pass on by up to `limit` roots: a connected one is read, a read or destroyed one dropped. */
+const checkWaiting = (limit: number): void => {
+  while (waitingPass && limit--) {
+    const next = waitingPass.next();
+    if (next.done) {
+      waitingPass = undefined;
+      break;
+    }
+    const element = next.value.deref();
+    if (element?._m === 1 && element.isConnected) readFactory(element);
+    if (element?._m !== 1) waiting.delete(next.value);
+  }
+};
+
+/**
+ * Finishes a pass the callback that started it could not: a root that
+ * connected where no record reports it must not wait for the application to
+ * change the document sixty more times, or for ever on a page that has gone
+ * idle. The steps run between tasks, one chain for a pass; a step whose pass
+ * was finished meanwhile ends the chain.
+ *
+ * A message channel carries them, not a timer: a test that counts its pending
+ * timers, or holds them with a fake clock, must not find the library's among
+ * them. The channel is closed when the chain ends, so nothing is left open.
+ * Without one, the pass goes on with the callbacks alone.
+ */
+const finishWaiting = (pass: IterableIterator<WeakRef<Seen>>): void => {
+  if (typeof MessageChannel !== "function") return;
+  const { port1, port2 } = new MessageChannel();
+  port1.onmessage = () => {
+    if (waitingPass === pass) checkWaiting(WAITING_STEP);
+    if (waitingPass === pass) port2.postMessage(0);
+    else {
+      port1.close();
+      port2.close();
+    }
+  };
+  port2.postMessage(0);
+};
 
 /** The roots the running callback has to read: each once, wherever its records name it. */
 const found = new Set<Seen>();
@@ -190,15 +234,11 @@ function onRecords(records: MutationRecord[]): void {
   // Read after the walks: a listener may change the tree it is told about.
   found.forEach((element) => element._m && readFactory(element));
   found.clear();
-  for (let checks = waiting.size && WAITING_CHECKS; checks--; ) {
-    const next = (waitingCursor ||= waiting.values()).next();
-    if (next.done) {
-      waitingCursor = undefined;
-      break;
-    }
-    const element = next.value.deref();
-    if (element?._m === 1 && element.isConnected) readFactory(element);
-    if (element?._m !== 1) waiting.delete(next.value);
+  if (waiting.size) {
+    const started = waitingPass ? undefined : (waitingPass = waiting.values());
+    checkWaiting(WAITING_CHECKS);
+    // More waiting than a callback checks: the pass goes on after it.
+    if (started && waitingPass === started) finishWaiting(started);
   }
   settle(records[0].target.ownerDocument as Watched);
   readHosts?.(records, flipped);

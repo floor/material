@@ -405,43 +405,107 @@ describe("a factory root inside a shadow tree", () => {
     expect(dropped.filter((entry) => entry.deref()).length).toBeLessThan(100);
   });
 
-  test("beside a pool kept detached, is read within a few callbacks, each checking a bounded share", async () => {
+  /** 300 roots kept detached past their task, and one more, the last in line, to mount late. */
+  const pooled = async (): Promise<{ other: Document; inner: HTMLElement; pool: HTMLElement[]; late: HTMLElement; release(): void }> => {
     const { other, inner, root } = ownPage();
-    const pool = Array.from({ length: 40 }, root);
+    const pool = Array.from({ length: 300 }, root);
     const late = root();
     const releases = [...pool, late].map((element) => own.trackFactoryDirection(element));
     await settled();
+    return { other, inner, pool, late, release: () => releases.forEach((release) => release()) };
+  };
 
-    // Each callback checks sixteen waiting roots: count them by their
-    // isConnected reads, which nothing else makes on a detached root.
+  test("beside a pool kept detached, is read after one change on a page that then goes idle", async () => {
+    const { other, inner, late, release } = await pooled();
+    inner.append(late);
+    other.body.append(other.createElement("i"));
+    // No further change to any document: the pass has to finish by itself.
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    expect(marks(late)).toBe("mtrl-rtl");
+    release();
+  });
+
+  test("beside a pool kept detached, a callback checks sixteen and the rest follows between tasks", async () => {
+    const { other, inner, pool, late, release } = await pooled();
+
+    // Count the checks by their isConnected reads, which nothing else makes on
+    // a detached root, and hold the channel's messages to see what the
+    // callback did alone.
     let checked = 0;
-    const watched = [...pool, late];
+    const watched = new Set<Node>([...pool, late]);
     const isConnected = Object.getOwnPropertyDescriptor(dom.window.Node.prototype, "isConnected")!;
     Object.defineProperty(dom.window.Node.prototype, "isConnected", {
       configurable: true,
       get(this: Node) {
-        if (watched.includes(this as HTMLElement)) checked++;
+        if (watched.has(this)) checked++;
         return isConnected.get!.call(this);
       },
     });
+    const realChannel = globalThis.MessageChannel;
+    const held: Array<() => void> = [];
+    let open = 0;
+    globalThis.MessageChannel = class {
+      port1: { onmessage: (() => void) | null; close(): void } = { onmessage: null, close: () => { open--; } };
+      port2 = { postMessage: () => { held.push(() => this.port1.onmessage?.()); }, close: () => {} };
+      constructor() { open++; }
+    } as unknown as typeof MessageChannel;
+    const turn = settled;
     try {
       inner.append(late);
-      const perCallback: number[] = [];
-      for (let callback = 0; callback < 4 && marks(late) === ""; callback++) {
-        checked = 0;
-        other.body.append(other.createElement("i"));
-        await settled();
-        perCallback.push(checked);
+      other.body.append(other.createElement("i"));
+      await turn();
+      expect(checked).toBe(16);
+      expect(marks(late)).toBe("");
+      expect(held.length).toBe(1);
+
+      // A second change while the pass is under way checks sixteen more and
+      // starts no second chain.
+      other.body.append(other.createElement("i"));
+      await turn();
+      expect(checked).toBe(32);
+      expect(held.length).toBe(1);
+
+      // The steps between tasks finish it: each root checked once, and the
+      // channel is closed behind the last one.
+      let steps = 0;
+      while (held.length) {
+        held.shift()!();
+        steps++;
       }
-      // Forty-one wait and sixteen are checked per callback: the last one is
-      // reached by the third.
       expect(marks(late)).toBe("mtrl-rtl");
-      expect(perCallback.length).toBe(3);
-      expect(Math.max(...perCallback)).toBeLessThanOrEqual(17);
+      expect(checked).toBe(301);
+      expect(steps).toBe(2);
+      expect(open).toBe(0);
+
+      // The pass is over: the pool is checked again only from the next change.
+      await turn();
+      expect(checked).toBe(301);
     } finally {
+      globalThis.MessageChannel = realChannel;
       Object.defineProperty(dom.window.Node.prototype, "isConnected", isConnected);
     }
-    releases.forEach((release) => release());
+    release();
+  });
+
+  test("the pass that finishes by itself leaves no timer pending", async () => {
+    const { other, inner, late, release } = await pooled();
+    const realSetTimeout = globalThis.setTimeout;
+    let timers = 0;
+    globalThis.setTimeout = ((...args: Parameters<typeof setTimeout>) => {
+      timers++;
+      return realSetTimeout(...args);
+    }) as typeof setTimeout;
+    try {
+      inner.append(late);
+      other.body.append(other.createElement("i"));
+      // Wait on a promise the count does not see.
+      await new Promise<void>((resolve) => realSetTimeout(resolve, 80));
+      expect(marks(late)).toBe("mtrl-rtl");
+      expect(timers).toBe(0);
+    } finally {
+      globalThis.setTimeout = realSetTimeout;
+    }
+    release();
   });
 
   test("destroyed while it waits, is not read when its element is mounted", async () => {
