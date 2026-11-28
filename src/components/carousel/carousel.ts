@@ -24,7 +24,7 @@ import { createBaseConfig, getElementConfig } from "./config";
  *     { image: 'b.jpg', title: 'Beta' },
  *   ],
  * });
- * carousel.on('change', ({ index }) => console.log(index));
+ * carousel.on('change', ({ value }) => console.log(value));
  * ```
  *
  * @category Components

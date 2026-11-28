@@ -2,6 +2,7 @@
 import type { CarouselComponent, CarouselSlide, CarouselVariant, SlidesAPI, CarouselEvents } from "./types";
 
 import type { EventCallback } from "../../core/state/emitter";
+import { addClass } from "../../core/dom/classes";
 
 interface ApiComponent {
   element: HTMLElement;
@@ -66,7 +67,9 @@ export const withAPI = () => (component: ApiComponent): CarouselComponent => {
       return api;
     },
     addClass(...classes: string[]) {
-      component.element.classList.add(...classes);
+      // The core helper, as the other components use it: an empty name is
+      // skipped and "a b" is two names. classList.add throws on both.
+      addClass(component.element, ...classes);
       return api;
     },
   };

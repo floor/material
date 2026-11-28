@@ -27,6 +27,7 @@ afterEach(() => {
 });
 
 import { createCarousel, type CarouselEvents, type CarouselChangePayload } from '../../../src/components/carousel';
+import { setComponentDefaults } from '../../../src/core/config/global';
 
 const slides = [
   { image: 'a.jpg', title: 'Alpha' },
@@ -180,6 +181,55 @@ describe('carousel', () => {
     items[1]!.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     expect(document.activeElement).toBe(items[4]);
     expect(scroller.contains(document.activeElement)).toBe(true);
+  });
+
+  // The base options every component takes reach the root at runtime. They
+  // are in the config's type now: this test would not compile without it.
+  test('takes the base component options, typed', () => {
+    const parent = document.createElement('section');
+    document.body.appendChild(parent);
+    const carousel = createCarousel({
+      slides,
+      parent,
+      id: 'featured',
+      tabIndex: -1,
+      data: { section: 'home' },
+      class: ['wide', 'quiet'],
+      ariaLabel: 'Featured',
+    });
+    expect(carousel.element.parentElement).toBe(parent);
+    expect(carousel.element.id).toBe('featured');
+    expect(carousel.element.tabIndex).toBe(-1);
+    expect(carousel.element.dataset.section).toBe('home');
+    expect(carousel.element.classList.contains('wide')).toBe(true);
+    expect(carousel.element.classList.contains('quiet')).toBe(true);
+    carousel.destroy();
+  });
+
+  test('is named once: the given label, or "Carousel"', () => {
+    const named = createCarousel({ slides, ariaLabel: 'Featured' });
+    expect(named.element.getAttribute('aria-label')).toBe('Featured');
+    const plain = createCarousel({ slides });
+    expect(plain.element.getAttribute('aria-label')).toBe('Carousel');
+    expect(plain.element.getAttribute('role')).toBe('region');
+    expect(plain.element.getAttribute('aria-roledescription')).toBe('carousel');
+  });
+
+  test('its defaults are typed in the global defaults map', () => {
+    setComponentDefaults('carousel', { gap: 4, ariaLabel: 'Gallery' });
+    try {
+      const carousel = createCarousel({ slides });
+      expect(carousel.element.getAttribute('aria-label')).toBe('Gallery');
+    } finally {
+      setComponentDefaults('carousel', {});
+    }
+  });
+
+  test('addClass takes an empty name and several names in one string', () => {
+    const carousel = createCarousel({ slides });
+    expect(carousel.addClass('')).toBe(carousel);
+    expect(carousel.addClass('one two', 'three')).toBe(carousel);
+    for (const name of ['one', 'two', 'three']) expect(carousel.element.classList.contains(name)).toBe(true);
   });
 
   test('removing and updating slides relabels them', () => {
