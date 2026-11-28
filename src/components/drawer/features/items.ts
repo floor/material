@@ -24,6 +24,9 @@ interface Section {
   index: number;
   label: string;
   group: HTMLElement;
+  /** The header row: a label, not a control. */
+  header: HTMLElement;
+  /** The chevron icon button that opens and closes the section. */
   button: HTMLElement;
   panel: HTMLElement;
   expanded: boolean;
@@ -82,24 +85,27 @@ export interface ItemsFeature {
 const createItemElement = (
   item: DrawerItemConfig,
   getClass: (name: string) => string,
+  header = false,
 ): HTMLElement => {
   const { href } = item;
-  const el = document.createElement(href === undefined ? "button" : "a");
+  const el = document.createElement(header ? "div" : href === undefined ? "button" : "a");
   el.className = getClass(DRAWER_CLASSES.ITEM);
-  if (href !== undefined) {
+  if (header) {
+    if (item.disabled) el.setAttribute("aria-disabled", "true");
+  } else if (href !== undefined) {
     if (item.disabled) el.setAttribute("role", "link");
     else el.setAttribute("href", safeUrl(href) || (href ? "about:blank" : ""));
   } else {
     el.setAttribute("type", "button");
     if (item.disabled) el.setAttribute("disabled", "");
   }
-  el.setAttribute("tabindex", item.disabled ? "-1" : "0");
+  if (!header) el.setAttribute("tabindex", item.disabled ? "-1" : "0");
 
   if (item.id) {
     el.dataset.id = item.id;
   }
 
-  if (item.disabled) {
+  if (item.disabled && !header) {
     el.setAttribute("aria-disabled", "true");
   }
 
@@ -203,12 +209,12 @@ export const withItems =
     const paintSection = (section: Section, expanded: boolean): void => {
       section.expanded = expanded;
       section.button.setAttribute("aria-expanded", String(expanded));
-      section.button.classList.toggle(cls(DRAWER_CLASSES.ITEM_EXPANDED), expanded);
+      section.header.classList.toggle(cls(DRAWER_CLASSES.ITEM_EXPANDED), expanded);
       section.group.classList.toggle(cls("drawer__group--expanded"), expanded);
       section.panel.toggleAttribute("inert", !expanded);
     };
     const paintParent = (section: Section, active: boolean): void => {
-      section.button.classList.toggle(cls(DRAWER_CLASSES.ITEM_HAS_ACTIVE), active);
+      section.header.classList.toggle(cls(DRAWER_CLASSES.ITEM_HAS_ACTIVE), active);
     };
 
     const setExpanded = (section: Section | undefined, expanded: boolean, event?: Event): void => {
@@ -313,28 +319,42 @@ export const withItems =
         const group = document.createElement("div");
         group.className = cls(DRAWER_CLASSES.GROUP);
         group.dataset.sectionId = id;
-        const button = createItemElement({ ...item, id, label, href: undefined, active: false }, cls);
+        // The header is a label; only its chevron is a control, an icon
+        // button with its own state layer (Google's own consoles draw
+        // sections this way). A section has no page of its own.
+        const header = createItemElement({ ...item, id, label, href: undefined, active: false }, cls, true);
+        header.id = `${prefix}-header`;
+        header.classList.add(cls(DRAWER_CLASSES.ITEM_EXPANDABLE), cls(DRAWER_CLASSES.ITEM_HEADER));
+        const button = document.createElement("button");
+        button.type = "button";
         button.id = `${prefix}-btn`;
-        button.classList.add(cls(DRAWER_CLASSES.ITEM_EXPANDABLE));
+        button.className = cls(DRAWER_CLASSES.ITEM_TOGGLE);
+        button.dataset.id = id;
+        button.setAttribute("aria-label", label);
+        if (item.disabled) {
+          button.disabled = true;
+          button.setAttribute("aria-disabled", "true");
+        }
         const chevron = document.createElement("span");
         chevron.className = cls(DRAWER_CLASSES.ITEM_CHEVRON);
         chevron.setAttribute("aria-hidden", "true");
         setHTML(chevron, chevronMarkup);
         button.append(chevron);
+        header.append(button);
 
         const panel = document.createElement("div");
         panel.className = cls(DRAWER_CLASSES.GROUP_ITEMS);
         panel.id = `${prefix}-panel`;
         panel.setAttribute("role", "group");
-        panel.setAttribute("aria-labelledby", button.id);
+        panel.setAttribute("aria-labelledby", header.id);
         button.setAttribute("aria-controls", panel.id);
         const inner = document.createElement("div");
         inner.className = cls(DRAWER_CLASSES.GROUP_ITEMS_INNER);
         panel.append(inner);
-        group.append(button, panel);
+        group.append(header, panel);
         itemsContainer.append(group);
 
-        const section: Section = { id, index, label, group, button, panel, expanded: false };
+        const section: Section = { id, index, label, group, header, button, panel, expanded: false };
         sections.set(id, section);
         item.items!.forEach(child => renderItem(child, inner, section));
         const active = !!activeId && item.items!.some(child => isDestination(child) && !child.disabled && child.id === activeId);
@@ -355,7 +375,7 @@ export const withItems =
 
     const setBadge = (id: string, badge: string): void => {
       const section = sections.get(id);
-      const element = section?.button ?? destinations.find(row => row.element.dataset.id === id)?.element;
+      const element = section?.header ?? destinations.find(row => row.element.dataset.id === id)?.element;
       if (!element) return;
 
       let badgeElement = element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_BADGE)}`);
@@ -363,7 +383,7 @@ export const withItems =
         if (!badgeElement) {
           badgeElement = document.createElement("span");
           badgeElement.className = cls(DRAWER_CLASSES.ITEM_BADGE);
-          element.insertBefore(badgeElement, element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_CHEVRON)}`));
+          element.insertBefore(badgeElement, element.querySelector(`.${cls(DRAWER_CLASSES.ITEM_TOGGLE)}`));
         }
         badgeElement.textContent = badge;
       } else badgeElement?.remove();
@@ -373,7 +393,7 @@ export const withItems =
     };
 
     const visibleItems = (container: HTMLElement): HTMLElement[] =>
-      [...container.querySelectorAll<HTMLElement>(`.${cls(DRAWER_CLASSES.ITEM)}`)].filter(visible);
+      [...container.querySelectorAll<HTMLElement>(`button.${cls(DRAWER_CLASSES.ITEM)}, a.${cls(DRAWER_CLASSES.ITEM)}, .${cls(DRAWER_CLASSES.ITEM_TOGGLE)}`)].filter(visible);
 
     const handleKeydown = (event: KeyboardEvent): void => {
       const { key } = event;

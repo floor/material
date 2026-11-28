@@ -428,7 +428,7 @@ $default-width: 360px;
         // HOVER / FOCUS / PRESSED STATES
         // ======================================================================
 
-        &:hover:not(:is([disabled], [aria-disabled="true"])) {
+        &:hover:not(:is([disabled], [aria-disabled="true"], .#{$component}__item--header)) {
             color: t.color("on-surface");
 
             .#{$component}__active-indicator::after {
@@ -447,7 +447,7 @@ $default-width: 360px;
             }
         }
 
-        &:active:not(:is([disabled], [aria-disabled="true"])) {
+        &:active:not(:is([disabled], [aria-disabled="true"], .#{$component}__item--header)) {
             color: t.color("on-surface");
 
             // A rippled item leaves the press to its ripple.
@@ -495,8 +495,26 @@ $default-width: 360px;
         // no weight change. Hover and press still give their own feedback on
         // top — their rules are more specific, so the pressed and focused
         // opacities win over this floor.
-        &--has-active .#{$component}__active-indicator::after {
+        &--has-active:not(&--header) .#{$component}__active-indicator::after {
             opacity: v.state("hover-state-layer-opacity");
+        }
+
+        // A section header is a label, not a control: it takes no hover or
+        // press layer and keeps the default cursor. Only its chevron, an
+        // icon button, answers the pointer. While the section is collapsed
+        // and holds the current page, the header carries the selected pill
+        // instead of its hidden child; once open, the child has it again.
+        &--header {
+            cursor: default;
+        }
+
+        &--header#{&}--has-active:not(#{&}--expanded) {
+            color: t.color("on-secondary-container");
+
+            .#{$component}__active-indicator::before {
+                opacity: 1;
+                transform: scaleX(1);
+            }
         }
 
         // ======================================================================
@@ -580,6 +598,14 @@ $default-width: 360px;
         width: calc(100% - 24px - var(--#{base.$prefix}-drawer-child-indent, 12px));
     }
 
+    // A section header without an icon is a title for its group, as in
+    // Google's consoles: its rows line up with the top-level rows instead of
+    // stepping in. A header with an icon keeps the child indent.
+    &__group:not(:has(> &__item--header > &__item-icon)) > &__group-items &__item--child {
+        margin-inline-start: 12px;
+        width: calc(100% - 24px);
+    }
+
     &__item-chevron {
         display: grid;
         place-items: center;
@@ -612,8 +638,75 @@ $default-width: 360px;
         transform: rotate(180deg);
     }
 
-    &__item-badge + &__item-chevron {
+    &__item-badge + &__item-chevron,
+    &__item-badge + &__item-toggle {
         margin-inline-start: 0;
+    }
+
+    // The section chevron as an icon button: a 40dp round target whose state
+    // layer is the only hover feedback the header gives. The glyph keeps the
+    // place the bare chevron had: its ink ends 24dp inside the indicator, so
+    // the 40dp box reaches 8px further than the 24dp box did.
+    &__item-toggle {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 40px;
+        height: 40px;
+        margin-inline-start: auto;
+        margin-inline-end: -14px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: t.color("on-surface-variant");
+        cursor: pointer;
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background-color: currentColor;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity v.motion("spring-default-effects-duration")
+                v.motion("spring-default-effects-easing");
+        }
+
+        &:hover::before {
+            opacity: v.state("hover-state-layer-opacity");
+        }
+
+        &:focus-visible {
+            outline: 3px solid t.color("secondary");
+            outline-offset: 2px;
+            overflow: visible;
+
+            &::before {
+                opacity: v.state("focus-state-layer-opacity");
+            }
+        }
+
+        &:active:not(:has(> .#{base.$prefix}-ripple))::before {
+            opacity: v.state("pressed-state-layer-opacity");
+        }
+
+        &:disabled {
+            cursor: default;
+        }
+
+        .#{$component}__item-chevron {
+            margin: 0;
+        }
+    }
+
+    &__item--header#{&}__item--has-active:not(#{&}__item--expanded) &__item-toggle {
+        color: t.color("on-secondary-container");
     }
 
     // ========================================================================

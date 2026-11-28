@@ -76,6 +76,10 @@ export const DRAWER_CLASSES = {
   ITEM_CHILD: "drawer__item--child",
   ITEM_HAS_ACTIVE: "drawer__item--has-active",
   ITEM_CHEVRON: "drawer__item-chevron",
+  /** A section header row: a label, not a control */
+  ITEM_HEADER: "drawer__item--header",
+  /** The icon button that opens and closes a section */
+  ITEM_TOGGLE: "drawer__item-toggle",
   /** Active indicator shape */
   ACTIVE_INDICATOR: "drawer__active-indicator",
   /** Dense/compact variant */

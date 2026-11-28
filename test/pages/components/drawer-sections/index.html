@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>drawer sections</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+<style>
+  .ds-frame { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .ds-frame > * { flex: none; }
+  .ds-log { font: 12px/1.5 ui-monospace, monospace; margin: 8px 0 0; min-height: 1.5em; }
+</style>
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createDrawer } from "../../../../dist/components/drawer/index.js";
+
+// Experiment, 2026-11-28: drawer sections drawn the way Google's own consoles
+// draw them (Search Console). A section has no page of its own: its header is
+// a label, and only the chevron, an icon button, opens and closes it.
+let form = "factory";
+const painters = new Set();
+const repaint = () => { for (const paint of painters) paint(); };
+const host = () => document.getElementById("tp-main");
+
+const svg = (d) => `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="${d}"/></svg>`;
+const icon = {
+  home: svg("M12 3 4 9v12h5v-7h6v7h5V9z"),
+  bulb: svg("M9 21h6v-1H9zm3-19a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"),
+  trend: svg("m16 6 2.3 2.3-4.9 4.9-4-4L2 16.6 3.4 18l6-6 4 4 6.3-6.3L22 12V6z"),
+  search: svg("M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"),
+  pages: svg("M16 1H4a2 2 0 0 0-2 2v14h2V3h12zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"),
+  sitemap: svg("M3 3h6v4H7v3h4V8h6v4h-6v-1H7v5h4v-2h6v4h-6v-1H5V7H3z"),
+  removal: svg("M12 6a9.8 9.8 0 0 1 8.8 5.5c-.4.8-.9 1.5-1.5 2.1l1.4 1.4A11.7 11.7 0 0 0 23 11.5 11.8 11.8 0 0 0 8.4 4.6l1.7 1.7A10 10 0 0 1 12 6zM2.4 3.1 1 4.5l2.7 2.7A11.8 11.8 0 0 0 1 11.5 11.8 11.8 0 0 0 16.4 18l3 3 1.4-1.4z"),
+  speed: svg("M20.4 8.6 19.2 10.4a8 8 0 0 1-.2 7.6H5A8 8 0 0 1 15.6 6.8l1.8-1.2A10 10 0 0 0 3.3 19a2 2 0 0 0 1.7 1h14a2 2 0 0 0 1.7-1 10 10 0 0 0-.3-10.4zm-9.8 6.8a2 2 0 0 0 2.8 0l5.7-8.5-8.5 5.7a2 2 0 0 0 0 2.8z"),
+  lock: svg("M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 6a3 3 0 0 1 6 0v2H9zm9 14H6V10h12z"),
+  layers: svg("m12 16.5-7.4-5.7L3 12l9 7 9-7-1.6-1.2zM12 14l7.4-5.7L21 7l-9-7-9 7 1.6 1.3z"),
+  flag: svg("M14.4 6 14 4H5v17h2v-7h5.6l.4 2h7V6z"),
+  shield: svg("M12 1 3 5v6c0 5.6 3.8 10.7 9 12 5.2-1.3 9-6.4 9-12V5z"),
+  link: svg("M3.9 12A3.1 3.1 0 0 1 7 8.9h4V7H7a5 5 0 0 0 0 10h4v-1.9H7A3.1 3.1 0 0 1 3.9 12zM8 13h8v-2H8zm9-6h-4v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10z"),
+  settings: svg("M19.1 12.9a7.4 7.4 0 0 0 0-1.8l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.6-.9L14.8 3h-4l-.3 2.6a7 7 0 0 0-1.6.9l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 1.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.6.9l.3 2.6h4l.3-2.6a7 7 0 0 0 1.6-.9l2.4 1 2-3.4zM12.8 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"),
+};
+
+const consoleItems = (active) => [
+  { id: "overview", label: "Overview", icon: icon.home },
+  { id: "insights", label: "Insights", icon: icon.bulb },
+  { id: "performance", label: "Performance", icon: icon.trend, items: [
+    { id: "genai", label: "Generative AI", icon: icon.trend },
+  ] },
+  { id: "inspection", label: "URL inspection", icon: icon.search },
+  { type: "divider" },
+  { id: "indexing", label: "Indexing", expanded: true, items: [
+    { id: "pages", label: "Pages", icon: icon.pages },
+    { id: "sitemaps", label: "Sitemaps", icon: icon.sitemap },
+    { id: "removals", label: "Removals", icon: icon.removal },
+  ] },
+  { type: "divider" },
+  { id: "experience", label: "Experience", expanded: true, items: [
+    { id: "vitals", label: "Core Web Vitals", icon: icon.speed },
+    { id: "https", label: "HTTPS", icon: icon.lock },
+  ] },
+  { type: "divider" },
+  { id: "enhancements", label: "Enhancements", items: [
+    { id: "breadcrumbs", label: "Breadcrumbs", icon: icon.layers },
+  ] },
+  { type: "divider" },
+  { id: "security", label: "Security & Manual Actions", expanded: false, items: [
+    { id: "manual", label: "Manual actions", icon: icon.flag },
+    { id: "issues", label: "Security issues", icon: icon.shield },
+  ] },
+  { type: "divider" },
+  { id: "links", label: "Links", icon: icon.link },
+  { id: "settings", label: "Settings", icon: icon.settings },
+].map(function mark(item) {
+  return item.items ? { ...item, items: item.items.map(mark) } : { ...item, active: item.id === active };
+});
+
+const consoleMarkup = (active) => `
+  <m-drawer-item value="overview">Overview</m-drawer-item>
+  <m-drawer-item value="insights">Insights</m-drawer-item>
+  <m-drawer-item value="performance">Performance
+    <m-drawer-item value="genai">Generative AI</m-drawer-item>
+  </m-drawer-item>
+  <m-drawer-item value="inspection">URL inspection</m-drawer-item>
+  <m-drawer-item type="divider"></m-drawer-item>
+  <m-drawer-item value="indexing">Indexing
+    <m-drawer-item value="pages">Pages</m-drawer-item>
+    <m-drawer-item value="sitemaps">Sitemaps</m-drawer-item>
+    <m-drawer-item value="removals">Removals</m-drawer-item>
+  </m-drawer-item>
+  <m-drawer-item type="divider"></m-drawer-item>
+  <m-drawer-item value="security">Security &amp; Manual Actions
+    <m-drawer-item value="manual">Manual actions</m-drawer-item>
+    <m-drawer-item value="issues">Security issues</m-drawer-item>
+  </m-drawer-item>
+  <m-drawer-item type="divider"></m-drawer-item>
+  <m-drawer-item value="links">Links</m-drawer-item>
+  <m-drawer-item value="settings">Settings</m-drawer-item>`;
+
+const mount = (box, { active, log }) => {
+  box.replaceChildren();
+  if (form === "element") {
+    const el = document.createElement("m-drawer");
+    el.setAttribute("open", "");
+    el.setAttribute("value", active);
+    el.innerHTML = consoleMarkup(active);
+    for (const type of ["select", "expand", "collapse"]) {
+      el.addEventListener(type, (event) => { if (log) log.textContent = `${type} ${JSON.stringify(event.detail?.value ?? event.detail?.id ?? "")}`; });
+    }
+    box.append(el);
+    return el;
+  }
+  const drawer = createDrawer({ variant: "standard", open: true, items: consoleItems(active) });
+  for (const type of ["select", "expand", "collapse"]) {
+    drawer.on(type, (detail) => { if (log) log.textContent = `${type} ${detail.id}${type === "select" ? "" : ` expanded=${detail.expanded}`}`; });
+  }
+  box.append(drawer.element);
+  return drawer.element;
+};
+
+const root = (box) => box.querySelector("m-drawer")?.shadowRoot ?? box;
+
+await initPage({
+  name: "drawer sections",
+  toolbar: {
+    density: true,
+    forms: [
+      { label: "Factory", render: () => { form = "factory"; repaint(); } },
+      { label: "Element", render: () => { form = "element"; repaint(); } },
+    ],
+  },
+});
+
+// ----------------------------------------------------------------------------
+const interaction = section(host(), "Interaction");
+
+const mainBox = document.createElement("div");
+const mainLog = document.createElement("p");
+mainLog.className = "ds-log";
+scenario(interaction, {
+  title: "A drawer like Search Console's",
+  lookFor: "hover a section header's text (Indexing, Experience…), then its chevron; hover a child row (Pages); click a chevron; Tab to a chevron and press Enter, Space, Left and Right",
+  expected: "the header text gives no feedback and keeps the arrow cursor; only the chevron shows a round 40 px state layer and the hand cursor, and only it opens or closes the section; a child row shows the full-width hover layer; the chevron takes the keyboard focus ring",
+  measure: () => {
+    const r = root(mainBox);
+    const toggle = r.querySelector('[data-id="indexing"].mtrl-drawer__item-toggle');
+    const header = r.querySelector('.mtrl-drawer__item--header[data-id="indexing"]');
+    if (!toggle || !header) return "no drawer";
+    const t = toggle.getBoundingClientRect();
+    return `chevron button ${t.width.toFixed(0)}×${t.height.toFixed(0)} px · header cursor ${getComputedStyle(header).cursor} · chevron cursor ${getComputedStyle(toggle).cursor} · aria-expanded ${toggle.getAttribute("aria-expanded")}`;
+  },
+  mount: (body) => {
+    const frame = document.createElement("div");
+    frame.className = "ds-frame";
+    frame.append(mainBox);
+    body.append(frame, mainLog);
+    const paint = () => mount(mainBox, { active: "breadcrumbs", log: mainLog });
+    painters.add(paint);
+    paint();
+  },
+});
+
+// ----------------------------------------------------------------------------
+const states = section(host(), "States");
+
+const collapsedBox = document.createElement("div");
+scenario(states, {
+  title: "A collapsed section that holds the current page",
+  lookFor: "Security & Manual Actions starts collapsed while its child Manual actions is the current page; open it, then close it again",
+  expected: "collapsed: the whole header carries the selected pill, and hovering its chevron draws a darker circle on the pill; open: the pill moves to Manual actions and the header is plain again",
+  measure: () => {
+    const r = root(collapsedBox);
+    const header = r.querySelector('.mtrl-drawer__item--header[data-id="security"]');
+    const pill = header?.querySelector(".mtrl-drawer__active-indicator");
+    if (!pill) return "no drawer";
+    return `header pill opacity ${getComputedStyle(pill, "::before").opacity} · expanded ${header.classList.contains("mtrl-drawer__item--expanded")}`;
+  },
+  mount: (body) => {
+    body.append(collapsedBox);
+    const paint = () => {
+      mount(collapsedBox, { active: "manual" });
+      // The element opens a section that holds the current page; close it so
+      // both forms start from the collapsed state the scenario is about.
+      requestAnimationFrame(() => {
+        const toggle = root(collapsedBox).querySelector('[data-id="security"].mtrl-drawer__item-toggle');
+        if (toggle?.getAttribute("aria-expanded") === "true") toggle.click();
+      });
+    };
+    painters.add(paint);
+    paint();
+  },
+});
+</script>
+</body>
+</html>

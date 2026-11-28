@@ -69,13 +69,20 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
     ],
   }));
   const row = (id: string) => drawer.element.querySelector<HTMLElement>(`[data-id="${id}"]`)!;
+  const toggle = (id: string) => drawer.element.querySelector<HTMLElement>(`.mtrl-drawer__item-toggle[data-id="${id}"]`)!;
   expect(drawer.getExpandedSections()).toEqual(["auto", "open"]);
-  expect(row("auto").getAttribute("aria-expanded")).toBe("true");
+  // The header is a label (a div, no tab stop); its chevron is the control.
+  expect(row("auto").localName).toBe("div");
+  expect(row("auto").hasAttribute("tabindex")).toBe(false);
+  expect(toggle("auto").localName).toBe("button");
+  expect(toggle("auto").getAttribute("aria-label")).toBe("Automatic");
+  expect(toggle("auto").getAttribute("aria-expanded")).toBe("true");
   expect(row("auto").classList.contains("mtrl-drawer__item--has-active")).toBe(true);
   expect(drawer.element.querySelector(".mtrl-drawer__section-label")?.textContent).toBe("Static");
-  const button = row("closed");
+  const button = toggle("closed");
+  const header = row("closed");
   const panel = drawer.element.querySelector<HTMLElement>(`#${button.getAttribute("aria-controls")}`)!;
-  expect(panel.getAttribute("aria-labelledby")).toBe(button.id);
+  expect(panel.getAttribute("aria-labelledby")).toBe(header.id);
   expect(panel.getAttribute("role")).toBe("group");
   expect(panel.hasAttribute("inert")).toBe(true);
 
@@ -89,7 +96,7 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
   expect(drawer.collapseSection("closed")).toBe(drawer);
   expect(document.activeElement).toBe(button);
   expect(panel.hasAttribute("inert")).toBe(true);
-  expect(button.classList.contains("mtrl-drawer__item--has-active")).toBe(true);
+  expect(header.classList.contains("mtrl-drawer__item--has-active")).toBe(true);
   expect(drawer.getActive()).toBe("nested");
   expect(changes).toEqual([{ id: "closed", value: "closed", label: "Explicitly closed", expanded: false }]);
   drawer.collapseSection("closed").expandSection("missing");
@@ -100,7 +107,7 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
   expect(selected).toEqual([]);
   drawer.setBadge("nested", "2").setBadge("closed", "3");
   expect(row("nested").querySelector(".mtrl-drawer__item-badge")?.textContent).toBe("2");
-  expect(button.querySelector(".mtrl-drawer__item-badge")?.nextElementSibling?.className).toBe("mtrl-drawer__item-chevron");
+  expect(header.querySelector(".mtrl-drawer__item-badge")?.nextElementSibling?.className).toBe("mtrl-drawer__item-toggle");
   expect(drawer.getItems()[1].items?.[0].badge).toBe("2");
   drawer.toggleSection("closed");
   expect(drawer.getItems()[1].expanded).toBe(false);
