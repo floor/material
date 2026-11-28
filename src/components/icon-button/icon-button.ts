@@ -112,7 +112,8 @@ const createIconButton = (config: IconButtonConfig): IconButtonComponent => {
       withIcon(baseConfig),
       withDisabled(baseConfig),
       withToggle(baseConfig),
-      withRipple(baseConfig),
+      // The stylesheet positions the root: the ripple reads no style to check.
+      withRipple(baseConfig, { positioned: true }),
       withLifecycle(),
       // Add width class if specified and not default
       (component) => {

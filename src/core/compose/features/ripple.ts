@@ -14,6 +14,15 @@ export interface RippleConfig {
    * How long, in milliseconds, a released wave lingers before it is removed
    */
   duration?: number;
+
+  /**
+   * The element the ripple is mounted on is positioned by its stylesheet
+   * (anything but `static`). Mounting then reads no computed style: under a
+   * connected parent that read forces a style recalculation for each element.
+   * Left out, a mounted element that is connected and `static` is made
+   * `relative`, as before.
+   */
+  positioned?: boolean;
 }
 
 /**
@@ -60,6 +69,7 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
   const options = { duration: config.duration ?? RIPPLE_CONFIG.duration };
 
   const mounts = new WeakMap<HTMLElement, () => void>();
+  const positioned = config.positioned;
 
   return {
     mount(element) {
@@ -67,13 +77,15 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
       const doc = element.ownerDocument;
       const view = doc.defaultView;
       if (!view) return;
-      if (view.getComputedStyle?.(element).position === "static") {
+      if (!positioned && view.getComputedStyle?.(element).position === "static") {
         element.style.position = "relative";
       }
       const container = doc.createElement("div");
       container.className = `${PREFIX}-ripple`;
       element.appendChild(container);
-      const waves = new Set<() => void>();
+      // The waves in flight, kept from the first press: most elements are
+      // never pressed.
+      let waves: Set<() => void> | undefined;
 
       // Pointer events, so a touch shows its press while the finger is down: the ripple
       // is the press, and mousedown only fires on touch after the finger lifts.
@@ -96,7 +108,7 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
           removeListeners();
           if (timer !== undefined) view.clearTimeout(timer);
           wave.remove();
-          waves.delete(dispose);
+          waves?.delete(dispose);
         };
         const release = (): void => {
           if (released) return;
@@ -105,14 +117,14 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
           wave.classList.add("fade-out");
           timer = view.setTimeout(dispose, options.duration);
         };
-        waves.add(dispose);
+        (waves ||= new Set()).add(dispose);
         for (const type of RELEASE) doc.addEventListener(type, release);
         container.appendChild(wave);
       };
       element.addEventListener("pointerdown", press);
       mounts.set(element, () => {
         element.removeEventListener("pointerdown", press);
-        for (const dispose of waves) dispose();
+        waves?.forEach((dispose) => dispose());
         container.remove();
       });
     },
@@ -127,17 +139,20 @@ export const createRipple = (config: RippleConfig = {}): RippleController => {
  * Adds ripple effect functionality to a component
  *
  * @param config - Configuration object
+ * @param defaults - Ripple settings the component itself knows, under the
+ *   caller's `rippleConfig`: a component whose stylesheet positions its root
+ *   passes `{ positioned: true }`
  * @returns Function that enhances a component with ripple effect
  */
 export const withRipple =
   // `& object` lets a component config that shares no key with RippleFeatureConfig through.
-  <T extends RippleFeatureConfig & object>(config: T) =>
+  <T extends RippleFeatureConfig & object>(config: T, defaults?: RippleConfig) =>
   <C extends ElementComponent & Partial<LifecycleComponent>>(
     component: C
   ): C & RippleComponent => {
     if (!config.ripple) return component as C & RippleComponent;
 
-    const rippleInstance = createRipple(config.rippleConfig);
+    const rippleInstance = createRipple({ ...defaults, ...config.rippleConfig });
 
     // Immediately mount ripple to ensure it's available right away
     rippleInstance.mount(component.element);

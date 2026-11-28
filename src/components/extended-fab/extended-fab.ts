@@ -140,7 +140,8 @@ const createExtendedFab = (config: ExtendedFabConfig = {}): ExtendedFabComponent
           : undefined,
       })(component),
       withDisabled(fabConfig),
-      withRipple(fabConfig),
+      // The stylesheet positions the root: the ripple reads no style to check.
+      withRipple(fabConfig, { positioned: true }),
       withLifecycle(),
       comp => withAPI(getApiConfig(comp))(comp)
     )(fabConfig);
