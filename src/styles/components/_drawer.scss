@@ -836,6 +836,29 @@ $default-width: 360px;
 
     &--dense {
         --#{base.$prefix}-density: -5;
+
+        // In a dense drawer the chevron button is as tall as the 36dp row
+        // and sits flush with the indicator's end: a square inside the pill's
+        // rounded end, not a 40dp circle overhanging the short row.
+        .#{$component}__item-toggle {
+            width: 36px;
+            height: 36px;
+        }
+
+        // Inside a header row: past the row's 24dp end padding.
+        .#{$component}__item--header > .#{$component}__item-toggle {
+            margin-inline-end: -24px;
+        }
+
+        // Beside a selectable header: on the indicator's end, 12dp from the
+        // drawer's edge.
+        .#{$component}__item-row > .#{$component}__item-toggle {
+            inset-inline-end: 12px;
+        }
+
+        .#{$component}__item--selectable {
+            padding-inline-end: 48px;
+        }
     }
 
     // ========================================================================
