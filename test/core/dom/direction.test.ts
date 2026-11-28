@@ -458,13 +458,6 @@ describe("a factory root inside a shadow tree", () => {
       expect(marks(late)).toBe("");
       expect(held.length).toBe(1);
 
-      // A second change while the pass is under way checks sixteen more and
-      // starts no second chain.
-      other.body.append(other.createElement("i"));
-      await turn();
-      expect(checked).toBe(32);
-      expect(held.length).toBe(1);
-
       // The steps between tasks finish it: each root checked once, and the
       // channel is closed behind the last one.
       let steps = 0;
@@ -477,12 +470,63 @@ describe("a factory root inside a shadow tree", () => {
       expect(steps).toBe(2);
       expect(open).toBe(0);
 
-      // The pass is over: the pool is checked again only from the next change.
+      // A change while a pass is under way checks sixteen more, starts no
+      // second chain, and is owed one more whole pass: 300 roots still wait.
+      other.body.append(other.createElement("i"));
       await turn();
-      expect(checked).toBe(301);
+      other.body.append(other.createElement("i"));
+      await turn();
+      expect(checked).toBe(301 + 32);
+      expect(held.length).toBe(1);
+      while (held.length) held.shift()!();
+      expect(checked).toBe(301 + 600);
+      expect(open).toBe(0);
+
+      // The passes are over: the pool is checked again only from the next change.
+      await turn();
+      expect(checked).toBe(301 + 600);
     } finally {
       globalThis.MessageChannel = realChannel;
       Object.defineProperty(dom.window.Node.prototype, "isConnected", isConnected);
+    }
+    release();
+  });
+
+  test("a root that connects while a pass is under way, after its turn, is read by the pass that follows", async () => {
+    const { other, inner, pool, release } = await pooled();
+    // The first in line: the pass checks it at once, while it is detached.
+    const early = pool[0]!;
+    const realChannel = globalThis.MessageChannel;
+    const held: Array<() => void> = [];
+    let open = 0;
+    globalThis.MessageChannel = class {
+      port1: { onmessage: (() => void) | null; close(): void } = { onmessage: null, close: () => { open--; } };
+      port2 = { postMessage: () => { held.push(() => this.port1.onmessage?.()); }, close: () => {} };
+      constructor() { open++; }
+    } as unknown as typeof MessageChannel;
+    try {
+      // A change starts the pass: the callback checks sixteen, the first among them.
+      other.body.append(other.createElement("i"));
+      await settled();
+      expect(held.length).toBe(1);
+      expect(marks(early)).toBe("");
+
+      // It connects now, where no record reports it, and one more change
+      // comes before the steps between tasks have run. Then nothing.
+      inner.append(early);
+      other.body.append(other.createElement("i"));
+      await settled();
+
+      let steps = 0;
+      while (held.length && steps < 20) {
+        held.shift()!();
+        steps++;
+      }
+      expect(marks(early)).toBe("mtrl-rtl");
+      expect(held.length).toBe(0);
+      expect(open).toBe(0);
+    } finally {
+      globalThis.MessageChannel = realChannel;
     }
     release();
   });

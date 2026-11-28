@@ -94,12 +94,12 @@ try {
   // base and the candidate belongs to the pin gates; here the prototype must
   // not ride along in either root graph and must exist in its opt-in graph.
   // The legacy entry grows when the bar itself changes, or the core every
-  // component carries. 12,750 raw bytes after the direction tracking change,
+  // component carries. 12,794 raw bytes after the direction tracking change,
   // from a local build bundled as below; the base was 11,472.
   check(!Buffer.from(rootBefore).includes("createBottomAppBarToolbar"), "the base revision leaks the opt-in marker into its root graph");
   check(!Buffer.from(rootAfter).includes("createBottomAppBarToolbar"), "opt-in marker leaked into root");
   check(Buffer.from(optIn).includes("createBottomAppBarToolbar"), "positive opt-in graph control is missing");
-  check(legacyAfter.length === 12_750, "legacy entry raw bytes");
+  check(legacyAfter.length === 12_794, "legacy entry raw bytes");
   console.log(JSON.stringify({ graphs: report.graphs, changedDefaults: changed }));
 
   const pageBuild = async (name: string, installed: string, source: string) => {

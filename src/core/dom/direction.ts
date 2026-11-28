@@ -96,13 +96,29 @@ const WAITING_STEP = 256;
 /** Where the pass over the waiting roots stands; none when the last one finished. */
 let waitingPass: IterableIterator<WeakRef<Seen>> | undefined;
 
+/**
+ * A change came while a pass was under way. A root the pass had already
+ * checked may have connected since, so that pass is followed by another:
+ * every change is followed by a whole pass that started after it.
+ */
+let waitingAgain = false;
+
+/** The chain of steps between tasks is running. */
+let finishing = false;
+
 /** Carries the pass on by up to `limit` roots: a connected one is read, a read or destroyed one dropped. */
 const checkWaiting = (limit: number): void => {
-  while (waitingPass && limit--) {
+  while (limit--) {
+    if (!waitingPass) {
+      if (!waitingAgain) return;
+      waitingAgain = false;
+      if (!waiting.size) return;
+      waitingPass = waiting.values();
+    }
     const next = waitingPass.next();
     if (next.done) {
       waitingPass = undefined;
-      break;
+      continue;
     }
     const element = next.value.deref();
     if (element?._m === 1 && element.isConnected) readFactory(element);
@@ -111,24 +127,25 @@ const checkWaiting = (limit: number): void => {
 };
 
 /**
- * Finishes a pass the callback that started it could not: a root that
- * connected where no record reports it must not wait for the application to
- * change the document sixty more times, or for ever on a page that has gone
- * idle. The steps run between tasks, one chain for a pass; a step whose pass
- * was finished meanwhile ends the chain.
+ * Finishes what the callbacks leave: a root that connected where no record
+ * reports it must not wait for the application to change the document sixty
+ * more times, or for ever on a page that has gone idle. The steps run between
+ * tasks, one chain at a time, until no pass is under way and none is owed.
  *
  * A message channel carries them, not a timer: a test that counts its pending
  * timers, or holds them with a fake clock, must not find the library's among
  * them. The channel is closed when the chain ends, so nothing is left open.
- * Without one, the pass goes on with the callbacks alone.
+ * Without one, the passes go on with the callbacks alone.
  */
-const finishWaiting = (pass: IterableIterator<WeakRef<Seen>>): void => {
-  if (typeof MessageChannel !== "function") return;
+const finishWaiting = (): void => {
+  if (finishing || typeof MessageChannel !== "function") return;
+  finishing = true;
   const { port1, port2 } = new MessageChannel();
   port1.onmessage = () => {
-    if (waitingPass === pass) checkWaiting(WAITING_STEP);
-    if (waitingPass === pass) port2.postMessage(0);
+    checkWaiting(WAITING_STEP);
+    if (waitingPass || waitingAgain) port2.postMessage(0);
     else {
+      finishing = false;
       port1.close();
       port2.close();
     }
@@ -235,10 +252,11 @@ function onRecords(records: MutationRecord[]): void {
   found.forEach((element) => element._m && readFactory(element));
   found.clear();
   if (waiting.size) {
-    const started = waitingPass ? undefined : (waitingPass = waiting.values());
+    // A pass starts with this change, or the one under way is owed another.
+    waitingAgain = true;
     checkWaiting(WAITING_CHECKS);
-    // More waiting than a callback checks: the pass goes on after it.
-    if (started && waitingPass === started) finishWaiting(started);
+    // More than a callback checks: the rest follows after it.
+    if (waitingPass || waitingAgain) finishWaiting();
   }
   settle(records[0].target.ownerDocument as Watched);
   readHosts?.(records, flipped);
