@@ -35,6 +35,7 @@ const HUMAN = {
   progress: "Progress",
   radios: "Radio buttons",
   select: "Select",
+  timepicker: "Time picker",
   "extended-fab": "Extended FAB",
   slider: "Slider",
   tooltip: "Tooltip",
@@ -42,7 +43,7 @@ const HUMAN = {
 
 /** The component pages, grouped the way the rail groups them. */
 const GROUPS = [
-  { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu", "radios", "select", "extended-fab", "list", "tooltip"] },
+  { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu", "radios", "select", "timepicker", "extended-fab", "list", "tooltip"] },
   { label: "Surfaces", icon: "layers", pages: ["bottom-sheet", "drawer", "navigation-rail"] },
   { label: "Media", icon: "image", pages: ["carousel"] },
   { label: "Status", icon: "stacked_line_chart", pages: ["progress"] },

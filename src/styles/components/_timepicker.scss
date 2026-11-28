@@ -5,8 +5,10 @@
 @use '../../styles/abstract/functions' as f;
 @use '../../styles/abstract/mixins' as m;
 @use '../../styles/abstract/theme' as t;
+@use '../abstract/direction' as d;
 
 $component: '#{base.$prefix}-time-picker';
+$period-inner-radius: max(0px, calc(#{f.get-shape('small')} - 1px));
 
 .#{$component} {
   // A picker is a task context: the density scale stops at its surface.
@@ -93,7 +95,12 @@ $component: '#{base.$prefix}-time-picker';
         margin: 12px 0 0;
       }
 
+      .#{$component}__period-am {
+        @include d.corners($start-start: $period-inner-radius, $start-end: 0, $end-start: $period-inner-radius, $end-end: 0);
+      }
+
       .#{$component}__period-pm {
+        @include d.corners($start-start: 0, $start-end: $period-inner-radius, $end-start: 0, $end-end: $period-inner-radius);
         border-block-start: 0;
         border-inline-start: 1px solid t.color('outline');
       }
@@ -245,7 +252,6 @@ $component: '#{base.$prefix}-time-picker';
     height: 80px;
     margin-inline-start: 12px;
     border-radius: f.get-shape('small');
-    overflow: hidden;
     // PeriodSelectorOutlineColor is Outline, not OutlineVariant.
     border: 1px solid t.color('outline');
 
@@ -261,9 +267,9 @@ $component: '#{base.$prefix}-time-picker';
       // unselected period took the dialog's on-surface.
       color: t.color('on-surface-variant');
 
-      // Improve focus styles for keyboard navigation
       &:focus-visible {
-        @include m.focus-ring($offset: -3px, $wrap: false);
+        @include m.focus-ring($wrap: false);
+        z-index: 1;
       }
 
       &:hover {
@@ -282,7 +288,11 @@ $component: '#{base.$prefix}-time-picker';
       }
     }
 
+    // Round the fills inside the group border and let the focus ring extend outside it.
+    &-am { border-radius: $period-inner-radius $period-inner-radius 0 0; }
+
     &-pm {
+      border-radius: 0 0 $period-inner-radius $period-inner-radius;
       border-block-start: 1px solid t.color('outline');
     }
 

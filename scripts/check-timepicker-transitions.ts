@@ -97,14 +97,14 @@ try {
       check(`${reduced}/${mode}: old digits cleaned up`, settled.digits.length === 1 && settled.digits[0].first === newFirst && settled.all === 0);
       markup.push(await page.locator(".mtrl-time-picker__dialog").evaluate(el => el.outerHTML));
     }
-    const target = await page.getByRole("option", { name: "3 o'clock", exact: true }).boundingBox();
+    const target = await page.getByRole("option", { name: "Hour 3 of 12", exact: true }).boundingBox();
     assert(target);
     await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2);
     await page.mouse.down();
     const clicked = await snapshot();
     console.log(`${reduced ? "reduced" : "normal"}/dial: ${JSON.stringify(clicked)}`);
     check(`${reduced}: dial click hand motion`, reduced ? clicked.all === 0 : clicked.hand > 0);
-    const dragTarget = await page.getByRole("option", { name: "6 o'clock", exact: true }).boundingBox();
+    const dragTarget = await page.getByRole("option", { name: "Hour 6 of 12", exact: true }).boundingBox();
     assert(dragTarget);
     await page.mouse.move(dragTarget.x + dragTarget.width / 2, dragTarget.y + dragTarget.height / 2);
     check(`${reduced}: dragging follows immediately`, (await snapshot()).hand === 0);
@@ -121,7 +121,7 @@ try {
   for (const reduced of [false, true]) {
     await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
     await mount();
-    const three = await point("3 o'clock");
+    const three = await point("Hour 3 of 12");
     await page.mouse.move(three.x, three.y);
     await page.mouse.down();
     await page.mouse.move(three.x + 1, three.y);
@@ -138,7 +138,7 @@ try {
       check("same value during a spring preserves motion", (await snapshot()).hand > 0);
     }
     await page.waitForTimeout(reduced ? 30 : 220); // stays: the transition's own timing is what this check asserts
-    const six = await point(await face.getAttribute("aria-label") === "Hour" ? "6 o'clock" : "30 minutes");
+    const six = await point(await face.getAttribute("aria-label") === "Hour" ? "Hour 6 of 12" : "Minute 30 of 60");
     await page.mouse.click(six.x, six.y);
     const second = await snapshot();
     check(`${reduced}: quick second selection animates`, reduced ? second.all === 0 : second.hand > 0);
@@ -198,7 +198,7 @@ try {
           }));
         }, { once: true });
       });
-      const target = await point(mode === "hour" ? `${value} o'clock` : `${value * 5 % 60} minutes`);
+      const target = await point(mode === "hour" ? `Hour ${value} of 12` : `Minute ${value * 5 % 60} of 60`);
       await page.mouse.click(target.x, target.y);
       const sample = JSON.parse((await face.getAttribute("data-motion-sample"))!) as {
         before: number; after: number; target: number; active: boolean;
