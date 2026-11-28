@@ -331,6 +331,57 @@ describe("a factory root inside a shadow tree", () => {
     expect(marks(component.element)).toBe("mtrl-rtl");
   });
 
+  test("where scheduling is inert, the next callback sorts the task's roots out", async () => {
+    const { inner } = shadowed();
+    await settled();
+    // A server render and a fake clock both hand the library a queueMicrotask
+    // that never calls back.
+    const real = globalThis.queueMicrotask;
+    globalThis.queueMicrotask = () => {};
+    let component: ReturnType<typeof create>;
+    try {
+      component = create();
+    } finally {
+      globalThis.queueMicrotask = real;
+    }
+    inner.append(component.element);
+    await settled();
+    expect(marks(component.element)).toBe("");
+
+    document.body.append(document.createElement("i"));
+    await settled();
+    expect(marks(component.element)).toBe("mtrl-rtl");
+
+    // Nothing was left stuck: the next root is sorted out by its own microtask.
+    const next = create();
+    inner.append(next.element);
+    await settled();
+    expect(marks(next.element)).toBe("mtrl-rtl");
+  });
+
+  test("a document that is dropped takes its unsorted roots with it", async () => {
+    const dropped: WeakRef<HTMLElement>[] = [];
+    const real = globalThis.queueMicrotask;
+    globalThis.queueMicrotask = () => {};
+    try {
+      for (let render = 0; render < 20; render++) {
+        const other = document.implementation.createHTMLDocument("render");
+        for (let i = 0; i < 10; i++) {
+          const element = other.createElement("div");
+          trackFactoryDirection(element);
+          dropped.push(new WeakRef(element));
+        }
+      }
+    } finally {
+      globalThis.queueMicrotask = real;
+    }
+    for (let round = 0; round < 5; round++) {
+      await settled();
+      Bun.gc(true);
+    }
+    expect(dropped.filter((entry) => entry.deref()).length).toBeLessThan(20);
+  });
+
   test("destroyed while it waits, is not read when its element is mounted", async () => {
     const { inner } = shadowed();
     const component = create();

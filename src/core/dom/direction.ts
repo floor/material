@@ -49,8 +49,12 @@ type Seen = HTMLElement & {
   _c?: Set<(rtl: boolean) => void>;
 };
 
-/** One direction observer per document, kept on the document and on each shadow root it watches. */
-type Watched = { _d?: MutationObserver };
+/**
+ * What a document carries: its one direction observer, which each shadow root
+ * it watches carries too, and the factory roots created detached in the
+ * running task. Kept on the document, so they last no longer than it does.
+ */
+type Watched = { _d?: MutationObserver; _f?: Seen[] };
 
 const WATCH: MutationObserverInit = {
   attributes: true,
@@ -62,17 +66,11 @@ const WATCH: MutationObserverInit = {
 const noop = (): void => {};
 
 /**
- * Factory roots created detached in the running task. One microtask sorts
- * them out, so a component that is created and mounted, or created and
- * destroyed, in the same task leaves nothing here and allocates nothing.
- */
-const fresh = new Set<Seen>();
-
-/**
  * Factory roots that stayed detached past the task that created them. No
  * record reports an insertion into a shadow tree the observer does not watch,
  * so these are checked on each callback until they connect. The entries are
- * weak: a component that is dropped without being mounted is collected.
+ * weak: a component that is dropped without being mounted is collected. A
+ * root that is mounted or destroyed in the task that creates it never has one.
  */
 const waiting = new Set<WeakRef<Seen>>();
 
@@ -119,16 +117,24 @@ const readFactory = (element: Seen): void => {
   watch(element);
 };
 
-const settle = (): void => {
-  fresh.forEach((element) => {
-    // Already read: the observer's callback came first.
+/**
+ * Sorts out the roots a task created detached, in a microtask at its end. A
+ * component created and mounted, or created and destroyed, in one task
+ * allocates nothing for it. Where scheduling is inert (a server render, a
+ * test's fake clock) the microtask never comes: the list then goes with its
+ * document, or is emptied by the observer's next callback.
+ */
+const settle = (owner: Watched): void => {
+  const created = owner._f;
+  owner._f = undefined;
+  created?.forEach((element) => {
+    // Read already (the observer's callback came first), or destroyed.
     if (element._m !== 1) return;
     if (!element.isConnected) waiting.add((element._p = new WeakRef(element)));
     // Connected where the observer watches, a record is on its way and its
     // callback reads the root; anywhere else nothing would.
     else if (!(element.getRootNode() as Watched)._d) readFactory(element);
   });
-  fresh.clear();
 };
 
 /**
@@ -171,6 +177,7 @@ function onRecords(records: MutationRecord[]): void {
     if (element?._m === 1 && element.isConnected) readFactory(element);
     if (element?._m !== 1) waiting.delete(entry);
   });
+  settle(records[0].target.ownerDocument as Watched);
   if (flipped) readHosts?.();
 }
 
@@ -218,12 +225,15 @@ export const trackFactoryDirection = (element: Seen): (() => void) => {
   if (element.isConnected) readFactory(element);
   else {
     watch(element);
-    if (!fresh.size) queueMicrotask(settle);
-    fresh.add(element);
+    const owner = element.ownerDocument as Watched;
+    if (!owner._f) {
+      owner._f = [];
+      queueMicrotask(() => settle(owner));
+    }
+    owner._f.push(element);
   }
   return () => {
     element._m = 0;
-    fresh.delete(element);
     waiting.delete(element._p as WeakRef<Seen>);
   };
 };
