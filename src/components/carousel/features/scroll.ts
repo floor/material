@@ -12,6 +12,7 @@ import { CAROUSEL_DEFAULTS, CAROUSEL_EVENTS, CAROUSEL_VARIANTS } from "../consta
 import { resolveLayoutDefaults } from "../config";
 import { cornerToken } from "../../../core/theme/shape";
 import { effectiveZoom } from "../../../core/dom/zoom";
+import { getCleanup } from "../../../core/compose/cleanup";
 import {
   KeylineRules,
   multiBrowseKeylines,
@@ -758,7 +759,6 @@ export const withScroll = (config: CarouselConfig) =>
     component.onSlidesChanged(rebuild);
     rebuild();
 
-    const destroy = component.lifecycle?.destroy;
     const enhanced = component as C & ScrollComponent;
     enhanced.getCurrentSlide = () => currentIndex;
     enhanced.getVariant = () => variant;
@@ -766,32 +766,34 @@ export const withScroll = (config: CarouselConfig) =>
     enhanced.prev = prev;
     enhanced.goTo = goTo;
     enhanced.setWheel = setWheel;
-    enhanced.lifecycle = {
-      destroy: () => {
-        setWheel(false);
-        restoreSnap();
-        resizeObserver?.disconnect();
-        directionObserver?.disconnect();
-        reduceMotion?.removeEventListener?.("change", rebuild);
-        clearPending();
-        scroller.removeEventListener("scroll", layout);
-        scroller.removeEventListener("wheel", clearPending);
-        scroller.removeEventListener("touchstart", handleTouchStart);
-        scroller.removeEventListener("keydown", handleKeyDown);
-        scroller.removeEventListener("focusin", handleFocusIn);
-        scroller.removeEventListener("pointerdown", handlePointerDown);
-        scroller.removeEventListener("pointermove", handlePointerMove);
-        scroller.removeEventListener("pointerup", handlePointerUp);
-        window.removeEventListener("pointerup", handlePointerUp, { capture: true });
-        window.removeEventListener("pointercancel", endDrag, { capture: true });
-        scroller.removeEventListener("pointercancel", endDrag);
-        scroller.removeEventListener("lostpointercapture", endDrag);
-        scroller.removeEventListener("dragstart", handleDragStart);
-        scroller.removeEventListener("click", handleClick, true);
-        window.removeEventListener("blur", endDrag);
-        window.removeEventListener("keydown", clearPointerFocus, { capture: true });
-        destroy?.();
-      },
-    };
+    // On the cleanup scope, so the lifecycle object stays the one
+    // withLifecycle built: replacing it with `{ destroy }` took mount, unmount
+    // and isMounted off the composed component.
+    const resources = getCleanup(component);
+    resources.add(() => {
+      setWheel(false);
+      restoreSnap();
+      resizeObserver?.disconnect();
+      directionObserver?.disconnect();
+      reduceMotion?.removeEventListener?.("change", rebuild);
+      clearPending();
+      scroller.removeEventListener("scroll", layout);
+      scroller.removeEventListener("wheel", clearPending);
+      scroller.removeEventListener("touchstart", handleTouchStart);
+      scroller.removeEventListener("keydown", handleKeyDown);
+      scroller.removeEventListener("focusin", handleFocusIn);
+      scroller.removeEventListener("pointerdown", handlePointerDown);
+      scroller.removeEventListener("pointermove", handlePointerMove);
+      scroller.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointerup", handlePointerUp, { capture: true });
+      window.removeEventListener("pointercancel", endDrag, { capture: true });
+      scroller.removeEventListener("pointercancel", endDrag);
+      scroller.removeEventListener("lostpointercapture", endDrag);
+      scroller.removeEventListener("dragstart", handleDragStart);
+      scroller.removeEventListener("click", handleClick, true);
+      window.removeEventListener("blur", endDrag);
+      window.removeEventListener("keydown", clearPointerFocus, { capture: true });
+    });
+    enhanced.lifecycle ??= { destroy: () => resources.destroy() };
     return enhanced;
   };

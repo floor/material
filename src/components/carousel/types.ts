@@ -1,5 +1,6 @@
 // src/components/carousel/types.ts
 import type { ForwardedEventPayload } from "../../core/dom";
+import type { BaseComponentConfig } from "../../core/config/component";
 
 /** Current item reported by programmatic navigation or native scrolling. */
 export interface CarouselChangePayload {
@@ -56,7 +57,12 @@ export interface CarouselSlide {
   content?: HTMLElement | string;
 }
 
-export interface CarouselConfig {
+/**
+ * The base options every component takes (`parent`, `id`, `class`, `style`,
+ * `data`, `tabIndex`, the ARIA options) reach the carousel's root at runtime;
+ * the type says so.
+ */
+export interface CarouselConfig extends BaseComponentConfig {
   /** Layout, "multi-browse" by default */
   variant?: CarouselVariant;
   slides?: CarouselSlide[];
@@ -85,11 +91,20 @@ export interface CarouselConfig {
   initialSlide?: number;
   minSmallItemWidth?: number;
   maxSmallItemWidth?: number;
-  /** Accessible name of the carousel */
+  /** Accessible name of the carousel, "Carousel" by default */
   ariaLabel?: string;
   prefix?: string;
-  componentName?: string;
-  class?: string;
+}
+
+/**
+ * Registers CarouselConfig with the global defaults map, so
+ * `setComponentDefaults("carousel", ...)` is typed without core importing
+ * anything from this component.
+ */
+declare module "../../core/config/global" {
+  interface ComponentConfigMap {
+    carousel?: Partial<CarouselConfig>;
+  }
 }
 
 export interface CarouselComponent {

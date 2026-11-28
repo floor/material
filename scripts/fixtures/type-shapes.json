@@ -360,6 +360,12 @@
       "\"outlined\""
     ]
   },
+  "CarouselConfig": {
+    "kind": "extends",
+    "bases": [
+      "BaseComponentConfig"
+    ]
+  },
   "CarouselSlide.content": {
     "kind": "union",
     "members": [

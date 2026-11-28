@@ -31,15 +31,16 @@ export const createBaseConfig = (config: CarouselConfig = {}): CarouselConfig =>
 
 export const getElementConfig = (config: CarouselConfig) => {
   const { variant } = resolveLayoutDefaults(config);
-  return createElementConfig(config, {
+  // The name is written once, as the element option every component uses;
+  // it was also written as an attribute here.
+  return createElementConfig({ ...config, ariaLabel: config.ariaLabel || "Carousel" }, {
     tag: "div",
     attributes: {
       role: "region",
       "aria-roledescription": "carousel",
-      "aria-label": config.ariaLabel || "Carousel",
     },
     className: [
-      config.class,
+      ...[config.class].flat(),
       `${config.prefix}-carousel--${variant}`,
       variant === CAROUSEL_VARIANTS.FULL_SCREEN ? `${config.prefix}-carousel--vertical` : null,
     ],
