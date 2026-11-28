@@ -11,7 +11,10 @@ const failures: string[] = [];
 try {
   page.setDefaultTimeout(6500);
   for (const layer of ["inline", "top"] as const) {
-    if (layer === "top") await page.reload();
+    if (layer === "top") {
+      await page.reload();
+      await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready === true);
+    }
     await page.evaluate(layer => {
       const { createTooltip } = (window as unknown as Fixture).mtrl;
       const host = document.querySelector("#mount")!;

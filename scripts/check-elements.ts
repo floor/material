@@ -10659,14 +10659,16 @@ try {
       window.scrollTo({ top: 300, behavior: "instant" });
     });
 
-    // Where the factory without a layer puts it, on the body with the global
-    // stylesheet, hovered on the same target alongside the element's. Both
-    // tooltips are `position: fixed` and placed in viewport coordinates, so
-    // with the page scrolled the two are compared directly.
+    // Measure the light-DOM factory on the same anchor before showing the
+    // shadow tooltip. Both use viewport coordinates on the scrolled page.
     await page.evaluate(() => {
       const w = window as unknown as PopWin & { __unlayered: Tip };
-      w.__unlayered = w.mtrl.createTooltip({ target: w.__pop.root.getElementById("pt-save"), text: "Save the file" });
+      w.__unlayered = w.mtrl.createTooltip({
+        target: w.__pop.root.getElementById("pt-save"), text: "Save the file", showOnHover: false, showOnFocus: false,
+      });
+      w.__unlayered.show(true);
     });
+    await settle(page, { target: "body > .mtrl-tooltip" });
     const unlayered = (): Promise<{ rect: Record<"top" | "left" | "width" | "height", number>; style: Record<string, string>; classes: string }> =>
       page.evaluate(() => {
         const tip = (window as unknown as { __unlayered: Tip }).__unlayered;
@@ -10694,10 +10696,14 @@ try {
       }, id);
 
     // Hover shows it after the delay
+    const expected = await unlayered();
     const save = await centerOf("pt-save");
     await page.mouse.move(save.x, save.y);
-    await wait(450);
-    const expected = await unlayered();
+    await page.waitForFunction(() => {
+      const tip = (window as unknown as PopWin).__pop.root.getElementById("pt-tip") as Host;
+      const surface = tip.component?.element;
+      return !!surface && surface.matches(":popover-open") && getComputedStyle(surface).opacity === "1";
+    });
     const shown = await page.evaluate(() => {
       const { root } = (window as unknown as PopWin).__pop;
       const tip = root.getElementById("pt-tip") as Host;
