@@ -346,7 +346,7 @@
     "core/compose/features/index.js": "2d4bb207b253d90eeea37f65e6865dbb91fa6a103a609b4ac0f900364ff721e1",
     "core/compose/features/input.js": "728f884122790c1d60c812256971d26c4521f9603dee806069cb2adaf945d4f3",
     "core/compose/features/lifecycle.js": "7b225d803dc6c1209be5a2fad76bb61c4fe760b968c20b4ade033c7f4845f4ce",
-    "core/compose/features/position.js": "203f57bf7357b9c14f8d080ad63c92d7aaead49cde92d04e90d0e2b87806f5ea",
+    "core/compose/features/position.js": "37fac2a9aaae86389c76cff628fc1734c796a20519b1437ce911c3e81f2297ff",
     "core/compose/features/ripple.js": "128f3efc356eb6020cfe10db481d035fc76505e4520ab7d1194caffb977168b4",
     "core/compose/features/size.js": "551171dd87fa94a5105b3ae8802b8526cc462c443fbd2dabd2bbdca1a689b63d",
     "core/compose/features/style.js": "e1a324556538875b7be842a2f0b16e45eeb3f6fcc60620b7546727d523270bdf",
