@@ -45,7 +45,8 @@ export const composeButton = (
     withIcon(baseConfig),
     withDisabled(baseConfig),
     withToggle(baseConfig),
-    withRipple(baseConfig),
+    // The stylesheet positions the root: the ripple reads no style to check.
+    withRipple(baseConfig, { positioned: true }),
     withLifecycle(),
     // The same generic step withProgress is. The pipe's overloads infer one
     // component type through it.

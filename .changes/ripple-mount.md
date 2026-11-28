@@ -1,0 +1,3 @@
+Section: Changed
+
+**Ripple at creation.** Creating a button, an icon button, a FAB or an extended FAB no longer reads computed style: the ripple checked whether its element was `static`, which under a connected parent forced a style recalculation for every component created. Their stylesheets already position the root, so the check is skipped for them. A ripple mounted on any other element with `createRipple()` or `withRipple()` is checked as before; pass `rippleConfig: { positioned: true }` (or `createRipple({ positioned: true })`) when the element is positioned by its stylesheet. The ripple's look and its first press are unchanged.
