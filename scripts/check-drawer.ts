@@ -711,13 +711,17 @@ try {
   });
   await settle(page);
   for (const edge of ['top', 'bottom'] as const) {
+    // Both sections collapsed and nothing selected before each tap.
+    await page.evaluate(() => { window.drawer.collapseSection('a'); window.drawer.collapseSection('b'); window.drawer.setActive('inbox'); });
+    await settle(page);
     const box = (await page.locator('.mtrl-drawer__item-toggle[data-id="a"]').boundingBox())!;
     await page.mouse.click(box.x + box.width / 2, edge === 'top' ? box.y + 1 : box.y + box.height - 1);
     const state = await page.evaluate(() => ({
       a: document.querySelector('.mtrl-drawer__item-toggle[data-id="a"]')!.getAttribute('aria-expanded'),
       b: document.querySelector('.mtrl-drawer__item-toggle[data-id="b"]')!.getAttribute('aria-expanded'),
+      active: window.drawer.getActive(),
     }));
-    assert.deepEqual(state, { a: edge === 'top' ? 'true' : 'false', b: 'false' }, `a tap on the ${edge} edge of a dense chevron toggles that chevron only`);
+    assert.deepEqual(state, { a: 'true', b: 'false', active: 'inbox' }, `a tap on the ${edge} edge of a dense chevron opens that section only and selects nothing`);
   }
 
   // ========================================================================

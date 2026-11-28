@@ -523,6 +523,19 @@ $section-reveal-scale: var(--#{base.$prefix}-drawer-section-reveal-scale, 0);
             cursor: default;
         }
 
+        // Section rows sit above the plain rows and take no vertical touch
+        // extension of their own: the rows' 48dp targets overlap their
+        // neighbours at density, and a later row's target must never take a
+        // tap inside a section's chevron or header (review, 2026-11-28).
+        &--header,
+        &--selectable {
+            z-index: 1;
+
+            &::after {
+                content: none;
+            }
+        }
+
         &--header#{&}--has-active:not(#{&}--expanded),
         &--selectable#{&}--has-active:not(#{&}--expanded) {
             color: t.color("on-secondary-container");
