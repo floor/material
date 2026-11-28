@@ -182,6 +182,76 @@ describe('carousel', () => {
     expect(scroller.contains(document.activeElement)).toBe(true);
   });
 
+  // A slide holds any content: the keys a control inside it uses are that
+  // control's, and the carousel must leave them alone.
+  describe('keys inside a control in a slide', () => {
+    const withControl = (html: string) => {
+      const carousel = createCarousel({ slides: [{ content: html }, { image: 'b.jpg' }, { image: 'c.jpg' }] });
+      document.body.appendChild(carousel.element);
+      sized(carousel, 600);
+      const items = [...carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__item')];
+      return { carousel, items, control: items[0]!.querySelector<HTMLElement>('[data-control]')! };
+    };
+    const press = (target: HTMLElement, key: string): KeyboardEvent => {
+      const event = new dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, composed: true });
+      target.dispatchEvent(event);
+      return event;
+    };
+    const controls: Record<string, string> = {
+      'a text input': '<input data-control type="text" value="abc">',
+      'an input with no type': '<input data-control value="abc">',
+      'a textarea': '<textarea data-control>abc</textarea>',
+      'a select': '<select data-control><option>a</option><option>b</option></select>',
+    };
+
+    for (const [name, html] of Object.entries(controls)) {
+      test(`${name} keeps the arrows, Home and End`, () => {
+        const { carousel, control } = withControl(html);
+        control.focus();
+        for (const key of ['ArrowRight', 'ArrowLeft', 'Home', 'End']) {
+          const event = press(control, key);
+          expect(event.defaultPrevented).toBe(false);
+          expect(carousel.getCurrentSlide()).toBe(0);
+          expect(document.activeElement).toBe(control);
+        }
+        carousel.destroy();
+      });
+    }
+
+    test('editable content keeps the arrows, Home and End', () => {
+      const { carousel, control } = withControl('<div data-control contenteditable="true">abc</div>');
+      // JSDOM does not compute isContentEditable.
+      Object.defineProperty(control, 'isContentEditable', { value: true });
+      for (const key of ['ArrowRight', 'End']) {
+        expect(press(control, key).defaultPrevented).toBe(false);
+        expect(carousel.getCurrentSlide()).toBe(0);
+      }
+      carousel.destroy();
+    });
+
+    test('a control inside another element\'s shadow tree is found through the composed path', () => {
+      const { carousel, control } = withControl('<div data-control></div>');
+      const input = document.createElement('input');
+      control.attachShadow({ mode: 'open' }).append(input);
+      const event = press(input, 'ArrowRight');
+      expect(event.defaultPrevented).toBe(false);
+      expect(carousel.getCurrentSlide()).toBe(0);
+      carousel.destroy();
+    });
+
+    test('a button or a checkbox in a slide does not keep them, and the slide itself still navigates', () => {
+      const { carousel, items, control } = withControl('<input data-control type="checkbox"><button>Open</button>');
+      expect(press(control, 'ArrowRight').defaultPrevented).toBe(true);
+      expect(carousel.getCurrentSlide()).toBe(1);
+
+      expect(press(items[1]!, 'ArrowLeft').defaultPrevented).toBe(true);
+      expect(carousel.getCurrentSlide()).toBe(0);
+      expect(press(items[0]!.querySelector('button')!, 'End').defaultPrevented).toBe(true);
+      expect(carousel.getCurrentSlide()).toBe(2);
+      carousel.destroy();
+    });
+  });
+
   test('removing and updating slides relabels them', () => {
     const carousel = createCarousel({ slides });
     carousel.removeSlide(0);
