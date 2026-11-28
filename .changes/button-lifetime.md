@@ -1,0 +1,3 @@
+Section: Fixed
+
+**Button, after `destroy()` and between overlapping calls.** A destroyed toggle button no longer toggles when its retained element is clicked. `setLoading(true, text)` followed at once by `setLoading(false)` leaves the button enabled, without the indicator and with its original text: the first call used to finish after the second and leave the indicator and the loading text on an enabled button. `showProgress()` followed at once by `hideProgress()` shows nothing, and an indicator that finishes loading after `destroy()` is disposed of and no longer attaches to the destroyed button. The loading text now appears when `setLoading` is called, not once the indicator has loaded.

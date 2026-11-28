@@ -1,6 +1,7 @@
 // src/components/button/features/progress.ts
 import type { ProgressConfig, ProgressComponent, ProgressEvents } from "../../progress/types";
 import { addClass, removeClass } from "../../../core/dom";
+import { getCleanup } from "../../../core/compose/cleanup";
 import { ButtonConfig, IconAPI } from "../types";
 
 /**
@@ -83,9 +84,14 @@ export const withProgress =
       minSize: 20,
     };
 
-    // Progress will be created lazily
+    // Progress will be created lazily. Everything that waits for it can be
+    // overtaken, by a later call or by destroy(): what is wanted is recorded
+    // when it is asked for, and what arrives late is checked against it.
+    const resources = getCleanup(component);
     let progress: ProgressComponent | null = null;
     let progressPromise: Promise<ProgressComponent> | null = null;
+    // Whether the indicator is wanted now: set by the last show or hide.
+    let visible = false;
     let isLoading = !!config.loading;
     let wasDisabled: boolean | undefined;
     // An initial busy shell has not captured a loading label yet.
@@ -107,6 +113,12 @@ export const withProgress =
 
       if (!progressPromise) {
         progressPromise = createProgressLazy(progressConfig).then((p) => {
+          // The button was destroyed while the module loaded: nothing will
+          // ever dispose of this instance but this.
+          if (resources.destroyed) {
+            p.destroy();
+            return p;
+          }
           progress = p;
 
           // Add button-specific class to the progress element
@@ -138,7 +150,10 @@ export const withProgress =
     // exist once this feature has run, and the wrappers below call the local,
     // which is always there.
     const showProgress = async (): Promise<C> => {
+      visible = true;
       const p = await ensureProgress();
+      // Hidden again, or destroyed, while the indicator loaded.
+      if (!visible || resources.destroyed) return component;
       const iconElement = getIconElement();
 
       // Ensure progress element is in the DOM
@@ -168,6 +183,7 @@ export const withProgress =
     };
 
     const hideProgress = async (): Promise<C> => {
+      visible = false;
       // If progress hasn't been created yet, just return
       if (!progress) return component;
 
@@ -195,7 +211,7 @@ export const withProgress =
 
     const setProgress = async (value: number): Promise<C> => {
       const p = await ensureProgress();
-      p.setValue(value);
+      if (!resources.destroyed) p.setValue(value);
       return component;
     };
     component.setProgress = setProgress;
@@ -208,7 +224,7 @@ export const withProgress =
 
     const setIndeterminate = async (indeterminate: boolean): Promise<C> => {
       const p = await ensureProgress();
-      p.setIndeterminate(indeterminate);
+      if (!resources.destroyed) p.setIndeterminate(indeterminate);
       return component;
     };
     component.setIndeterminate = setIndeterminate;
@@ -221,23 +237,32 @@ export const withProgress =
 
     // This feature runs before withAPI adds setText/getText on a separate
     // object. Prefer withText's manager, with a fallback for other compositions.
+    const setText = (value: string): void => {
+      if (component.text) component.text.setText(value);
+      else component.setText?.(value);
+    };
+    // The state, the label and the disabled flag change when the call is
+    // made, in the order the calls are made, so the last call decides them.
+    // Only the indicator waits, and it answers to `visible`. Before, the
+    // label was written after the wait: a loading overtaken by its own end
+    // left the button enabled with the indicator and the loading label.
     const setLoading = async (loading: boolean, text?: string): Promise<C> => {
       if (loading !== isLoading || (loading && originalText === undefined)) {
         isLoading = loading;
         if (loading) {
           originalText = (component.text ? component.text.getText() : component.getText?.()) ?? "";
           markLoading();
+          if (text) setText(text);
           await showProgress();
         } else {
           component.element.removeAttribute("aria-busy");
-          await hideProgress();
           if (!wasDisabled) component.disabled?.enable();
           wasDisabled = undefined;
-        }
-        if (!loading) text ||= originalText;
-        if (text) {
-          if (component.text) component.text.setText(text);
-          else component.setText?.(text);
+          const restored = text || originalText;
+          // The next loading takes the label it finds as the original.
+          originalText = undefined;
+          if (restored) setText(restored);
+          await hideProgress();
         }
       }
       return component;
@@ -250,21 +275,19 @@ export const withProgress =
       return component;
     };
 
-    // Update destroy to clean up progress if it was created
-    if (component.lifecycle) {
-      const originalDestroy = component.lifecycle.destroy;
-      component.lifecycle.destroy = () => {
-        if (progress) {
-          progress.destroy();
-          if (progress.element.parentNode) progress.element.parentNode.removeChild(progress.element);
-        }
-        originalDestroy();
-      };
-    }
+    // The indicator leaves with the button, whichever way it is destroyed.
+    // One that is still loading is disposed of when it arrives.
+    resources.add(() => {
+      visible = false;
+      if (progress) {
+        progress.destroy();
+        progress.element.remove();
+      }
+    });
 
     // If showProgress is true, initialize immediately
     if (config.showProgress) {
-      void ensureProgress().then(() => showProgress());
+      void showProgress();
     }
 
     return component;
