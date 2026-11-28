@@ -309,8 +309,8 @@ comment above the loop in
 map drifts, the package job prints each path with its new digest; replace that line and leave
 `tested`, `branch`, `ci` and `mainRevision` as they are.
 
-`readme:check` fails CI on a stale size row, so a pull request that moves a size updates the rows
-in `README.md` and `npm-readme.md` itself, to the figure the run prints.
+`readme:check` compares the size rows only when it runs with `--sizes`, and release CI is the run
+that passes it; an ordinary pull request leaves the rows in `README.md` and `npm-readme.md` alone.
 
 ## The CI gate
 
