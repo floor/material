@@ -88,8 +88,12 @@ describe('list stylesheet: segmented', () => {
   });
   test('a row paints its own container colour: --mtrl-list-item-container-color', () => {
     expect(declared(`${SEG} > ${ITEM}:not(.mtrl-list__item--selected)`, 'background'))
-      .toBe('var(--mtrl-list-item-container-color, var(--mtrl-sys-color-surface-container))');
+      .toBe('var(--mtrl-list-item-container-color, var(--mtrl-sys-color-surface))');
     expect(declared('.mtrl-list__item--selected', 'background')).toBe('var(--mtrl-sys-color-secondary-container)');
+  });
+  test('every row has 10dp of its own top and bottom space whatever its lines', () => {
+    expect(declared(`${SEG} > ${ITEM}`, 'padding-block'))
+      .toBe('max(0px, 10px + 2px * var(--mtrl-density, 0))');
   });
   test('rest 4px, outer 16px, hovered 12px, focused, pressed and selected 16px', () => {
     const large = 'var(--mtrl-sys-shape-corner-large, 16px)';
