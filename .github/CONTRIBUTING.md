@@ -342,8 +342,9 @@ when GitHub Actions has no successful scheduled run on `main` in the previous
    **Keep the install sections consistent with the version**, between
    `<!-- install -->` and `<!-- /install -->` in both files.
    `bun run readme:check` requires `npm install material` for stable versions
-   and `npm install material@next` for a 3.0.0 pre-release. A stable version
-   must have no paragraph about the `next` tag in its install section.
+   and `npm install material@next` for a preview. Set the preview install
+   command in both READMEs before running `release:prepare`. Keep stable
+   install sections focused on the stable package.
 
    The size tables are a pre-fill, not the gate. Release CI measures the same
    tree and fails the pull request with `The committed release size tables
@@ -360,9 +361,8 @@ when GitHub Actions has no successful scheduled run on `main` in the previous
    git push origin vx.y.z
    ```
 
-   Tag only a commit on `main`: the workflow refuses a tag whose commit is not
-   an ancestor of `main`. A `v*` tag ruleset (only the owner creates matching
-   tags) is recommended.
+   Tag stable releases on `main`. Preview tags may point to a commit on
+   `main` or `next`. A `v*` tag ruleset for owner-created tags is recommended.
 
 3. The workflow checks that the tag matches the version, builds, and
    publishes: a pre-release under the `next` dist-tag, a release under
@@ -372,3 +372,14 @@ when GitHub Actions has no successful scheduled run on `main` in the previous
    short README, GitHub the long one. `scripts/package-fixture.ts` runs that
    same workflow step on a copy of the tree for every packed check, and
    `size:check` asserts which README and manifest are in the tarball.
+
+### Preview releases
+
+`next` carries preview work alongside `main`. Merge `main` into `next` regularly.
+Keep `next` as a merge-only branch to preserve its history. Preview pull requests
+target `next` and require green CI at the reviewed commit, review from another
+lab, and the size gate.
+
+Use `bun run release:prepare --version 3.17.0-next.0 --dry-run` to check the
+release plan after preparing the install sections and size measurements. Preview
+tags publish to npm's `next` dist-tag. Stable releases control `latest`.
