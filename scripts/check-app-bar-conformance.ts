@@ -19,8 +19,8 @@
  * - P8 bottom app bar: actions take OnSurfaceVariant (MDC BottomAppBar.md:80).
  * - P10 docked toolbar: items keep ContainerMinSpacing 4dp
  *   (tokens/DockedToolbarTokens.kt:31).
- * - P11 navigation bar: the horizontal active label keeps ItemActiveLabelTextColor
- *   Secondary (tokens/NavigationBarTokens.kt:31).
+ * - P11 navigation bar: the selected label inside the horizontal pill uses
+ *   OnSecondaryContainer (ShortNavigationBar.kt:295).
  */
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
@@ -247,9 +247,9 @@ try {
   });
 
   rows.push({
-    name: "P11 the horizontal active label keeps Secondary",
+    name: "P11 the horizontal active label uses OnSecondaryContainer",
     run: async () => {
-      const secondary = await probe("secondary");
+      const onSecondaryContainer = await probe("on-secondary-container");
       const measured = await page.evaluate(() => {
         const api = (window as unknown as { api: Record<string, unknown> }).api as Record<string, (config: Record<string, unknown>) => Record<string, unknown>>;
         document.body.replaceChildren();
@@ -267,7 +267,7 @@ try {
         return label ? getComputedStyle(label).color : null;
       });
       assert.ok(measured, "P11: no horizontal active label");
-      assert.equal(measured, secondary, `P11: the horizontal active label is ${measured}, not Secondary`);
+      assert.equal(measured, onSecondaryContainer, "P11: the horizontal active label uses OnSecondaryContainer");
     },
   });
 
