@@ -576,30 +576,43 @@ try {
   // ========================================================================
   // SECTION MOTION TOKENS: an app retunes the reveal with three properties
   // ========================================================================
-  const tokens = await page.evaluate(() => {
+  // The page runs with reduced motion, where every duration is 0s by design:
+  // read the tokens with motion on, then restore reduced motion.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.evaluate(() => {
     window.mountDrawer({
       variant: 'standard', open: true,
       items: [{ id: 'labels', label: 'Labels', expanded: false, items: [{ id: 'family', label: 'Family' }] }],
     });
+  });
+  await settle(page);
+  const readTokens = () => page.evaluate(() => {
     const root = window.drawer.element;
-    const read = () => {
-      const inner = root.querySelector('.mtrl-drawer__group-items-inner') as HTMLElement;
-      const panel = root.querySelector('.mtrl-drawer__group-items') as HTMLElement;
-      const chevron = root.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
-      return {
-        innerDuration: getComputedStyle(inner).transitionDuration.split(', ')[0],
-        innerEasing: getComputedStyle(inner).transitionTimingFunction.split(', ')[0],
-        panelDuration: getComputedStyle(panel).transitionDuration.split(', ')[0],
-        chevronDuration: getComputedStyle(chevron).transitionDuration,
-        closedTransform: getComputedStyle(inner).transform,
-      };
+    const inner = root.querySelector('.mtrl-drawer__group-items-inner') as HTMLElement;
+    const panel = root.querySelector('.mtrl-drawer__group-items') as HTMLElement;
+    const chevron = root.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+    // The first entry of each list: easing values hold commas themselves,
+    // so the list splits on "), " for curves and ", " for durations.
+    const firstEasing = (value: string) => value.startsWith('cubic-bezier(') ? value.slice(0, value.indexOf(')') + 1) : value.split(', ')[0];
+    return {
+      innerDuration: getComputedStyle(inner).transitionDuration.split(', ')[0],
+      innerEasing: firstEasing(getComputedStyle(inner).transitionTimingFunction),
+      panelDuration: getComputedStyle(panel).transitionDuration.split(', ')[0],
+      chevronDuration: getComputedStyle(chevron).transitionDuration,
+      closedTransform: getComputedStyle(inner).transform,
     };
-    const defaults = read();
+  });
+  const tokens = { defaults: await readTokens(), tuned: null as Awaited<ReturnType<typeof readTokens>> | null };
+  await page.evaluate(() => {
+    const root = window.drawer.element;
     root.style.setProperty('--mtrl-drawer-section-motion-duration', '400ms');
     root.style.setProperty('--mtrl-drawer-section-motion-easing', 'linear');
     root.style.setProperty('--mtrl-drawer-section-reveal-scale', '1');
-    return { defaults, tuned: read() };
   });
+  // The closed transform animates to the new scale: read it once settled.
+  await settle(page);
+  tokens.tuned = await readTokens();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   assert.deepEqual(tokens.defaults, { innerDuration: '0.25s', innerEasing: 'cubic-bezier(0.3, 0, 0, 1)', panelDuration: '0.25s', chevronDuration: '0.25s', closedTransform: 'matrix(1, 0, 0, 0, 0, 0)' }, 'the section tokens default to the menu reveal');
   assert.deepEqual(tokens.tuned, { innerDuration: '0.4s', innerEasing: 'linear', panelDuration: '0.4s', chevronDuration: '0.4s', closedTransform: 'matrix(1, 0, 0, 1, 0, 0)' }, 'the section tokens retune the duration, the curve and the reveal scale together');
 
