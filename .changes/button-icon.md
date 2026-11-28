@@ -1,0 +1,3 @@
+Section: Fixed
+
+**Button icon after a removal.** `button.setIcon('')` followed by `setIcon(svg)` brings the icon back as it was created: it lost its base class, its size class and its position class and was put back first whatever its position, and on a button created without an icon `getIcon()` kept returning the first icon after a replacement. `button.icon.setIcon()` after a removal wrote to an element that was no longer in the button; both entry points now act on the same element, and an empty string removes the icon through either. The core icon manager gains `removeIcon()`; its `setIcon('')` still changes nothing, so the FAB, the extended FAB and the icon button behave as before.

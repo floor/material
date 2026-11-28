@@ -53,4 +53,41 @@ describe("withIcon", () => {
     enhanced.icon.setIcon("<i>♥</i>");
     expect(element.firstElementChild?.classList.contains(`${PREFIX}-icon`)).toBe(true);
   });
+
+  test("removeIcon takes the element out, and the next setIcon builds it again as configured", () => {
+    const element: HTMLElement = document.createElement("div");
+    const other = element.appendChild(document.createElement("b"));
+    const enhanced = withIcon({ componentName: "card", iconPosition: "end", iconSize: "lg", icon: "<i>a</i>" })(
+      { element } as ElementComponent,
+    );
+    const classes = (): string[] => [...(enhanced.icon.getElement()?.classList ?? [])].sort();
+    const configured = [`${PREFIX}-card__icon`, `${PREFIX}-card__icon--end`, `${PREFIX}-icon`, `${PREFIX}-icon--lg`];
+    expect(classes()).toEqual(configured);
+    const first = enhanced.icon.getElement();
+
+    expect(enhanced.icon.removeIcon()).toBe(enhanced.icon);
+    expect(first?.isConnected).toBe(false);
+    expect(first?.parentNode).toBeNull();
+    expect(enhanced.icon.getElement()).toBeNull();
+    expect(enhanced.icon.getIcon()).toBe("");
+    expect([...element.children]).toEqual([other]);
+    // Removing what is not there is nothing.
+    enhanced.icon.removeIcon();
+    expect([...element.children]).toEqual([other]);
+
+    enhanced.icon.setIcon("<i>b</i>");
+    expect(enhanced.icon.getElement()).not.toBe(first);
+    expect(classes()).toEqual(configured);
+    expect(enhanced.icon.getIcon()).toBe("<i>b</i>");
+    // The end position: after what the element already holds.
+    expect(element.lastElementChild).toBe(enhanced.icon.getElement());
+  });
+
+  test("an empty setIcon still changes nothing: removal is removeIcon's", () => {
+    const element: HTMLElement = document.createElement("div");
+    const enhanced = withIcon({ componentName: "card", icon: "<i>a</i>" })({ element } as ElementComponent);
+    enhanced.icon.setIcon("");
+    expect(enhanced.icon.getIcon()).toBe("<i>a</i>");
+    expect(enhanced.icon.getElement()?.parentNode).toBe(element);
+  });
 });

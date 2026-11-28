@@ -15,6 +15,13 @@ export interface IconManager {
   setIcon: (html: string) => IconManager;
 
   /**
+   * Removes the icon element. The next `setIcon` creates it again, with the
+   * configured classes and at the configured position.
+   * @returns IconManager instance for chaining
+   */
+  removeIcon: () => IconManager;
+
+  /**
    * Gets current icon HTML content
    * @returns Current icon HTML
    */
@@ -157,6 +164,17 @@ const createIcon = (
         // Update existing icon
         setHTML(iconElement, html);
       }
+      return this;
+    },
+
+    /**
+     * Removes the icon element; the manager forgets it, so `getElement`
+     * returns null and `getIcon` an empty string until an icon is set again.
+     * @returns IconManager instance for chaining
+     */
+    removeIcon(): IconManager {
+      iconElement?.remove();
+      iconElement = null;
       return this;
     },
 

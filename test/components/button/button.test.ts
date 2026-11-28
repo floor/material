@@ -182,6 +182,102 @@ describe('button', () => {
     }
   });
 
+  // The icon manager owns the icon element; the button used to remove it and
+  // build its own on the way back, so two owners disagreed about the icon.
+  describe('one owner for the icon, through button.setIcon and button.icon.setIcon', () => {
+    const OTHER = '<svg id="other" viewBox="0 0 24 24"></svg>';
+    // iconPosition is the icon feature's option. The button's config type does
+    // not declare it, and passes it through.
+    type Config = NonNullable<Parameters<typeof createButton>[0]>;
+    const placed = (config: Config, iconPosition: 'start' | 'end'): Config =>
+      ({ ...config, iconPosition }) as Config;
+    const iconClasses = (button: ReturnType<typeof mount>): string[] =>
+      [...(button.icon.getElement()?.classList ?? [])].sort();
+    const entries = {
+      'button.setIcon': (button: ReturnType<typeof mount>, html: string) => { button.setIcon(html); },
+      'button.icon.setIcon': (button: ReturnType<typeof mount>, html: string) => { button.icon.setIcon(html); },
+    };
+
+    for (const [entry, set] of Object.entries(entries)) {
+      test(`${entry}: a re-added icon keeps its base, size and position classes`, () => {
+        const button = mount(placed({ text: 'Save', icon: ICON, iconSize: 'lg' }, 'end'));
+        const created = iconClasses(button);
+        expect(created).toEqual(['mtrl-button__icon', 'mtrl-button__icon--end', 'mtrl-icon', 'mtrl-icon--lg']);
+
+        set(button, '');
+        expect(button.hasIcon()).toBe(false);
+        expect(button.getIcon()).toBe('');
+        expect(button.icon.getIcon()).toBe('');
+        expect(button.icon.getElement()).toBeNull();
+        expect(button.element.querySelector('.mtrl-button__icon')).toBeNull();
+        expect(has(button, 'icon')).toBe(false);
+
+        set(button, OTHER);
+        expect(iconClasses(button)).toEqual(created);
+        expect(button.getIcon()).toContain('id="other"');
+        expect(button.icon.getIcon()).toContain('id="other"');
+        expect(button.icon.getElement()?.parentNode).toBe(button.element);
+        expect(button.element.querySelectorAll('.mtrl-button__icon').length).toBe(1);
+        expect(has(button, 'icon')).toBe(true);
+        button.destroy();
+      });
+
+      test(`${entry}: an end icon comes back after the text, a start icon before it`, () => {
+        for (const iconPosition of ['start', 'end'] as const) {
+          const button = mount(placed({ text: 'Save', icon: ICON }, iconPosition));
+          const text = button.element.querySelector('.mtrl-button__text')!;
+          const follows = (): boolean =>
+            !!(text.compareDocumentPosition(button.icon.getElement()!) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
+          expect(follows()).toBe(iconPosition === 'end');
+
+          set(button, '');
+          set(button, OTHER);
+          expect(follows()).toBe(iconPosition === 'end');
+          button.destroy();
+        }
+      });
+
+      test(`${entry}: the getter follows a replacement on a button created without an icon`, () => {
+        const button = mount({ text: 'Save' });
+        set(button, ICON);
+        set(button, OTHER);
+        expect(button.getIcon()).toContain('id="other"');
+        expect(button.icon.getIcon()).toContain('id="other"');
+        expect(button.element.querySelectorAll('.mtrl-button__icon').length).toBe(1);
+        button.destroy();
+      });
+
+      test(`${entry}: add, replace, remove and re-add leave the text and the ripple nodes alone`, () => {
+        const button = mount({ text: 'Save', ripple: true });
+        const others = [...button.element.childNodes];
+        const rest = (): ChildNode[] => [...button.element.childNodes].filter((node) => node !== button.icon.getElement());
+        for (const html of [ICON, OTHER, '', ICON, '']) {
+          set(button, html);
+          expect(rest()).toEqual(others);
+          expect(button.hasIcon()).toBe(html !== '');
+        }
+        expect([...button.element.childNodes]).toEqual(others);
+        button.destroy();
+      });
+    }
+
+    test('the two entry points act on the same element', () => {
+      const button = mount({ text: 'Save', icon: ICON });
+      button.setIcon('');
+      button.icon.setIcon(OTHER);
+      expect(button.hasIcon()).toBe(true);
+      expect(button.getIcon()).toContain('id="other"');
+      expect(button.icon.getElement()?.isConnected).toBe(true);
+
+      button.icon.setIcon('');
+      expect(button.hasIcon()).toBe(false);
+      button.setIcon(ICON);
+      expect(button.icon.getElement()?.isConnected).toBe(true);
+      expect(button.element.querySelectorAll('.mtrl-button__icon').length).toBe(1);
+      button.destroy();
+    });
+  });
+
   test('an icon with text is marked for icon layout, and setIcon replaces it', () => {
     const button = mount({ text: 'Add', icon: ICON });
     expect(button.hasIcon()).toBe(true);

@@ -4,7 +4,6 @@ import { ButtonComponent } from "./types";
 import { addClass } from "../../core";
 import { ProgressComponent } from "../progress/types";
 
-import { setHTML } from "../../core/dom/html";
 /**
  * API configuration options for button component
  * @category Components
@@ -35,6 +34,7 @@ interface ComponentWithElements {
   };
   icon: {
     setIcon: (html: string) => void;
+    removeIcon: () => void;
     getIcon: () => string;
     getElement: () => HTMLElement | null;
   };
@@ -104,8 +104,10 @@ export const withAPI =
     };
 
     const iconAPI = {
+      // The same path as button.setIcon(): an empty string removes the icon,
+      // and the layout modifier follows.
       setIcon: (html: string) => {
-        component.icon.setIcon(html);
+        buttonComponent.setIcon(html);
         return iconAPI;
       },
       getIcon: () => component.icon.getIcon(),
@@ -216,38 +218,18 @@ export const withAPI =
        * @returns Button component for method chaining
        */
       setIcon(icon: string) {
-        const buttonClass = getButtonClass(component);
+        const modifier = `${getButtonClass(component)}--icon`;
         if (!icon) {
-          // Remove the icon if it exists
-          const iconElement = component.icon.getElement();
-          if (iconElement && iconElement.parentNode) {
-            iconElement.parentNode.removeChild(iconElement);
-
-            // Override getElement to return null for removed icon
-            component.icon.getElement = () => null;
-            component.icon.getIcon = () => "";
-          }
-
-          component.element.classList.remove(`${buttonClass}--icon`);
-        } else if (!buttonComponent.hasIcon()) {
-          // Create new icon element when re-adding
-          const newIconElement = document.createElement("span");
-          newIconElement.className = `${component.getClass("button__icon")}`;
-          setHTML(newIconElement, icon);
-
-          // Insert at the beginning of button
-          component.element.insertBefore(newIconElement, component.element.firstChild);
-
-          // Update component's reference to the new element
-          component.icon.getElement = () => newIconElement;
-          component.icon.getIcon = () => icon;
-          component.element.classList.add(`${buttonClass}--icon`);
+          // The icon manager owns the element: it removes it and forgets it,
+          // so its getters and the next setIcon agree with the DOM.
+          component.icon.removeIcon();
+          component.element.classList.remove(modifier);
         } else {
-          // Update existing icon without creating a new one
-          const iconElement = component.icon.getElement();
-          if (iconElement) {
-            setHTML(iconElement, icon);
-          }
+          const added = !buttonComponent.hasIcon();
+          // Created again where there was none: with the configured classes
+          // (size, position) and at the configured position.
+          component.icon.setIcon(icon);
+          if (added) component.element.classList.add(modifier);
         }
 
         return buttonComponent;
