@@ -12,6 +12,7 @@ import { CAROUSEL_DEFAULTS, CAROUSEL_EVENTS, CAROUSEL_VARIANTS } from "../consta
 import { resolveLayoutDefaults } from "../config";
 import { cornerToken } from "../../../core/theme/shape";
 import { effectiveZoom } from "../../../core/dom/zoom";
+import { isTextEditable } from "../../../core/dom/roving";
 import {
   KeylineRules,
   multiBrowseKeylines,
@@ -395,6 +396,13 @@ export const withScroll = (config: CarouselConfig) =>
     const handleKeyDown = (e: KeyboardEvent): void => {
       ignorePointerFocus = false;
       stopWheel();
+      // A slide holds any content. In a text field the arrows, Home and End
+      // move the caret, and in a select they change the option: they are that
+      // control's keys, not the carousel's. The control is the first entry of
+      // the composed path, since inside another element's shadow tree the
+      // event's target is that element.
+      const origin = (e.composedPath?.()[0] ?? e.target) as Element | null;
+      if (isTextEditable(origin) || origin?.localName === "select") return;
       const from = indexOf(e.target);
       if (from < 0) return;
       // Arrows are physical: the forward item sits leftwards on an RTL page.
