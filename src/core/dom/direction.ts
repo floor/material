@@ -25,12 +25,16 @@
 // its shadow tree, where no attribute selector crosses, so the host reads its
 // computed direction: the same nearest boundary, including a stylesheet's.
 //
-// What a DOM change costs is sized by the change, never by the page: an
-// inserted or moved subtree is walked for the roots in it, a `dir` change for
-// the roots under the element that carries it, and a change anywhere else
-// reads no direction at all. A factory root is marked on the element itself:
-// past the task that creates it, nothing here keeps a component alive,
-// destroyed or not.
+// What a DOM change costs is sized by the change, not by the mounted
+// components: an inserted or moved subtree is walked for the roots in it, a
+// `dir` change for the roots under the element that carries it, and a change
+// anywhere else reads no direction at all. Two things are still paid on a
+// callback, and both are named where they live: up to sixteen liveness checks
+// while factory roots that were created detached stay detached past their
+// task (`waiting`), and, when content changes inside a `dir="auto"` element,
+// a read of the element hosts under one. A factory root is marked on the
+// element itself: past the task that creates it, nothing here keeps a
+// component alive, destroyed or not.
 import { PREFIX } from "../config";
 
 /** A followed root. Its marks live on the element, so they are as weak as it is. */
@@ -44,6 +48,8 @@ type Seen = HTMLElement & {
   _p?: WeakRef<Seen>;
   /** An element host: its own shadow root is the library's, and is not watched. */
   _h?: boolean;
+  /** An element host under a `dir="auto"` ancestor, whose content resolves its direction. */
+  _a?: boolean;
   /** Where someone listens: the direction last reported, and who asked. */
   _r?: boolean;
   _c?: Set<(rtl: boolean) => void>;
@@ -68,11 +74,23 @@ const noop = (): void => {};
 /**
  * Factory roots that stayed detached past the task that created them. No
  * record reports an insertion into a shadow tree the observer does not watch,
- * so these are checked on each callback until they connect. The entries are
- * weak: a component that is dropped without being mounted is collected. A
- * root that is mounted or destroyed in the task that creates it never has one.
+ * so these are checked on the observer's callbacks until they connect. The
+ * entries are weak: a component that is dropped without being mounted is
+ * collected. A root that is mounted or destroyed in the task that creates it
+ * never has one, and one that was mounted once never has one again.
  */
 const waiting = new Set<WeakRef<Seen>>();
+
+/**
+ * How many waiting roots one callback checks, taking up where the last one
+ * stopped. A pool of components kept detached then costs a callback this
+ * much whatever its size (checked on every callback, 1,000 of them cost one
+ * DOM change more than twice what the scan this module replaced did), and a
+ * root that connects where no record reports it is read within
+ * `waiting.size / WAITING_CHECKS` callbacks.
+ */
+const WAITING_CHECKS = 16;
+let waitingCursor: IterableIterator<WeakRef<Seen>> | undefined;
 
 /** The roots the running callback has to read: each once, wherever its records name it. */
 const found = new Set<Seen>();
@@ -80,8 +98,8 @@ const found = new Set<Seen>();
 // Two parts only some pages use add themselves here on first use, so a bundle
 // that has no element host, or no listener, carries neither.
 
-/** Reads the element hosts again, after a `dir` attribute changed. */
-let readHosts: (() => void) | undefined;
+/** Reads the element hosts a batch of records may have changed the direction of. */
+let readHosts: ((records: MutationRecord[], flipped: boolean) => void) | undefined;
 
 /** Tells a root's listeners the direction it resolved. */
 let report: ((element: Seen, rtl: boolean) => void) | undefined;
@@ -172,13 +190,18 @@ function onRecords(records: MutationRecord[]): void {
   // Read after the walks: a listener may change the tree it is told about.
   found.forEach((element) => element._m && readFactory(element));
   found.clear();
-  waiting.forEach((entry) => {
-    const element = entry.deref();
+  for (let checks = waiting.size && WAITING_CHECKS; checks--; ) {
+    const next = (waitingCursor ||= waiting.values()).next();
+    if (next.done) {
+      waitingCursor = undefined;
+      break;
+    }
+    const element = next.value.deref();
     if (element?._m === 1 && element.isConnected) readFactory(element);
-    if (element?._m !== 1) waiting.delete(entry);
-  });
+    if (element?._m !== 1) waiting.delete(next.value);
+  }
   settle(records[0].target.ownerDocument as Watched);
-  if (flipped) readHosts?.();
+  readHosts?.(records, flipped);
 }
 
 /**
@@ -188,27 +211,64 @@ function onRecords(records: MutationRecord[]): void {
  */
 const hosts = new Set<Seen>();
 
+const AUTO = "[dir=auto i]";
+
+/**
+ * How many followed hosts stand under a `dir="auto"` ancestor. There the
+ * direction is resolved from the content, with no attribute changing: while
+ * this is zero, a change of content reads no host.
+ */
+let autoHosts = 0;
+
+const underAuto = (element: Seen, auto: boolean): void => {
+  if (auto !== !!element._a) {
+    element._a = auto;
+    autoHosts += auto ? 1 : -1;
+  }
+};
+
 const readHost = (element: Seen): void => {
   const rtl = typeof getComputedStyle === "function" && getComputedStyle(element).direction === "rtl";
   reflect(element, rtl, !rtl && !!element.closest("[dir=rtl]"));
+  // The direction is inherited through shadow hosts, so the ancestor may be
+  // above any of them.
+  let auto = false;
+  for (let node: Element | undefined = element; node && !auto; node = (node.getRootNode() as ShadowRoot).host) {
+    auto = !!node.closest(AUTO);
+  }
+  underAuto(element, auto);
 };
 
-const readEveryHost = (): void => hosts.forEach(readHost);
+/**
+ * After a `dir` attribute changed, every host. After content changed inside a
+ * `dir="auto"` element (the text that decides its direction was replaced), the
+ * hosts that stand under one.
+ */
+const readChangedHosts = (records: MutationRecord[], flipped: boolean): void => {
+  if (flipped) hosts.forEach(readHost);
+  else if (autoHosts && records.some((record) => (record.target as Element).closest?.(AUTO))) {
+    hosts.forEach((host) => host._a && readHost(host));
+  }
+};
 
 /**
- * Follows an element host. A connected host is read now, and again after a
- * `dir` attribute changes above it (a page switching direction at runtime).
+ * Follows an element host. A connected host is read now, again after a `dir`
+ * attribute changes (a page switching direction at runtime), and, under a
+ * `dir="auto"` ancestor, after the content that resolves it changes.
  * The host calls this when it is built and each time it is connected, which
  * is how a move is read; the function returned stops following it.
  */
 export const trackDirection = (element: Seen): (() => void) => {
   element._h = true;
   if (typeof MutationObserver !== "function" || !element.isConnected) return noop;
-  readHosts = readEveryHost;
+  readHosts = readChangedHosts;
   readHost(element);
   hosts.add(element);
   watch(element);
-  return () => hosts.delete(element);
+  return () => {
+    hosts.delete(element);
+    underAuto(element, false);
+  };
 };
 
 /**

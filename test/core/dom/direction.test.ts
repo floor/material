@@ -385,6 +385,43 @@ describe("a factory root inside a shadow tree", () => {
     expect(dropped.filter((entry) => entry.deref()).length).toBeLessThan(100);
   });
 
+  test("beside a pool kept detached, is read within a few callbacks, each checking a bounded share", async () => {
+    const { inner } = shadowed();
+    const pool = Array.from({ length: 40 }, () => create());
+    const late = create();
+    await settled();
+
+    // Each callback checks sixteen waiting roots: count them by their
+    // isConnected reads, which nothing else makes on a detached root.
+    let checked = 0;
+    const watched = [...pool, late].map((component) => component.element);
+    const isConnected = Object.getOwnPropertyDescriptor(dom.window.Node.prototype, "isConnected")!;
+    Object.defineProperty(dom.window.Node.prototype, "isConnected", {
+      configurable: true,
+      get(this: Node) {
+        if (watched.includes(this as HTMLElement)) checked++;
+        return isConnected.get!.call(this);
+      },
+    });
+    try {
+      inner.append(late.element);
+      const perCallback: number[] = [];
+      for (let callback = 0; callback < 4 && marks(late.element) === ""; callback++) {
+        checked = 0;
+        document.body.append(document.createElement("i"));
+        await settled();
+        perCallback.push(checked);
+      }
+      expect(marks(late.element)).toBe("mtrl-rtl");
+      expect(perCallback.length).toBeGreaterThan(1);
+      expect(Math.max(...perCallback)).toBeLessThanOrEqual(17);
+    } finally {
+      Object.defineProperty(dom.window.Node.prototype, "isConnected", isConnected);
+    }
+    pool.forEach((component) => component.destroy());
+    late.destroy();
+  });
+
   test("destroyed while it waits, is not read when its element is mounted", async () => {
     const { inner } = shadowed();
     const component = create();
@@ -486,6 +523,86 @@ describe("an element host", () => {
 
     expect(styleReads).toBe(0);
     release();
+  });
+
+  // Under dir="auto" the browser resolves the direction from the content. The
+  // stand-in for that here is the section's inline direction, set with the
+  // text that would decide it.
+  const autoSection = (): { section: HTMLElement; write(text: string, direction: string): void } => {
+    const section = document.createElement("section");
+    section.setAttribute("dir", "auto");
+    section.append("English");
+    document.body.append(section);
+    return {
+      section,
+      write(text, direction) {
+        section.style.direction = direction;
+        section.firstChild!.replaceWith(document.createTextNode(text));
+      },
+    };
+  };
+
+  test("under dir=auto, follows the content that resolves the direction", async () => {
+    const { section, write } = autoSection();
+    const element = host(section);
+    const release = trackDirection(element);
+    expect(marks(element)).toBe("");
+
+    write("\u05e2\u05d1\u05e8\u05d9\u05ea", "rtl");
+    await settled();
+    expect(marks(element)).toBe("mtrl-rtl");
+
+    write("English", "ltr");
+    await settled();
+    expect(marks(element)).toBe("");
+
+    // Deeper in the section, and through a shadow boundary.
+    const wrap = document.createElement("div");
+    const inner = document.createElement("div");
+    wrap.attachShadow({ mode: "open" }).append(inner);
+    section.append(wrap);
+    const releaseInner = trackDirection(inner);
+    write("\u05e2\u05d1\u05e8\u05d9\u05ea", "rtl");
+    await settled();
+    expect(marks(inner)).toBe("mtrl-rtl");
+    expect(marks(element)).toBe("mtrl-rtl");
+
+    release();
+    releaseInner();
+  });
+
+  test("a change of content reads no host unless one stands under dir=auto", async () => {
+    const { section, write } = autoSection();
+    const outside = host();
+    const releaseOutside = trackDirection(outside);
+    styleReads = 0;
+
+    // No followed host is under the section: its content is nobody's direction.
+    write("\u05e2\u05d1\u05e8\u05d9\u05ea", "rtl");
+    await settled();
+    expect(styleReads).toBe(0);
+
+    // With one under it, that host is read, and the one outside is not.
+    const inside = host(section);
+    const releaseInside = trackDirection(inside);
+    styleReads = 0;
+    write("English", "ltr");
+    await settled();
+    expect(styleReads).toBe(1);
+    expect(marks(inside)).toBe("");
+
+    // Content changing elsewhere reads nothing, even now.
+    styleReads = 0;
+    document.body.append(document.createElement("p"));
+    await settled();
+    expect(styleReads).toBe(0);
+
+    // Released, the host under the section no longer counts.
+    releaseInside();
+    write("\u05e2\u05d1\u05e8\u05d9\u05ea", "rtl");
+    await settled();
+    expect(styleReads).toBe(0);
+    releaseOutside();
   });
 
   test("a host that is not connected is not followed", async () => {
