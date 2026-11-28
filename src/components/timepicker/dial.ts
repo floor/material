@@ -58,11 +58,18 @@ const dialValue = (time: TimeValue, selector: DialSelector, format: TimeFormat):
   : selector === "second" ? time.seconds ?? 0
   : format === TIME_FORMAT.MILITARY ? time.hours : time.hours % 12 || 12;
 
-/** How a value on the dial is named: "9 o'clock", "20 hours", "15 minutes". */
+/** The spoken value in the time selector buttons. */
 export const nameFor = (selector: DialSelector, format: TimeFormat, value: number): string =>
   selector === "minute" ? `${value} minutes`
   : selector === "second" ? `${value} seconds`
   : format === TIME_FORMAT.MILITARY ? `${value} hours` : `${value} o'clock`;
+
+/** The accessible name of an option on the dial. */
+const optionName = (selector: DialSelector, format: TimeFormat, value: number): string => {
+  if (selector === "minute") return `Minute ${value} of 60`;
+  if (selector === "hour") return `Hour ${value}${format === TIME_FORMAT.MILITARY ? "" : " of 12"}`;
+  return nameFor(selector, format, value);
+};
 
 let dials = 0;
 
@@ -132,7 +139,7 @@ export const createDial = (options: DialOptions): Dial => {
       if (item.radius === INNER) option.classList.add(cls("dial-number--inner"));
       option.id = `${id}-${index}`;
       option.setAttribute("role", "option");
-      option.setAttribute("aria-label", nameFor(next, format, item.value));
+      option.setAttribute("aria-label", optionName(next, format, item.value));
       option.dataset.value = String(item.value);
       option.textContent = item.text;
       place(option, item);

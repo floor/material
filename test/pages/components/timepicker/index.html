@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>Time picker</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createTimePicker } from "../../../../dist/components/timepicker/index.js";
+
+const main = await initPage({ name: "timepicker" });
+let picker;
+
+scenario(section(main, "Interaction"), {
+  title: "Dial names and AM/PM focus",
+  lookFor: "Open the picker, move through the dial with the arrow keys, and Tab to AM or PM.",
+  expected: "A 3 px ring sits 2 px outside the focused AM or PM option. Dial options announce the hour out of 12 or the minute out of 60.",
+  measure: () => {
+    const dialog = picker.dialogElement;
+    if (!dialog.open) return "Open the picker to measure a dial option.";
+    const option = dialog.querySelector('[role="option"][aria-selected="true"]');
+    const focused = dialog.querySelector('.mtrl-time-picker__period [role="radio"]:focus-visible');
+    const ring = focused ? getComputedStyle(focused) : null;
+    return [option?.getAttribute("aria-label"), ring && `Period focus ${ring.outlineWidth} at ${ring.outlineOffset}`].filter(Boolean).join(" · ");
+  },
+  mount: (body) => {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.textContent = "Open time picker";
+    picker = createTimePicker({ title: "Appointment", type: "dial", format: "12h", value: "14:30" });
+    open.addEventListener("click", () => picker.open());
+    body.append(open, picker.element);
+  },
+});
+</script>
+</body>
+</html>

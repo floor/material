@@ -26937,10 +26937,10 @@
           "state": "period-focus",
           "density": 0,
           "spec": {
-            "value": "Visible keyboard focus ring",
-            "url": "https://m3.material.io/foundations/interaction/states/applying-states",
-            "section": "Keyboard focus indicator",
-            "read": "2026-11-26"
+            "value": "3dp solid Secondary at 2dp",
+            "url": "https://m3.material.io/components/time-pickers/specs",
+            "section": "Tokens & specs · Focused · Time pickers focused indicator outline offset",
+            "read": "2026-11-28"
           },
           "compose": {
             "value": "0.10 opacity focus layer",
@@ -26950,7 +26950,7 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Ripple.kt#L360"
           },
           "material": {
-            "value": "3px solid Secondary at -3px",
+            "value": "3px solid Secondary at 2px",
             "engines": null,
             "resolved": {
               "light": "#625B71",
@@ -26962,7 +26962,7 @@
             "spec": "match",
             "compose": "drift"
           },
-          "note": "The website calls for a visible ring. Compose uses an opacity layer by default and also offers an opt-in inset ring. The reference choice is pending.",
+          "note": "Material specifies a 3 dp Secondary focus outline at a 2 dp offset. Compose uses an opacity layer by default.",
           "issue": null
         },
         {

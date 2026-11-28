@@ -170,16 +170,27 @@ describe("in dial mode the hour and minute boxes are radios", () => {
 // The dial is a listbox of its numbers, reachable and operable by keyboard;
 // it was a canvas hidden from assistive technology.
 describe("the dial is an accessible control", () => {
-  test("a listbox named Hour, its numbers options named as times, one tab stop", () => {
+  test("12-hour dial options announce the hour out of 12 and keep one tab stop", () => {
     const c = picker();
     const face = q(c, `.${PREFIX}-time-picker__dial-face`);
     expect(face.getAttribute("role")).toBe("listbox");
     expect(face.getAttribute("aria-label")).toBe("Hour");
     const options = Array.from(face.querySelectorAll("[role=option]"));
     expect(options).toHaveLength(12);
-    expect(options[3].getAttribute("aria-label")).toBe("3 o'clock");
+    expect(options[0].getAttribute("aria-label")).toBe("Hour 12 of 12");
+    expect(options[3].getAttribute("aria-label")).toBe("Hour 3 of 12");
     expect(face.querySelectorAll('[role=option][tabindex="0"]')).toHaveLength(1);
     expect(face.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
+  });
+
+  test("the 24-hour dial announces midnight and the hour, then minutes out of 60", () => {
+    const c = picker({ format: "24h" });
+    const face = q(c, `.${PREFIX}-time-picker__dial-face`);
+    expect(q(face, '[role=option][data-value="0"]').getAttribute("aria-label")).toBe("Hour 0");
+    expect(q(face, '[role=option][data-value="23"]').getAttribute("aria-label")).toBe("Hour 23");
+    q(c, `.${PREFIX}-time-picker__minutes`).click();
+    expect(q(face, '[role=option][data-value="0"]').getAttribute("aria-label")).toBe("Minute 0 of 60");
+    expect(q(face, '[role=option][data-value="30"]').getAttribute("aria-label")).toBe("Minute 30 of 60");
   });
 
   test("the arrows move between numbers and wrap; Enter selects", () => {

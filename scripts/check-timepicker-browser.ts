@@ -84,7 +84,7 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   await page.emulateMedia({ reducedMotion: "reduce" });
   await dialog.locator(".mtrl-time-picker__toggle-type").click();
   await dialog.locator(".mtrl-time-picker__hours").click();
-  assert.deepEqual(await hand(), { angle: 270, radius: 101, label: "Hour", selected: "9 o'clock" }, "9:35 puts the hand at nine, on the outer ring");
+  assert.deepEqual(await hand(), { angle: 270, radius: 101, label: "Hour", selected: "Hour 9 of 12" }, "9:35 puts the hand at nine, on the outer ring");
   // In dial mode the boxes are radios, filled primary-container when
   // checked; the arrows move the check, the focus and the dial.
   const selector = (unit: string) => dialog.locator(`.mtrl-time-picker__${unit}`).evaluate(element => {
@@ -122,13 +122,13 @@ export async function checkTimePicker(page: Page, artifacts: string): Promise<vo
   assert.equal(await draft(), "03:35", "a drag to three o'clock picks 3");
   assert.equal(await dialog.locator('.mtrl-time-picker__dial-number[tabindex="0"]').count(), 1, "a drag from a focused number leaves one dial tab stop");
   await page.waitForFunction(() => document.querySelector(".mtrl-time-picker__dial-face")?.getAttribute("aria-label") === "Minute");
-  assert.equal((await hand()).selected, "35 minutes", "then the dial moves on to minutes");
+  assert.equal((await hand()).selected, "Minute 35 of 60", "then the dial moves on to minutes");
   assert.equal((await selector("minutes")).checked, "true", "and checks the minute box");
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setFormat("24h" as never).setValue("12:00"));
   await dialog.locator(".mtrl-time-picker__hours").click();
-  assert.deepEqual(await hand(), { angle: 0, radius: 69, label: "Hour", selected: "12 hours" }, "noon is on the inner ring, at the top");
+  assert.deepEqual(await hand(), { angle: 0, radius: 69, label: "Hour", selected: "Hour 12" }, "noon is on the inner ring, at the top");
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setValue("00:00"));
-  assert.deepEqual(await hand(), { angle: 0, radius: 101, label: "Hour", selected: "0 hours" }, "midnight is on the outer ring, at the top");
+  assert.deepEqual(await hand(), { angle: 0, radius: 101, label: "Hour", selected: "Hour 0" }, "midnight is on the outer ring, at the top");
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setFormat("12h" as never).setValue("11:00"));
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.evaluate(() => (window as unknown as TimePickerWindow).timePicker.setValue("13:00"));
@@ -219,10 +219,11 @@ async function checkTimePickerTokens(page: Page): Promise<void> {
     const roles = ["primary-container", "on-primary-container", "surface-container-highest", "on-surface", "on-surface-variant", "tertiary-container", "on-tertiary-container", "outline", "primary", "secondary"];
     const role = (css: string) => { if (css === "rgba(0, 0, 0, 0)") return "transparent"; const value = pixel(css); return roles.find(name => pixel(`var(--mtrl-sys-color-${name})`) === value) ?? css; };
     const part = (name: string) => dialog.querySelector<HTMLElement>(`.mtrl-time-picker__${name}`);
-    const box = (name: string) => { const element = part(name); if (!element) return null; const r = element.getBoundingClientRect(), c = getComputedStyle(element); return { left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width), height: Math.round(r.height), font: `${c.fontSize}/${c.lineHeight}`, fill: role(c.backgroundColor), label: role(c.color), outline: c.outlineStyle === "none" ? "none" : `${c.outlineWidth} ${role(c.outlineColor)}`, border: `${c.borderTopWidth} ${role(c.borderTopColor)}` }; };
+    const box = (name: string) => { const element = part(name); if (!element) return null; const r = element.getBoundingClientRect(), c = getComputedStyle(element); return { left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width), height: Math.round(r.height), font: `${c.fontSize}/${c.lineHeight}`, fill: role(c.backgroundColor), label: role(c.color), outline: c.outlineStyle === "none" ? "none" : `${c.outlineWidth} ${role(c.outlineColor)}`, outlineOffset: c.outlineOffset, border: `${c.borderTopWidth} ${role(c.borderTopColor)}` }; };
     const result = {
       hours: box("hours"), minutes: box("minutes"), separator: box("separator"), selectors: box("selectors"),
       period: box("period"), am: box("period-am"), pm: box("period-pm"),
+      periodOverflow: part("period") ? getComputedStyle(part("period")!).overflow : null,
       labels: [...dialog.querySelectorAll<HTMLLabelElement>(".mtrl-time-picker__input-label")].map(label => `${label.textContent} ${getComputedStyle(label).fontSize} ${role(getComputedStyle(label).color)} for=${label.htmlFor === label.parentElement?.querySelector("input")?.id}`),
       overlay: getComputedStyle(dialog, "::before").content,
     };
@@ -259,6 +260,12 @@ async function checkTimePickerTokens(page: Page): Promise<void> {
   const horizontal = await measure({ type: "dial", format: "12h", orientation: "horizontal" });
   assert.deepEqual([horizontal.period?.width, horizontal.period?.height], [216, 38], "horizontal: AM/PM 216x38dp");
 
+  await page.keyboard.press("Tab");
+  const focusedAM = await measure({ type: "input", format: "12h" }, "ltr", ".mtrl-time-picker__period-am");
+  const focusedPM = await measure({ type: "dial", format: "12h", orientation: "horizontal" }, "rtl", ".mtrl-time-picker__period-pm");
+  assert.deepEqual([focusedAM.am?.outline, focusedAM.am?.outlineOffset, focusedAM.periodOverflow], ["3px secondary", "2px", "visible"], "input mode: the AM ring extends past the group");
+  assert.deepEqual([focusedPM.pm?.outline, focusedPM.pm?.outlineOffset, focusedPM.periodOverflow], ["3px secondary", "2px", "visible"], "RTL horizontal dial: the PM ring extends past the group");
+
   // Right to left: the time still reads hours then minutes, left to right; AM/PM
   // moves to the other side, still 12dp away.
   const rtl = await measure({ type: "dial", format: "12h" }, "rtl");
@@ -292,9 +299,9 @@ async function checkTimePickerShadow(page: Page): Promise<void> {
   assert.equal(await page.evaluate(() => document.getElementById("time-host")!.shadowRoot!.contains((window as unknown as TimePickerWindow).timePicker.dialogElement)), true, "the dialog is inside the shadow root");
   // A mouse click on a number focuses it; the pick moves the dial to minutes,
   // and focus follows onto the new face.
-  await page.getByRole("option", { name: "3 o'clock" }).click();
+  await page.getByRole("option", { name: "Hour 3 of 12" }).click();
   await page.waitForFunction(() => document.getElementById("time-host")!.shadowRoot!.querySelector(".mtrl-time-picker__dial-face")?.getAttribute("aria-label") === "Minute");
-  assert.equal(await focused(), "30 minutes", "in a shadow root, focus moves onto the minutes face");
+  assert.equal(await focused(), "Minute 30 of 60", "in a shadow root, focus moves onto the minutes face");
   await page.keyboard.press("Escape");
   assert.equal(await focused(), "time-opener", "closing returns focus to the opener inside the shadow root");
   await page.evaluate(() => { (window as unknown as TimePickerWindow).timePicker.destroy(); document.getElementById("time-host")?.remove(); });
