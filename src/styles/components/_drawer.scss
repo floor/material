@@ -654,17 +654,19 @@ $default-width: 360px;
         display: flex;
         flex-direction: column;
 
+        // On the indicator's end, 12dp from the drawer's edge.
         > .#{$component}__item-toggle {
             position: absolute;
             top: 50%;
-            inset-inline-end: 22px;
+            inset-inline-end: 12px;
             margin: 0;
             transform: translateY(-50%);
         }
     }
 
+    // The label stops 8dp short of the button.
     &__item--selectable {
-        padding-inline-end: 56px;
+        padding-inline-end: calc(#{f.density(56px, 36px)} + 8px);
     }
 
     &__group--expanded > &__item-row {
@@ -676,29 +678,33 @@ $default-width: 360px;
         margin-inline-start: 0;
     }
 
-    // The section chevron as an icon button: a 40dp round target whose state
-    // layer is the only hover feedback the header gives. The glyph keeps the
-    // place the bare chevron had: its ink ends 24dp inside the indicator, so
-    // the 40dp box reaches 8px further than the 24dp box did.
+    // The section chevron as an icon button (owner, 2026-11-28, after
+    // Google's own consoles): a round button as tall as the row at every
+    // density — 56dp at rest, 36dp dense — that ends on the indicator's end.
+    // Its state layer is the only hover feedback a section header gives.
+    // Below 48dp the button keeps a 48dp touch target, centred on it.
     &__item-toggle {
         position: relative;
         z-index: 2;
         display: grid;
         place-items: center;
         flex: none;
-        width: 40px;
-        height: 40px;
+        width: f.density(56px, 36px);
+        height: f.density(56px, 36px);
         margin-inline-start: auto;
-        margin-inline-end: -14px;
+        // Past the row's 24dp end padding, onto the indicator's end.
+        margin-inline-end: -24px;
         padding: 0;
         border: 0;
         border-radius: 50%;
         background: transparent;
         color: t.color("on-surface-variant");
         cursor: pointer;
-        overflow: hidden;
         -webkit-tap-highlight-color: transparent;
 
+        // State layer for hover, focus and press. The ripple clips itself
+        // to the button's round shape, so the button does not clip: the
+        // touch target below has to reach past a 36dp button.
         &::before {
             content: "";
             position: absolute;
@@ -711,6 +717,16 @@ $default-width: 360px;
                 v.motion("spring-default-effects-easing");
         }
 
+        &::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: max(100%, 48px);
+            height: max(100%, 48px);
+            transform: translate(-50%, -50%);
+        }
+
         &:hover::before {
             opacity: v.state("hover-state-layer-opacity");
         }
@@ -718,7 +734,6 @@ $default-width: 360px;
         &:focus-visible {
             outline: 3px solid t.color("secondary");
             outline-offset: 2px;
-            overflow: visible;
 
             &::before {
                 opacity: v.state("focus-state-layer-opacity");
@@ -842,29 +857,6 @@ $default-width: 360px;
 
     &--dense {
         --#{base.$prefix}-density: -5;
-
-        // In a dense drawer the chevron button is as tall as the 36dp row
-        // and sits flush with the indicator's end: a square inside the pill's
-        // rounded end, not a 40dp circle overhanging the short row.
-        .#{$component}__item-toggle {
-            width: 36px;
-            height: 36px;
-        }
-
-        // Inside a header row: past the row's 24dp end padding.
-        .#{$component}__item--header > .#{$component}__item-toggle {
-            margin-inline-end: -24px;
-        }
-
-        // Beside a selectable header: on the indicator's end, 12dp from the
-        // drawer's edge.
-        .#{$component}__item-row > .#{$component}__item-toggle {
-            inset-inline-end: 12px;
-        }
-
-        .#{$component}__item--selectable {
-            padding-inline-end: 48px;
-        }
     }
 
     // ========================================================================
@@ -943,6 +935,17 @@ $default-width: 360px;
 
         &__divider {
             background-color: currentColor;
+        }
+
+        // The chevron button's state layer is hidden in forced colors: an
+        // outline marks the hovered button, and the focus ring takes the
+        // system colour like the rows'.
+        &__item-toggle:hover {
+            outline: 1px solid CanvasText;
+        }
+
+        &__item-toggle:focus-visible {
+            outline: 3px solid CanvasText;
         }
     }
 }

@@ -1,0 +1,3 @@
+Section: Changed
+
+**Navigation drawer.** A section header is now a label, and its chevron is a round icon button as tall as the row, ending on the active indicator's end, with its own state layer, focus ring, ripple and a 48 dp touch target. Only the chevron opens and closes the section: the header takes no hover layer or tab stop. A collapsed section that holds the active destination carries the active indicator on its header. A section with `selectable: true` or an `href` (the `selectable` or `href` attribute on a parent item) is a destination of its own, with its chevron beside it. Sections open and close with the menu's scale reveal, and rows under a header without an icon line up with the top-level rows.
