@@ -75,7 +75,7 @@ const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch(request) {
   document.querySelector('#outside').onclick=()=>window.rail.expand();
   </script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
     } });
-async function checkModalHitWidth(page: Page, url: string, engine: string): Promise<string[]> {
+async function checkModalGeometry(page: Page, url: string, engine: string): Promise<string[]> {
     const failures: string[] = [];
     await page.goto(url);
     await page.waitForFunction(() => !!window.mountRail);
@@ -96,13 +96,18 @@ async function checkModalHitWidth(page: Page, url: string, engine: string): Prom
             assert(rail && inbox && sent && indicator);
 
             const expectedWidth = Math.min(280, viewport - 56);
-            const padding = await dialog.evaluate(el => {
+            const { padding, corners } = await dialog.evaluate(el => {
                 const style = getComputedStyle(el);
-                return [style.paddingLeft, style.paddingRight].join('/');
+                return {
+                    padding: [style.paddingLeft, style.paddingRight].join('/'),
+                    corners: [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius],
+                };
             });
             const geometry = `${rail.width}/${inbox.width}/${sent.width}, padding ${padding}`;
             const expected = `${expectedWidth}/${expectedWidth}/${expectedWidth}, padding 0px/0px`;
             const label = `${engine} ${viewport}px ${dir}`;
+            if (corners.some(radius => radius !== '16px'))
+                failures.push(`${label}: expected four 16px corners, measured ${corners.join('/')}`);
             if (geometry !== expected || inbox.x !== rail.x || sent.x !== rail.x)
                 failures.push(`${label}: expected full-width items (${expected}), measured ${geometry}`);
             if (indicator.x - rail.x !== 34 || indicator.width !== expectedWidth - 68 || indicator.height !== 56)
@@ -116,7 +121,7 @@ async function checkModalHitWidth(page: Page, url: string, engine: string): Prom
                 failures.push(`${label}: clicks at both rail edges should select their destination`);
         }
     }
-    if (failures.length === 0) console.log(`${engine}: modal rail destinations span 280px and 244px in LTR and RTL with unchanged indicators`);
+    if (failures.length === 0) console.log(`${engine}: modal rail destinations span 280px and 244px in LTR and RTL with 16px corners and 34px indicator insets`);
     return failures;
 }
 
@@ -133,8 +138,8 @@ try {
     try {
         const webkitPage = await webkitBrowser.newPage({ reducedMotion: 'reduce' });
         for (const url of urls) {
-            modalFailures.push(...await checkModalHitWidth(page, url, 'chromium'));
-            modalFailures.push(...await checkModalHitWidth(webkitPage, url, 'webkit'));
+            modalFailures.push(...await checkModalGeometry(page, url, 'chromium'));
+            modalFailures.push(...await checkModalGeometry(webkitPage, url, 'webkit'));
         }
     } finally {
         await webkitBrowser.close();

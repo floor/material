@@ -17188,17 +17188,17 @@
             }
           },
           "material": {
-            "value": "0px",
+            "value": "CornerLarge",
             "engines": null,
             "resolved": {
-              "radius": "0px"
+              "radius": "16px"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
-          "note": "The stable Compose modal rail uses 16 dp on all corners. The row measures the leading corner of the left-docked Material rail. The measured value could not be assigned a unique role.",
+          "note": "The stable Compose modal rail uses 16 dp on all corners. The row measures the leading corner of the left-docked Material rail.",
           "issue": null
         },
         {

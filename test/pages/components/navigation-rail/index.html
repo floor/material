@@ -14,8 +14,33 @@ import { createNavigationRail } from "../../../../dist/components/navigation-rai
 const main = await initPage({ name: "navigation-rail" });
 const icon = '<svg viewBox="0 0 24 24"><path d="M3 5h18v14H3zm2 2v1l7 4 7-4V7l-7 4z"/></svg>';
 let rail;
+let modal;
 let readout;
 let lastReading = "Open the rail to measure its destinations.";
+
+scenario(section(main, "Variants & sizes"), {
+  title: "Modal rail corners",
+  lookFor: "Open the modal rail, then close it and repeat with RTL enabled.",
+  expected: "All four corners use CornerLarge (16 px).",
+  measure: () => {
+    if (!modal.element.open) return "Open the modal rail to measure its corners.";
+    const style = getComputedStyle(modal.element);
+    const corners = [style.borderTopLeftRadius, style.borderTopRightRadius, style.borderBottomRightRadius, style.borderBottomLeftRadius];
+    return `Corner radii (from top left): ${corners.join(" · ")}`;
+  },
+  mount: (body) => {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.textContent = "Show modal rail corners";
+    modal = createNavigationRail({
+      ariaLabel: "Modal rail corners",
+      layout: "modal",
+      items: [{ id: "Inbox", label: "Inbox", icon, active: true }],
+    });
+    open.addEventListener("click", () => modal.expand());
+    body.append(open, modal.element);
+  },
+});
 
 scenario(section(main, "Interaction"), {
   title: "Expanded modal rail hit width",
