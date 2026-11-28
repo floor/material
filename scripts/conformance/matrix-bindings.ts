@@ -351,6 +351,10 @@ export const bindings: FixtureBinding[] = [
     ["height/filled-m/density-minus-2", "Button height at negative density", "density", "filled/m/density -2", height("root")],
     ["height/filled-m/density-minus-3", "Button height at negative density", "density", "filled/m/density -3", height("root")],
     ["state-layer/filled-trailing/selected", "Selected trailing state layer opacity", "colour", "selected layer/m", opacity("trailing layer")],
+    ...["xs", "s"].flatMap(size => ["leading", "trailing"].map((half): Spec =>
+      [`hit-target-height/filled-${size}-${half}`, "Centred pointer target height", "size", `filled/${size}/hit target`,
+        css(half, "centredHitHeight"), undefined, `filled, size ${size}, ${half}`],
+    )),
     ...splitHeights,
     ["gap/size-m", "Button gap", "spacing", "filled/m/rest", css("root", "columnGap"), "SplitButtonMediumTokens.BetweenSpace", "filled, size m"],
     ["trailing-icon/size-m", "Trailing icon size", "size", "filled/m/rest", width("chevron"), "SplitButtonMediumTokens.TrailingIconSize", "filled, size m"],

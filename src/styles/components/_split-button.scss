@@ -66,7 +66,7 @@ $gap: 2px;
   //
   // The size classes set the three radii; a root without one keeps the
   // default size's values, which is the size the factory defaults to.
-  --#{$component}-pill: #{math.div(map.get($sizes, "s", "height"), 2)};
+  --#{$component}-pill: #{f.density(math.div(map.get($sizes, "s", "height"), 2), 16px, 2px)};
   --#{$component}-corner: var(--#{$component}-inner-shape, #{map.get($sizes, "s", "inner")});
   --#{$component}-corner-active: var(--#{$component}-inner-shape-active, #{map.get($sizes, "s", "inner-active")});
 
@@ -80,14 +80,16 @@ $gap: 2px;
   // Sizes
   // ---------------------------------------------------------------------------
   @each $size, $spec in $sizes {
+    $height: map.get($spec, "height");
+
     &--#{$size} {
-      --#{$component}-pill: #{math.div(map.get($spec, "height"), 2)};
+      --#{$component}-pill: #{f.density(math.div($height, 2), 16px, 2px)};
       --#{$component}-corner: var(--#{$component}-inner-shape, #{map.get($spec, "inner")});
       --#{$component}-corner-active: var(--#{$component}-inner-shape-active, #{map.get($spec, "inner-active")});
 
       .#{$button} {
-        height: map.get($spec, "height");
-        min-height: map.get($spec, "height");
+        height: f.density($height, 32px);
+        min-height: f.density($height, 32px);
       }
 
       // The leading button: an outer pill edge, an inner corner facing its
@@ -233,8 +235,8 @@ $gap: 2px;
         content: "";
         position: absolute;
         inset-inline: 0;
+        // The shared button's transform already centres this hit area.
         top: 50%;
-        translate: 0 -50%;
         height: v.button("touch-target");
         min-height: 100%;
       }

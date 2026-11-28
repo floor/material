@@ -78,6 +78,8 @@ export type Part = {
   pseudo?: "::before" | "::after" | "::placeholder" | "::backdrop";
   /** Include occupied, near-opaque regions of the canvas bitmap in CSS pixels. */
   bitmap?: boolean;
+  /** Measure the pointer hit height centred on this part. */
+  centredHitHeight?: boolean;
 };
 
 export type State = "rest" | "hover" | "focus" | "pressed" | "disabled" | "dragged";
@@ -493,6 +495,18 @@ export const createConformanceHarness = async (options: HarnessOptions): Promise
             const style: Record<string, string> = {};
             for (const property of properties) {
               style[property] = computed.getPropertyValue(property) || computed[property as keyof CSSStyleDeclaration]?.toString() || "";
+            }
+            if (part.centredHitHeight) {
+              const x = rect.x + rect.width / 2;
+              const y = rect.y + rect.height / 2;
+              const halves = [-1, 1].map(direction => {
+                let pixels = 0;
+                while (element.contains(document.elementFromPoint(x, y + direction * (pixels + 0.5)))) {
+                  pixels += 1;
+                }
+                return pixels;
+              });
+              style.centredHitHeight = `${2 * Math.min(...halves)}px`;
             }
             const isIndefinite = excludeIndefinite && !!element.closest(".mtrl-loading-indicator:not(.mtrl-loading-indicator--determinate)");
             const bitmap = !isIndefinite && part.bitmap && element instanceof HTMLCanvasElement ? readBitmap(element, rect) : undefined;

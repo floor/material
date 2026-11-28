@@ -184,6 +184,35 @@ try {
   await page.goto(`http://127.0.0.1:${server.port}/`);
   await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready === true);
 
+  const targetMisses = await page.evaluate(() => {
+    const misses: string[] = [];
+    for (const split of document.querySelectorAll<HTMLElement>(".mtrl-split-button")) {
+      if (split.dataset.size !== "xs" && split.dataset.size !== "s") continue;
+      for (const half of ["leading", "trailing"]) {
+        const button = split.querySelector<HTMLElement>(`.mtrl-split-button__${half}`)!;
+        const { x, y, width, height } = button.getBoundingClientRect();
+        for (const dy of [-25, -23, 23, 25]) {
+          const hit = button.contains(document.elementFromPoint(x + width / 2, y + height / 2 + dy));
+          if (hit !== (Math.abs(dy) < 24)) {
+            misses.push(`${split.dataset.dir} ${split.dataset.size} ${half} at ${dy}px: ${hit ? "hit" : "miss"}`);
+          }
+        }
+      }
+    }
+    return misses;
+  });
+  const densityHeights = await page.locator('[data-dir="ltr"][data-size="m"]').evaluate(split => {
+    const heights = [0, -1, -2, -3].map(density => {
+      split.style.setProperty("--mtrl-density", String(density));
+      return split.getBoundingClientRect().height;
+    });
+    split.style.removeProperty("--mtrl-density");
+    return heights;
+  });
+  console.log(`split button medium heights at density 0/-1/-2/-3: ${densityHeights.join("/")} px`);
+  console.log(`split button hit targets: ${targetMisses.length ? targetMisses.join("; ") : "all small targets centred at 48 px"}`);
+  assert.deepEqual({ densityHeights, targetMisses }, { densityHeights: [56, 52, 48, 44], targetMisses: [] });
+
   const measure = () => page.evaluate(() => {
     const rows: Sample[] = [];
     for (const root of document.querySelectorAll<HTMLElement>(".mtrl-split-button")) {

@@ -48,6 +48,25 @@ scenario(variants, {
   mount: (body) => { mountRow(body, "ltr"); mountRow(body, "rtl"); },
 });
 
+const densitySamples = [];
+scenario(variants, {
+  title: "Medium split button at four densities",
+  lookFor: "both halves shrink together as the density increases",
+  expected: "the visible height is 56, 52, 48 and 44 px at densities 0, −1, −2 and −3",
+  mount: (body) => {
+    const row = Object.assign(document.createElement("div"), { className: "tp-row" });
+    for (const density of [0, -1, -2, -3]) {
+      const split = build("m", "ltr");
+      split.style.setProperty("--mtrl-density", String(density));
+      densitySamples.push({ density, split });
+      row.append(split);
+    }
+    body.append(row);
+  },
+  measure: () => densitySamples.map(({ density, split }) =>
+    `density ${density} = ${split.getBoundingClientRect().height} px`).join(" · "),
+});
+
 const states = section(main, "States");
 scenario(states, {
   title: "Hover, focus, pressed, disabled",
@@ -113,6 +132,31 @@ scenario(interaction, {
     return out.join(" · ") || "no split buttons mounted yet";
   },
   mount: (body) => { interactionRow = mountRow(body, "ltr"); },
+});
+
+const hitSamples = [];
+scenario(interaction, {
+  title: "Small split button hit targets",
+  lookFor: "click just above or below either half of the extra-small or small button",
+  expected: "both halves accept hits 23 px above and below their centres",
+  mount: (body) => {
+    const row = Object.assign(document.createElement("div"), { className: "tp-row" });
+    for (const size of ["xs", "s"]) {
+      const split = build(size, "ltr");
+      row.append(split);
+      for (const half of ["leading", "trailing"]) {
+        hitSamples.push({ size, half, button: split.querySelector(`.mtrl-split-button__${half}`) });
+      }
+    }
+    body.append(row);
+  },
+  measure: () => hitSamples.map(({ size, half, button }) => {
+    const { x, y, width, height } = button.getBoundingClientRect();
+    const centre = y + height / 2;
+    if (centre < 23 || centre + 23 >= innerHeight) return `${size} ${half} (scroll into view)`;
+    const hits = [-23, 23].map(delta => button.contains(document.elementFromPoint(x + width / 2, centre + delta)));
+    return `${size} ${half} ${hits[0] ? "✓" : "×"} above, ${hits[1] ? "✓" : "×"} below`;
+  }).join(" · "),
 });
 
 const edge = section(main, "Edge cases");

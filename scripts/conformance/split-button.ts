@@ -58,6 +58,18 @@ for (const density of [0, -1, -2, -3]) {
   cases.push({ id: `filled/m/density ${density}`, density, mount, config: { variant: "filled", size: "m" }, parts });
 }
 
+for (const size of ["xs", "s"]) {
+  cases.push({
+    id: `filled/${size}/hit target`,
+    mount,
+    config: { variant: "filled", size },
+    parts: ["leading", "trailing"].map(half => ({
+      name: half, selector: `.mtrl-split-button__${half}`, centredHitHeight: true,
+    })),
+    properties: [],
+  });
+}
+
 cases.push({ id: "filled/m/dark", scheme: "dark", mount, config: { variant: "filled", size: "m" }, parts });
 cases.push({ id: "filled/m/disabled", state: "disabled", mount, config: { variant: "filled", size: "m", disabled: true }, parts });
 cases.push({ id: "outlined/m/rest (border)", mount, config: { variant: "outlined", size: "m" }, parts });
