@@ -17,6 +17,23 @@ import assert from "node:assert/strict";
 
 export const FILES = ["README.md", "npm-readme.md"] as const;
 
+/** Installation instructions must match the package version's dist-tag. */
+export function installSectionProblems(file: string, text: string, version: string): string[] {
+  const preview = version.split("+")[0].includes("-");
+  const install = preview ? "npm install material@next" : "npm install material";
+  const section = /<!-- install -->([\s\S]*?)<!-- \/install -->/.exec(text)?.[1];
+  if (!section) return [`${file}: no <!-- install --> section`];
+  const lines = section.split("\n").filter(line => line.startsWith("npm install"));
+  const problems: string[] = [];
+  if (lines.length !== 1 || lines[0] !== install) {
+    problems.push(`${file}: the install line is ${JSON.stringify(lines)}. Version ${version} requires "${install}"`);
+  }
+  if (!preview && /`next` tag|material@next/.test(section)) {
+    problems.push(`${file}: the install section still speaks of the next tag. Version ${version} is a stable release`);
+  }
+  return problems;
+}
+
 export interface Block {
   file: string;
   line: number;
