@@ -108,6 +108,16 @@ export const withScroll = (config: CarouselConfig) =>
     let containerSize = 0;
     let scrollOffsetAtStart = 0;
     let snapPositions: number[] = [];
+    // One snap node per slide, kept from one build to the next: a build adds
+    // or removes only the difference and moves the rest. `snapPlaced` is what
+    // each node was last told, so a node whose place has not changed is not
+    // written to.
+    const snapPoints: HTMLElement[] = [];
+    const snapPlaced: string[] = [];
+    const dropSnapPoints = (keep: number): void => {
+      while (snapPoints.length > keep) snapPoints.pop()!.remove();
+      snapPlaced.length = snapPoints.length;
+    };
     let currentIndex = Math.max(0, config.initialSlide ?? CAROUSEL_DEFAULTS.INITIAL_SLIDE);
     let lastStyles = new WeakMap<HTMLElement, string>();
 
@@ -219,6 +229,14 @@ export const withScroll = (config: CarouselConfig) =>
       currentIndex = count ? Math.min(currentIndex, count - 1) : 0;
       if (containerSize <= 0 || count === 0) {
         strategy = null;
+        if (count === 0) {
+          // Nothing left to snap to: the last slide's node and the track's
+          // length would otherwise stay behind.
+          dropSnapPoints(0);
+          snapPositions = [];
+          track.style.width = "";
+          track.style.height = "";
+        }
         return;
       }
       const isUncontained = variant === CAROUSEL_VARIANTS.UNCONTAINED;
@@ -270,20 +288,32 @@ export const withScroll = (config: CarouselConfig) =>
       // Track length and one snap point per item
       track.style[vertical ? "height" : "width"] = `${containerSize + scrollRange}px`;
       track.style[vertical ? "width" : "height"] = "";
-      track.querySelectorAll(`.${snapClass}`).forEach((el) => el.remove());
+      dropSnapPoints(count);
       const fragment = document.createDocumentFragment();
-      snapPositions.forEach((snapPosition) => {
-        const point = document.createElement("div");
-        point.className = snapClass;
+      snapPositions.forEach((snapPosition, i) => {
         // Snap points sit at their logical offset from the inline-start edge:
         // the track's left in LTR, its right in RTL, where scroll-snap-align:
         // start aligns the point's right edge and scrollLeft settles at the
         // negated offset. The stylesheet's left: 0 must not win over right.
-        point.style[vertical ? "top" : rtl ? "right" : "left"] = `${snapPosition}px`;
+        const side = vertical ? "top" : rtl ? "right" : "left";
+        const placed = `${side}:${snapPosition}:${rtl}`;
+        let point = snapPoints[i];
+        if (!point) {
+          point = document.createElement("div");
+          point.className = snapClass;
+          snapPoints.push(point);
+          fragment.appendChild(point);
+        } else if (snapPlaced[i] === placed) {
+          return;
+        } else {
+          // The side it was placed on may have changed with the direction.
+          point.style.top = point.style.left = point.style.right = "";
+        }
+        point.style[side] = `${snapPosition}px`;
         if (rtl) point.style.left = "auto";
-        fragment.appendChild(point);
+        snapPlaced[i] = placed;
       });
-      track.appendChild(fragment);
+      if (fragment.firstChild) track.appendChild(fragment);
 
       slideElements.forEach((el) => {
         el.style[vertical ? "height" : "width"] = `${strategy!.itemSize}px`;

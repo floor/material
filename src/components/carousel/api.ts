@@ -49,6 +49,10 @@ export const withAPI = () => (component: ApiComponent): CarouselComponent => {
       component.slides.addSlide(slide, index);
       return api;
     },
+    addSlides(slides: CarouselSlide[], index?: number) {
+      component.slides.addSlides(slides, index);
+      return api;
+    },
     removeSlide(index: number) {
       component.slides.removeSlide(index);
       return api;
