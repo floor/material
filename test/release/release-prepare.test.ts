@@ -13,6 +13,15 @@ const readme = `# Fixture\n\n${sizeBlock}\n`;
 
 const sizes = Object.fromEntries(README_SIZE_ROWS.map((name, index) => [name, { gzip: (index + 1) * 1000 }]));
 
+const prepareScript = resolve(import.meta.dir, "../../scripts/release-prepare.ts");
+const workflowFixture = resolve(import.meta.dir, "../fixtures/stylesheet-nightly-fetch.ts");
+const spawnPrepare = (root: string, args: string[], nightly: "fresh" | "stale" | "unavailable" = "fresh") =>
+  Bun.spawn(["bun", "--preload", workflowFixture, prepareScript, "--root", root, ...args], {
+    stdout: "pipe",
+    stderr: "pipe",
+    env: { ...process.env, FIXTURE_STYLESHEET_NIGHTLY: nightly },
+  });
+
 const fixture = async (): Promise<string> => {
   const root = await mkdtemp(join(tmpdir(), "release-prepare-"));
   await mkdir(join(root, ".changes"), { recursive: true });
@@ -42,12 +51,11 @@ const fixture = async (): Promise<string> => {
 };
 
 describe("release:prepare dry run", () => {
-  test("a fixture version lists the planned files and writes nothing", async () => {
+  test("a recent successful scheduled run keeps the plan quiet and writes nothing", async () => {
     const root = await fixture();
     try {
-      const script = resolve(import.meta.dir, "../../scripts/release-prepare.ts");
-      const child = Bun.spawn(["bun", script, "--root", root, "--analysis", join(root, "analysis"),
-        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run", "--skip-measure"], { stdout: "pipe", stderr: "pipe" });
+      const child = spawnPrepare(root, ["--analysis", join(root, "analysis"),
+        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run", "--skip-measure"]);
       const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
       expect(stderr).toBe("");
       expect(code).toBe(0);
@@ -61,6 +69,19 @@ describe("release:prepare dry run", () => {
       expect(await readFile(join(root, "CHANGELOG.md"), "utf8")).not.toContain("## [1.1.0]");
       expect(await readFile(join(root, ".changes/one.md"), "utf8")).toContain("A fixture change.");
       expect(JSON.parse(await readFile(join(root, "conformance/matrix.json"), "utf8")).material).toBe("1.0.0");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("unavailable workflow history produces a warning and leaves the plan usable", async () => {
+    const root = await fixture();
+    try {
+      const child = spawnPrepare(root, ["--version", "1.1.0", "--dry-run"], "unavailable");
+      const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+      expect(code).toBe(0);
+      expect(stderr).toContain("Could not verify the combined stylesheet nightly on main");
+      expect(stdout).toContain("no file written");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -171,8 +192,6 @@ const git = async (root: string, ...args: string[]): Promise<string> => {
   return stdout;
 };
 
-const prepareScript = resolve(import.meta.dir, "../../scripts/release-prepare.ts");
-
 describe("release:prepare refuses to write outside its own files", () => {
   test("a dry run does not measure at all, and the checkout's scratch survives it", async () => {
     const root = await fixture();
@@ -188,8 +207,8 @@ describe("release:prepare refuses to write outside its own files", () => {
         scripts: { size: "bun run ./tools/size.ts", "size:check": "bun run ./tools/size.ts" },
       }, null, 2)}\n`);
 
-      const child = Bun.spawn(["bun", prepareScript, "--root", root, "--analysis", join(root, "analysis"),
-        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run"], { stdout: "pipe", stderr: "pipe" });
+      const child = spawnPrepare(root, ["--analysis", join(root, "analysis"),
+        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run"]);
       const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
       expect(code).toBe(0);
       expect(stdout).toContain("(dry run)");
@@ -207,8 +226,8 @@ describe("release:prepare refuses to write outside its own files", () => {
     const root = await fixture();
     try {
       await rm(join(root, "analysis"), { recursive: true, force: true });
-      const child = Bun.spawn(["bun", prepareScript, "--root", root, "--analysis", join(root, "analysis"),
-        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run"], { stdout: "pipe", stderr: "pipe" });
+      const child = spawnPrepare(root, ["--analysis", join(root, "analysis"),
+        "--version", "1.1.0", "--date", "2026-11-28", "--dry-run"]);
       const [, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
       expect(code).not.toBe(0);
       expect(stderr).toContain("a dry run writes nothing, measurement included");
@@ -229,8 +248,8 @@ describe("release:prepare refuses to write outside its own files", () => {
       await writeFile(join(root, "unrelated.txt"), "staged by mistake\n");
       await git(root, "add", "unrelated.txt");
 
-      const child = Bun.spawn(["bun", prepareScript, "--root", root, "--analysis", join(root, "analysis"),
-        "--version", "1.1.0", "--date", "2026-11-28", "--skip-measure", "--trailer", "Agent: fixture"], { stdout: "pipe", stderr: "pipe" });
+      const child = spawnPrepare(root, ["--analysis", join(root, "analysis"),
+        "--version", "1.1.0", "--date", "2026-11-28", "--skip-measure", "--trailer", "Agent: fixture"]);
       const [, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
       expect(code).not.toBe(0);
       expect(stderr).toContain("needs a clean index and worktree");
@@ -242,7 +261,7 @@ describe("release:prepare refuses to write outside its own files", () => {
     }
   });
 
-  test("a clean tree writes the one release commit", async () => {
+  test("a clean tree warns about a missing recent nightly and writes one release commit", async () => {
     const root = await fixture();
     try {
       await git(root, "init", "-q");
@@ -251,12 +270,13 @@ describe("release:prepare refuses to write outside its own files", () => {
       await git(root, "add", "-A");
       await git(root, "commit", "-q", "-m", "fixture");
 
-      const child = Bun.spawn(["bun", prepareScript, "--root", root, "--analysis", join(root, "analysis"),
-        "--version", "1.1.0", "--date", "2026-11-28", "--skip-measure", "--trailer", "Agent: fixture"], { stdout: "pipe", stderr: "pipe" });
+      const child = spawnPrepare(root, ["--analysis", join(root, "analysis"),
+        "--version", "1.1.0", "--date", "2026-11-28", "--skip-measure", "--trailer", "Agent: fixture"], "stale");
       const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
-      expect(stderr).toBe("");
+      expect(stderr).toContain("No successful scheduled combined stylesheet pin run on main in the last 36 hours");
       expect(code).toBe(0);
       expect(stdout).toContain("release:prepare wrote");
+      expect((await git(root, "rev-list", "--count", "HEAD")).trim()).toBe("2");
       const log = await git(root, "log", "-1", "--format=%s%n%b");
       expect(log).toContain("release: bump material to 1.1.0");
       expect(log).toContain("Agent: fixture");

@@ -101,6 +101,30 @@ const newerThan = (next: string, current: string): boolean => {
   return false;
 };
 
+async function warnIfStylesheetNightlyIsStale(): Promise<void> {
+  const workflow = "combined-stylesheet-pins.yml";
+  const history = `https://github.com/floor/material/actions/workflows/${workflow}`;
+  const url = new URL(`https://api.github.com/repos/floor/material/actions/workflows/${workflow}/runs`);
+  const cutoff = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString().slice(0, 19) + "Z";
+  url.search = new URLSearchParams({
+    branch: "main", event: "schedule", status: "success", created: `>=${cutoff}`, per_page: "1",
+  }).toString();
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/vnd.github+json" },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) throw new Error("Workflow history is unavailable");
+    const { total_count: count } = await response.json() as { total_count?: unknown };
+    if (typeof count !== "number") throw new Error("Invalid workflow history");
+    if (count === 0) {
+      console.warn(`Warning — No successful scheduled combined stylesheet pin run on main in the last 36 hours. See ${history}`);
+    }
+  } catch {
+    console.warn(`Warning — Could not verify the combined stylesheet nightly on main. See ${history}`);
+  }
+}
+
 async function main(): Promise<void> {
   const options = parseArguments(process.argv.slice(2));
   if (!/^\d+\.\d+\.\d+$/.test(options.version)) usage(`not a release version: ${JSON.stringify(options.version)}`);
@@ -154,6 +178,8 @@ async function main(): Promise<void> {
     committed[path] = await readFile(join(options.root, path), "utf8").catch(() => undefined);
   }
   const diffs = tableDiffs(tables, committed);
+
+  await warnIfStylesheetNightlyIsStale();
 
   const changes = [
     `package.json: version ${manifest.version} → ${options.version}`,

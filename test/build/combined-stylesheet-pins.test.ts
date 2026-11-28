@@ -60,9 +60,9 @@ const expectStrictCheck = (job: Job) => {
 };
 
 describe("combined stylesheet pin workflows", () => {
-  test("checks nightly on main after building", async () => {
+  test("checks nightly or on demand on main after building", async () => {
     const workflow = await readWorkflow("combined-stylesheet-pins");
-    expect(Object.keys(workflow.on)).toEqual(["schedule"]);
+    expect(Object.keys(workflow.on)).toEqual(["schedule", "workflow_dispatch"]);
     expect(workflow.on.schedule).toHaveLength(1);
     expect(workflow.jobs.verify!.if).toBe("github.ref == 'refs/heads/main'");
     expectStrictCheck(workflow.jobs.verify!);
