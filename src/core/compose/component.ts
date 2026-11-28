@@ -310,13 +310,14 @@ export const withElement =
     // A factory's markup is light DOM: no host class crosses a shadow boundary
     // for the sheets to read, and an ancestor `[dir]` would be the page root's.
     // The root carries the direction it resolved instead (core/dom/direction).
-    trackFactoryDirection(element);
+    const untrackDirection = trackFactoryDirection(element);
 
     const cleanupTouch = hasTouchSupport() && options.interactive
       ? setupTouch(element, base, options)
       : undefined;
 
     resources.add(() => {
+      untrackDirection();
       cleanupTouch?.();
       base.touchState.activeTarget = null;
       base.touchState.isTouching = false;
