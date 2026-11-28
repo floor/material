@@ -26,6 +26,7 @@ modules.
 - `components/fab-menu/` — every placement; the long-list fit-then-shift readout.
 - `components/carousel/` — drag, flick, trackpad overscroll; the scroll readout with ghost lines.
 - `components/bottom-sheet/` — standard and modal; drag and settle with the state/offset readout.
+- `components/side-sheet/` — standard and modal headline colours.
 - `components/drawer/` — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu (5x slow motion), and the divider's 16 px gap and 28 px side insets.
 - `components/progress/` — buffer colour candidates; value scrubbing.
 - `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.

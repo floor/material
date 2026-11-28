@@ -18616,7 +18616,7 @@
             "value": "OnSurfaceVariant",
             "url": "https://m3.material.io/components/side-sheets/specs",
             "section": "Modal side sheet color",
-            "read": "2026-11-26",
+            "read": "2026-11-28",
             "resolved": {
               "light": "#49454F",
               "dark": "#CAC4D0",
@@ -18631,16 +18631,16 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "OnSurface",
+            "value": "OnSurfaceVariant",
             "engines": null,
             "resolved": {
-              "light": "#1D1B20",
-              "dark": "#E6E0E9",
-              "seed": "#171D1A"
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
             }
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",
@@ -18657,7 +18657,7 @@
             "value": "OnSurfaceVariant",
             "url": "https://m3.material.io/components/side-sheets/specs",
             "section": "Standard side sheet color",
-            "read": "2026-11-26",
+            "read": "2026-11-28",
             "resolved": {
               "light": "#49454F",
               "dark": "#CAC4D0",
@@ -18672,16 +18672,16 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "OnSurface",
+            "value": "OnSurfaceVariant",
             "engines": null,
             "resolved": {
-              "light": "#1D1B20",
-              "dark": "#E6E0E9",
-              "seed": "#171D1A"
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
             }
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "The website color diagram assigns OnSurfaceVariant to the headline. Compose 1.5.0 has no standalone side sheet.",

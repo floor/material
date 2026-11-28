@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>Side sheet</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createSideSheet } from "../../../../dist/components/side-sheet/index.js";
+
+await initPage({ name: "side sheet" });
+const variants = section(document.getElementById("tp-main"), "Variants & sizes");
+let active;
+const probe = document.createElement("span");
+probe.hidden = true;
+probe.style.color = "var(--mtrl-sys-color-on-surface-variant)";
+scenario(variants, {
+  title: "Standard and modal headlines",
+  lookFor: "open each sheet and compare its headline in light and dark",
+  expected: "both headlines use OnSurfaceVariant",
+  mount: (body) => {
+    body.append(probe);
+    for (const variant of ["standard", "modal"]) {
+      const opener = document.createElement("button");
+      opener.type = "button";
+      opener.textContent = `Open ${variant}`;
+      body.append(opener);
+      opener.addEventListener("click", () => {
+        active?.sheet.destroy();
+        const sheet = createSideSheet({ variant, title: "Filters", content: "Filter results" });
+        active = { variant, sheet };
+        sheet.open();
+      });
+    }
+  },
+  measure: () => {
+    if (!active?.sheet.isOpen()) return "Open a side sheet";
+    const title = active.sheet.element.querySelector(".mtrl-side-sheet__title");
+    const expected = getComputedStyle(probe).color;
+    const colour = getComputedStyle(title).color;
+    return `${active.variant} headline ${colour}${colour === expected ? " (OnSurfaceVariant)" : ` · expected ${expected}`}`;
+  },
+});
+</script>
+</body>
+</html>

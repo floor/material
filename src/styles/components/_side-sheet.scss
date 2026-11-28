@@ -92,7 +92,7 @@ $component: "#{base.$prefix}-side-sheet";
         margin: 0;
         flex: 1 1 auto;
         min-width: 0;
-        color: t.color("on-surface");
+        color: t.color("on-surface-variant");
         @include m.typography("title-large");
     }
 

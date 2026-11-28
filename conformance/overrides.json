@@ -1917,7 +1917,7 @@
       "value": "OnSurfaceVariant",
       "url": "https://m3.material.io/components/side-sheets/specs",
       "section": "Modal side sheet color",
-      "read": "2026-11-26"
+      "read": "2026-11-28"
     }
   },
   "side-sheet/headline-colour/standard/rest": {
@@ -1926,7 +1926,7 @@
       "value": "OnSurfaceVariant",
       "url": "https://m3.material.io/components/side-sheets/specs",
       "section": "Standard side sheet color",
-      "read": "2026-11-26"
+      "read": "2026-11-28"
     }
   },
   "side-sheet/max-width/standard": {
