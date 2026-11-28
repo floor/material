@@ -173,8 +173,7 @@ const FIXTURES: Fixture[] = [
     mirrored: true,
   },
   {
-    // The modal rail is fixed, docked at the start edge, corner-large at the
-    // end — one arm flips dock and corners together.
+    // The modal rail docks at the start edge and uses CornerLarge on all sides.
     name: "navigation-rail-modal",
     roots: ".mtrl-navigation-rail",
     html: `<aside class="mtrl-navigation-rail mtrl-navigation-rail--modal" open></aside>`,
@@ -183,7 +182,7 @@ const FIXTURES: Fixture[] = [
       { key: "dock", sel: ".mtrl-navigation-rail", kind: "edges" },
     ],
     ltr: {
-      corners: { tl: 0, tr: 16, br: 16, bl: 0 },
+      corners: { tl: 16, tr: 16, br: 16, bl: 16 },
       dock: { left: 0, right: WIDTH - 96, width: 96, boxWidth: WIDTH },
     },
     mirrored: true,
