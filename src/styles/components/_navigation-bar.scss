@@ -80,9 +80,8 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
   }
   .#{$component}__icon,
   .#{$component}__label { margin: 0; }
-  // The active label keeps the base rule's Secondary:
-  // ItemActiveLabelTextColor is the same token in both layouts
-  // (tokens/NavigationBarTokens.kt:31).
+  // The inline label is inside the active pill and shares the active icon's colour.
+  .#{$component}__item--active .#{$component}__label { color: t.color('on-secondary-container'); }
   .#{$component}__badge {
     @include d.start(calc(28px + var(--#{$component}-dot-shift, 0px)), $arm: false);
     inset-block-start: 6px;
@@ -203,8 +202,7 @@ $spatial: v.motion('spring-default-spatial-duration') v.motion('spring-default-s
     svg { inline-size: 24px; block-size: 24px; fill: currentColor; }
   }
   &__item--active &__icon { color: t.color('on-secondary-container'); }
-  // ItemActiveLabelTextColor is Secondary in both item layouts
-  // (tokens/NavigationBarTokens.kt:31; MDC tokens.xml:27).
+  // The vertical label sits below the active pill.
   &__item--active &__label { color: t.color('secondary'); }
 
   &__label {
