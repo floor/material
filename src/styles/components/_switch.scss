@@ -247,7 +247,7 @@ $component: '#{base.$prefix}-switch';
     pointer-events: none;
 
     .#{$component}__track {
-      background-color: t.alpha('on-surface', 0.12);
+      background-color: t.alpha('surface-container-highest', 0.12);
       border-color: t.alpha('on-surface', 0.12);
     }
 
@@ -263,10 +263,11 @@ $component: '#{base.$prefix}-switch';
       color: t.alpha('on-surface', 0.38);
     }
 
-    // Selected: the track keeps 0.12 (the disabled rule above wins the cascade
-    // over the checked track colour), and the handle is Surface at full opacity.
+    // Selected: the track uses OnSurface at 0.12 and the handle is Surface
+    // at full opacity.
     &.#{$component}--checked {
       .#{$component}__track {
+        background-color: t.alpha('on-surface', 0.12);
         border-color: transparent;
       }
 

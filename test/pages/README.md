@@ -30,6 +30,7 @@ modules.
 - `components/progress/` — buffer colour candidates; value scrubbing.
 - `components/slider/` — the handle on the tick scale, pressed handle, ends readout, and the Sound demo (media and alarm volume) whose checks read this page.
 - `components/radios/` — `ripple: false` still paints the keyboard focus ring and the focus layer.
+- `components/switch/` — disabled track fill, outline and handle in light and dark.
 - `components/select/` — the trailing arrow takes its colour with the field, and rotates 180° while the menu is open.
 - `components/extended-fab/` — undefined variant and width match omitted ones; a defined global variant wins.
 - `components/navigation-rail/` — expanded modal destinations, with live target and indicator widths.
