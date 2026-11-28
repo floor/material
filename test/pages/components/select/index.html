@@ -44,14 +44,16 @@ const arrowReadout = (root) => {
   const arrow = getComputedStyle(icon).color;
   const open = root.classList.contains("mtrl-select--open");
   const focused = root.matches(":focus-within");
-  const expected = open || focused ? token("primary") : getComputedStyle(field).borderBottomColor;
+  const error = root.classList.contains("mtrl-text-field--error");
+  const role = open && !focused ? "primary" : error ? "error" : "on-surface-variant";
+  const expected = token(role);
   const turned = degrees(getComputedStyle(svg).transform);
-  const colour = arrow === expected ? "with the field" : "apart from the field";
-  return `${open ? "open" : "closed"} · arrow ${colour} · rotation ${turned}°`;
+  const colour = arrow === expected ? role : `expected ${role}`;
+  return `${open ? "open" : "closed"} · arrow ${arrow} (${colour}) · rotation ${turned}°`;
 };
 
-const mountSelect = (body, id) => {
-  const select = createSelect({ label: "Country", options, value: "us" });
+const mountSelect = (body, id, config = {}) => {
+  const select = createSelect({ label: "Country", options, value: "us", ...config });
   select.element.id = id;
   body.append(select.element);
 };
@@ -72,31 +74,65 @@ const states = section(main, "States");
 scenario(states, {
   title: "Focused field",
   lookFor: "the arrow's colour while the field is focused",
-  expected: "the arrow takes primary with the field",
+  expected: "the normal focused arrow uses OnSurfaceVariant",
   measure: () => {
     const root = document.getElementById("select-focus");
     return root ? arrowReadout(root) : "no select";
   },
   mount: (body) => mountSelect(body, "select-focus"),
 });
+scenario(states, {
+  title: "Focused field with an error",
+  lookFor: "focus the outlined select and read the arrow colour",
+  expected: "the arrow uses Error",
+  measure: () => arrowReadout(document.getElementById("select-error")),
+  mount: (body) => mountSelect(body, "select-error", { variant: "outlined", error: true }),
+});
+scenario(states, {
+  title: "Hovered outlined label",
+  lookFor: "move the pointer over the field",
+  expected: "the unfocused label uses OnSurfaceVariant",
+  measure: () => {
+    const label = document.querySelector("#select-hover .mtrl-text-field__label");
+    if (!label) return "no label";
+    const colour = getComputedStyle(label).color;
+    return `label ${colour}${colour === token("on-surface-variant") ? " (OnSurfaceVariant)" : ""}`;
+  },
+  mount: (body) => mountSelect(body, "select-hover", { variant: "outlined" }),
+});
 
 const interaction = section(main, "Interaction");
 scenario(interaction, {
   title: "Open rotation",
-  lookFor: "the arrow's colour with the field, and its turn while the menu is open",
-  expected: "open, the arrow is primary and rotated 180°; closed, it matches the field and sits at 0°",
+  lookFor: "open the menu with the keyboard and watch the arrow turn",
+  expected: "the focused arrow keeps OnSurfaceVariant and rotates 180° when the menu opens",
   measure: () => {
     const root = document.getElementById("select-open");
     return root ? arrowReadout(root) : "no select";
   },
   mount: (body) => mountSelect(body, "select-open"),
 });
+scenario(interaction, {
+  title: "Option height in both popup layers",
+  lookFor: "open the inline select and the top-layer select one at a time",
+  expected: "each open popup has 48 px options at default density",
+  measure: () => ["inline", "top"].map(layer => {
+    const input = document.querySelector(`#select-height-${layer} input`);
+    const listbox = document.getElementById(input?.getAttribute("aria-controls") ?? "");
+    const option = listbox?.querySelector('[role="option"]');
+    return `${layer} ${option ? `${option.getBoundingClientRect().height} px` : "closed"}`;
+  }).join(" · "),
+  mount: (body) => {
+    mountSelect(body, "select-height-inline", { label: "Inline popup" });
+    mountSelect(body, "select-height-top", { label: "Top-layer popup", layer: "top" });
+  },
+});
 
 const edge = section(main, "Edge cases");
 scenario(edge, {
   title: "Closed arrow",
   lookFor: "the arrow at rest, before the menu opens",
-  expected: "the resting arrow matches the field's border and is not rotated",
+  expected: "the resting arrow uses OnSurfaceVariant and is not rotated",
   measure: () => {
     const root = document.getElementById("select-closed");
     return root ? arrowReadout(root) : "no select";

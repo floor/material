@@ -1742,13 +1742,45 @@
       }
     }
   },
-  "select/option-height/filled/popup-top-layer": {
-    "reason": "The website uses 44 dp for an expressive vertical menu. Compose uses a 48 dp minimum for the baseline dropdown item.",
+  "select/option-height/filled/popup-inline": {
+    "reason": "The inline select shares the baseline dropdown item's 48 dp minimum with the top layer.",
     "spec": {
-      "value": "44dp",
+      "value": "48dp",
       "url": "https://m3.material.io/components/menus/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "Menu (baseline) · Measurements · List item height",
+      "read": "2026-11-28"
+    },
+    "compose": {
+      "value": "48dp",
+      "file": "Menu.kt",
+      "symbol": "DropdownMenuItem",
+      "line": 2166,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Menu.kt#L2166"
+    }
+  },
+  "select/option-height/filled/popup-top-layer": {
+    "reason": "The M3 baseline menu and Compose DropdownMenuItem both use a 48 dp minimum.",
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Menu (baseline) · Measurements · List item height",
+      "read": "2026-11-28"
+    },
+    "compose": {
+      "value": "48dp",
+      "file": "Menu.kt",
+      "symbol": "DropdownMenuItem",
+      "line": 2166,
+      "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Menu.kt#L2166"
+    }
+  },
+  "select/option-height/outlined/popup-inline": {
+    "reason": "The inline select shares the baseline dropdown item's 48 dp minimum with the top layer.",
+    "spec": {
+      "value": "48dp",
+      "url": "https://m3.material.io/components/menus/specs",
+      "section": "Menu (baseline) · Measurements · List item height",
+      "read": "2026-11-28"
     },
     "compose": {
       "value": "48dp",
@@ -1759,12 +1791,12 @@
     }
   },
   "select/option-height/outlined/popup-top-layer": {
-    "reason": "The website uses 44 dp for an expressive vertical menu. Compose uses a 48 dp minimum for the baseline dropdown item.",
+    "reason": "The M3 baseline menu and Compose DropdownMenuItem both use a 48 dp minimum.",
     "spec": {
-      "value": "44dp",
+      "value": "48dp",
       "url": "https://m3.material.io/components/menus/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "Menu (baseline) · Measurements · List item height",
+      "read": "2026-11-28"
     },
     "compose": {
       "value": "48dp",

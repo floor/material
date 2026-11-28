@@ -171,8 +171,8 @@ const channels = (color: string): string => {
 };
 
 /**
- * Focus eases the trailing icon's colour on the span. The svg inherits it, so
- * the two colours match on every frame. Sampling runs in the page: settle
+ * A change to the focused field's error state eases the colour on the span.
+ * The svg inherits it, so both colours match on every frame. Sampling runs in the page: settle
  * would wait out the transition and hide a second ease. WebKit tabs with
  * Alt+Tab. Opening still runs a transform transition on the svg.
  */
@@ -194,6 +194,8 @@ const checkIconColour = async (page: Page, engine: string): Promise<void> => {
   await settle(page);
   await page.locator("#before-select").focus();
   await page.keyboard.press(engine === "webkit" ? "Alt+Tab" : "Tab");
+  await settle(page);
+  assert.equal(await page.locator(".mtrl-text-field__input:focus-visible").count(), 1);
   const samples = await page.evaluate(() => new Promise<Array<{ span: string; svg: string }>>((resolve) => {
     const span = document.querySelector<HTMLElement>(".mtrl-text-field__trailing-icon");
     const svg = span?.querySelector("svg");
@@ -209,6 +211,7 @@ const checkIconColour = async (page: Page, engine: string): Promise<void> => {
       else resolve(taken);
     };
     tick();
+    (window as unknown as SelectWindow).select.setError(true);
   }));
   assert(samples.length > 2, `${engine}: the icon colour was not sampled`);
   const mismatched = samples.filter((sample) => channels(sample.span) !== channels(sample.svg));
@@ -220,7 +223,7 @@ const checkIconColour = async (page: Page, engine: string): Promise<void> => {
   assert.notEqual(
     channels(samples[0]!.span),
     channels(samples[samples.length - 1]!.span),
-    `${engine}: focus did not change the icon colour`,
+    `${engine}: the error state did not change the focused icon colour`,
   );
 
   await page.evaluate((options) => {

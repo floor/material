@@ -294,10 +294,12 @@ export const bindings: FixtureBinding[] = [
     ["focus/contained", "Bar focus indicator", "focus", "contained/bar/light/focus", outline("header"), undefined, "contained"],
   ]),
   fixture("select", "Select", [
+    ["option-height/filled/popup-inline", "Inline popup option height", "size", "filled/light/popup", height("option")],
     ["option-height/filled/popup-top-layer", "Top-layer popup option height", "size", "filled/popup-top", height("option")],
     ["menu-container-shape/filled/popup", "Popup corner radius", "shape", "filled/light/popup", corner("popup")],
     ["trailing-icon-colour/filled/focus", "Focused trailing icon tone", "colour", "filled/light/focus", css("indicatorIcon", "color"), "FilledAutocompleteTokens.TextFieldFocusTrailingIconColor"],
     ["trailing-icon-colour/filled/error-focus", "Error focus trailing icon tone", "colour", "filled/light/error-focus", css("indicatorIcon", "color"), "FilledAutocompleteTokens.TextFieldErrorFocusTrailingIconColor"],
+    ["option-height/outlined/popup-inline", "Inline popup option height", "size", "outlined/light/popup", height("option")],
     ["option-height/outlined/popup-top-layer", "Top-layer popup option height", "size", "outlined/popup-top", height("option")],
     ["menu-container-shape/outlined/popup", "Popup corner radius", "shape", "outlined/light/popup", corner("popup")],
     ["trailing-icon-colour/outlined/focus", "Focused trailing icon tone", "colour", "outlined/light/focus", css("indicatorIcon", "color"), "OutlinedAutocompleteTokens.TextFieldFocusTrailingIconColor"],
