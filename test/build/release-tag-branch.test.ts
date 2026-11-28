@@ -23,7 +23,9 @@ const git = (args: string[]): string => {
       GIT_COMMITTER_NAME: "Release fixture",
       GIT_COMMITTER_EMAIL: "release@example.invalid",
     },
-    stdin: Buffer.alloc(0),
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
   });
   if (result.exitCode !== 0) throw new Error(result.stderr.toString());
   return result.stdout.toString().trim();
