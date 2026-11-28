@@ -188,9 +188,15 @@ $component: "#{base.$prefix}-list";
     > .#{$component}__item:not(.#{$component}__item--selected) > .#{$component}__trailing--icon {
       color: t.color("on-surface");
     }
-    // Rest shape: extra-small where a row meets another row.
-    > .#{$component}__item { border-radius: var(--#{base.$prefix}-list-item-shape, v.shape('extra-small')); }
-    > .#{$component}__item:not(.#{$component}__item--selected) { background: var(--#{base.$prefix}-list-item-container-color, t.color("surface-container")); }
+    // Rest shape: extra-small where a row meets another row. A segmented row
+    // also has its own top and bottom space: 10dp whatever its lines
+    // (ListTokens ItemTopSpace and ItemBottomSpace; md.comp.list.list-item),
+    // where the standard row keeps 8dp and its three-line 12dp.
+    > .#{$component}__item {
+      border-radius: var(--#{base.$prefix}-list-item-shape, v.shape('extra-small'));
+      padding-block: f.density(10px, 0px, 2px);
+    }
+    > .#{$component}__item:not(.#{$component}__item--selected) { background: var(--#{base.$prefix}-list-item-container-color, t.color("surface")); }
     // Outer corners of a group (the first row, the last, and a row beside a
     // divider or subheader) are large. Specs, 2026-10-02: 4dp inner, 16dp outer.
     // Block-edge pairs, which mirror to themselves: the arms form carries the
