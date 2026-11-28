@@ -16800,17 +16800,17 @@
             }
           },
           "material": {
-            "value": "Secondary",
+            "value": "OnSecondaryContainer",
             "engines": null,
             "resolved": {
-              "light": "#625B71",
-              "dark": "#CCC2DC",
-              "seed": "#4D6357"
+              "light": "#1D192B",
+              "dark": "#E8DEF8",
+              "seed": "#354B40"
             }
           },
           "status": {
-            "spec": "match",
-            "compose": "drift"
+            "spec": "drift",
+            "compose": "match"
           },
           "note": "The released ShortNavigationBarItem sets the inline selected label to the active icon colour.",
           "issue": null

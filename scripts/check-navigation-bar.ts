@@ -170,13 +170,16 @@ try {
     // Centered: ((100 - 10 * (4 + 3)) / 2)% = 15% of 800 on each side
     near(m.items[0]!.box.left - m.bar.left, 120, `${stylesheet}: centred arrangement`, 1);
     near(m.bar.right - m.items[3]!.box.right, 120, `${stylesheet}: centred arrangement, end`, 1);
-    assert.equal(h.labelColor, m.roles.secondary, `${stylesheet}: horizontal active label (ItemActiveLabelTextColor Secondary)`);
+    assert.equal(h.labelColor, m.roles["on-secondary-container"], `${stylesheet}: horizontal active label inside the indicator`);
+    assert.equal(m.items[1]!.labelColor, m.roles["on-surface-variant"], `${stylesheet}: horizontal inactive label`);
 
     // The same width in a narrow container stays vertical; a forced layout wins either way
     await page.evaluate(() => window.mountBar({ itemLayout: "vertical" }, "800px"));
     await settle(page);near((await measure(page)).items[0]!.indicator.height, 32, `${stylesheet}: vertical forced at 800px`);
     await page.evaluate(() => window.mountBar({ itemLayout: "horizontal" }, "400px"));
-    await settle(page);near((await measure(page)).items[0]!.indicator.height, 40, `${stylesheet}: horizontal forced at 400px`);
+    await settle(page);m = await measure(page);
+    near(m.items[0]!.indicator.height, 40, `${stylesheet}: horizontal forced at 400px`);
+    assert.equal(m.items[0]!.labelColor, m.roles["on-secondary-container"], `${stylesheet}: forced horizontal active label`);
     await page.close();
   }
 

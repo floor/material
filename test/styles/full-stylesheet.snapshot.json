@@ -1385,6 +1385,7 @@
     ".mtrl-navigation-bar--horizontal .mtrl-navigation-bar__content",
     ".mtrl-navigation-bar--horizontal .mtrl-navigation-bar__icon,.mtrl-navigation-bar--horizontal .mtrl-navigation-bar__label",
     ".mtrl-navigation-bar--horizontal .mtrl-navigation-bar__indicator",
+    ".mtrl-navigation-bar--horizontal .mtrl-navigation-bar__item--active .mtrl-navigation-bar__label",
     ".mtrl-navigation-bar--horizontal .mtrl-navigation-bar__items",
     ".mtrl-navigation-bar--vertical .mtrl-navigation-bar__badge,.mtrl-navigation-bar--auto .mtrl-navigation-bar__badge",
     ".mtrl-navigation-bar--vertical .mtrl-navigation-bar__badge--dot,.mtrl-navigation-bar--auto .mtrl-navigation-bar__badge--dot",
