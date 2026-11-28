@@ -50,6 +50,54 @@ const fixture = async (): Promise<string> => {
   return root;
 };
 
+const previewInstall = "<!-- install -->\n\n```sh\nnpm install material@next\n```\n\n<!-- /install -->";
+
+describe("release:prepare preview dry run", () => {
+  for (const [current, version] of [
+    ["3.16.11", "3.17.0-next.0"],
+    ["3.17.0-next.9", "3.17.0-next.10"],
+  ]) {
+    test(`plans ${version} from ${current} without writing the tree`, async () => {
+      const root = await fixture();
+      try {
+        const contents = `${readme}\n${previewInstall}\n`;
+        await writeFile(join(root, "package.json"), JSON.stringify({ name: "fixture", version: current }));
+        await writeFile(join(root, "README.md"), contents);
+        await writeFile(join(root, "npm-readme.md"), contents);
+
+        const child = spawnPrepare(root, ["--version", version!, "--dry-run"]);
+        const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
+        expect(stderr).toBe("");
+        expect(code).toBe(0);
+        expect(stdout).toContain(`package.json: version ${current} → ${version}`);
+        expect(stdout).toContain(`CHANGELOG.md: a ${version} section`);
+        expect(stdout).toContain("dry run: no file written, no fragment deleted, no commit made");
+        expect(JSON.parse(await readFile(join(root, "package.json"), "utf8")).version).toBe(current!);
+        expect(await readFile(join(root, "README.md"), "utf8")).toBe(contents);
+        expect(await readFile(join(root, "npm-readme.md"), "utf8")).toBe(contents);
+        expect(await readFile(join(root, ".changes/one.md"), "utf8")).toContain("A fixture change.");
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  test("requires the preview install command in both readmes", async () => {
+    const root = await fixture();
+    try {
+      await writeFile(join(root, "README.md"), `${readme}\n${previewInstall}\n`);
+      await writeFile(join(root, "npm-readme.md"), `${readme}\n${previewInstall.replace("material@next", "material")}\n`);
+      const child = spawnPrepare(root, ["--version", "3.17.0-next.0", "--dry-run"]);
+      const [stderr, code] = await Promise.all([new Response(child.stderr).text(), child.exited]);
+      expect(code).toBe(1);
+      expect(stderr).toContain("npm-readme.md: the install line");
+      expect(stderr).toContain("npm install material@next");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("release:prepare dry run", () => {
   test("a recent successful scheduled run keeps the plan quiet and writes nothing", async () => {
     const root = await fixture();

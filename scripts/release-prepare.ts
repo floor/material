@@ -23,6 +23,7 @@ import { readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { assemble, FRAGMENT_DIR, parseFragment, type Fragment } from "./changelog-fragments";
+import { FILES, installSectionProblems } from "./readme-blocks";
 import { buildReleaseTables, tableDiffs } from "./release-tables";
 
 interface Options {
@@ -36,7 +37,7 @@ interface Options {
 }
 
 const usage = (message: string): never => {
-  throw new Error(`${message}\n\nusage: bun run release:prepare --version <x.y.z> [--date <YYYY-MM-DD>] [--dry-run] [--skip-measure] [--trailer "Agent: …"] [--root <dir>] [--analysis <dir>]`);
+  throw new Error(`${message}\n\nusage: bun run release:prepare --version <x.y.z[-next.N]> [--date <YYYY-MM-DD>] [--dry-run] [--skip-measure] [--trailer "Agent: …"] [--root <dir>] [--analysis <dir>]`);
 };
 
 const parseArguments = (argv: readonly string[]): Options => {
@@ -91,16 +92,6 @@ const readFragments = async (root: string): Promise<Fragment[]> => {
   }));
 };
 
-/** Compare the highest versions, as numbers, to reject a downgrade. */
-const newerThan = (next: string, current: string): boolean => {
-  const parse = (version: string): number[] => version.split(/[.-]/).slice(0, 3).map((part) => Number(part) || 0);
-  const [a, b] = [parse(next), parse(current)];
-  for (let index = 0; index < 3; index += 1) {
-    if ((a[index] ?? 0) !== (b[index] ?? 0)) return (a[index] ?? 0) > (b[index] ?? 0);
-  }
-  return false;
-};
-
 async function warnIfStylesheetNightlyIsStale(): Promise<void> {
   const workflow = "combined-stylesheet-pins.yml";
   const history = `https://github.com/floor/material/actions/workflows/${workflow}`;
@@ -127,7 +118,7 @@ async function warnIfStylesheetNightlyIsStale(): Promise<void> {
 
 async function main(): Promise<void> {
   const options = parseArguments(process.argv.slice(2));
-  if (!/^\d+\.\d+\.\d+$/.test(options.version)) usage(`not a release version: ${JSON.stringify(options.version)}`);
+  if (!/^\d+\.\d+\.\d+(?:-next\.(?:0|[1-9]\d*))?$/.test(options.version)) usage(`not a release version: ${JSON.stringify(options.version)}`);
 
   const paths = {
     manifest: join(options.root, "package.json"),
@@ -146,8 +137,15 @@ async function main(): Promise<void> {
 
   const manifest = JSON.parse(await readFile(paths.manifest, "utf8")) as { version?: string };
   assert(manifest.version, "package.json has no version");
-  if (!newerThan(options.version, manifest.version)) {
+  if (Bun.semver.order(options.version, manifest.version) <= 0) {
     throw new Error(`the tree is at ${manifest.version}; ${options.version} is not newer`);
+  }
+
+  if (options.version.includes("-")) {
+    const installProblems = (await Promise.all(FILES.map(async file =>
+      installSectionProblems(file, await readFile(join(options.root, file), "utf8"), options.version),
+    ))).flat();
+    if (installProblems.length > 0) throw new Error(installProblems.join("\n"));
   }
 
   const fragments = await readFragments(options.root);
