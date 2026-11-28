@@ -346,16 +346,18 @@ one of the `browser` groups in `ci.yml` and to the list in `test/build/ci-comman
 
 ## Issues
 
-`.github/ISSUE_TEMPLATE/` holds one form per kind of issue, and blank issues are off:
+`.github/ISSUE_TEMPLATE/` holds one template per kind of issue, and blank issues are off:
 
-- `1-bug.yml` — broken behaviour: a crash, wrong behaviour against the documentation, a
-  regression, a layout shift, RTL, an accessibility break; labelled `bug`.
-- `2-conformance-drift.yml` — a measured difference from m3.material.io or Compose Material 3;
-  labelled `conformance/drift-spec`, and a maintainer relabels it with the family's exact member
-  (`drift-compose`, `drift-both`, `reference-conflict`, `deviation`, `api-gap`).
-- `3-feature.yml` — a missing component, variant or option; labelled `enhancement`, and a
-  maintainer adds `conformance/api-gap` when a reference specifies it.
+- `bug.md` — broken behaviour: a crash, wrong behaviour against the documentation, a regression,
+  a layout shift, RTL, an accessibility break; a measured difference from m3.material.io or
+  Compose Material 3 is filed as a bug too; labelled `bug`.
+- `feature.md` — a missing component, variant or option; labelled `enhancement`, and a maintainer
+  adds `conformance/api-gap` when a reference specifies it.
 - `config.yml` — no blank issues, and links to the documentation and the specification.
+
+Both use the same shape: `## Problem` (two to four lines), `## Done when` (checkboxes), `## Check`
+(the command that proves it and its expected result, required), `## Scope` (In · Out) and
+`## Gates` (none, cross-lab review, release or the owner's go).
 
 A drift also carries a `component/<name>` label and an `aspect/<name>` one (size, shape, colour,
 typography, elevation, motion, focus, density, behaviour); a maintainer sets them on triage.

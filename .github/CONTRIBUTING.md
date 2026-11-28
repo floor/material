@@ -69,14 +69,16 @@ bun run dev
 
 ### Which issue form
 
-Each kind of issue has its own form in `.github/ISSUE_TEMPLATE/`, and blank issues are off:
+Each issue uses one template in `.github/ISSUE_TEMPLATE/`, and blank issues are off:
 
-- **Bug report** (`1-bug.yml`) — broken behaviour: a crash, wrong behaviour against the
-  documentation, a regression, a layout shift, RTL, an accessibility break.
-- **Conformance drift** (`2-conformance-drift.yml`) — a measured difference from m3.material.io or
-  Compose Material 3; the section below is about it.
-- **Feature request** (`3-feature.yml`) — a missing component, variant or option; link the
-  reference when Material 3 specifies it, and it is tracked as a gap against the references.
+- **Bug report** (`bug.md`) — broken behaviour: a crash, wrong behaviour against the
+  documentation, a regression, a layout shift, RTL, an accessibility break. A measured difference
+  from m3.material.io or Compose Material 3 is filed as a bug too; the section below is about it.
+- **Feature request** (`feature.md`) — a missing component, variant or option; link the reference
+  when Material 3 specifies it, and it is tracked as a gap against the references.
+
+Both carry the same sections: Problem, Done when, Check, Scope and Gates. The Check names the
+command that proves the work, and it is required.
 
 ### Conformance drift
 
