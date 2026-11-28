@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { launchChromium } from "./browser-profile";
+import { captureSsrScreenshot } from "./ssr-screenshot";
 import { chromium, firefox, webkit, type Page } from "playwright";
 import { parseHTML } from "linkedom";
 import { renderElement } from "../dist/ssr/index.js";
@@ -155,7 +156,7 @@ try {
       }, fixture.html), `${engine}/${fixture.element}: fallback must contain only the authored host and light DOM`);
       if (!children) {
         await clearOfPointer(inert, fixture.element, "without JavaScript");
-        await inert.screenshot({ path: `${directory}/${fixture.element}-before.png`, animations: "disabled" });
+        await captureSsrScreenshot(inert, `${directory}/${fixture.element}-before.png`);
         await inert.close();
         equal++;
         report.push({ element: fixture.element, firstPaint, fallback: true });
@@ -184,7 +185,7 @@ try {
     const beforeRegions = allowance ? await regions(inert, allowance.selector) : [];
     if (allowance) assert(beforeRegions.length, `${fixture.element}: exception selector matches no SSR node`);
     await clearOfPointer(inert, fixture.element, "before the upgrade");
-    const before = await inert.screenshot({ path: `${directory}/${fixture.element}-before.png`, animations: "disabled" });
+    const before = await captureSsrScreenshot(inert, `${directory}/${fixture.element}-before.png`);
     await inert.close();
     const page = await browser.newPage(options);
     const errors: string[] = [];
@@ -220,7 +221,7 @@ try {
       return { anchors: CSS.supports("anchor-name", "none"), width: getComputedStyle(indicator).width, transform: indicator.style.transform, inlineWidth: indicator.style.width };
     }) : undefined;
     await clearOfPointer(page, fixture.element, "after the upgrade");
-    const after = await page.screenshot({ path: `${directory}/${fixture.element}-after.png`, animations: "disabled" });
+    const after = await captureSsrScreenshot(page, `${directory}/${fixture.element}-after.png`);
     const afterRegions = allowance ? await regions(page, allowance.selector) : [];
     if (allowance) assert(afterRegions.length, `${fixture.element}: exception selector matches no upgraded node`);
     const pixelDiff = await pixels(page, before, after, [...beforeRegions, ...afterRegions]);

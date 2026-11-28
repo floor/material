@@ -92,7 +92,7 @@ Read an existing component of the same kind before starting (`src/components/div
 - `src/components/<name>/`: `index.ts`, `<name>.ts`, `config.ts`, `types.ts`, `constants.ts`, and `features/` when it has several; exported from `src/components/index.ts`.
 - `src/styles/components/_<name>.scss`, imported in `src/styles/main.scss` and declared in `scripts/style-manifest.ts` (the selective stylesheets). Colours, type, shape and motion come from the tokens (`t.color()`, `m.typography()`, `v.shape()`, `v.motion()`), never literals.
 - `src/elements/<name>.ts`: the custom element's spec (attributes, properties, events, slots). The React, Vue, Svelte and Solid adapters are generated from it with `bun run adapters:generate`; CI fails when they are stale.
-- `scripts/size.ts`: the component's size budget; `scripts/check-token-render.ts`: a case for `bun run tokens:check`.
+- `scripts/size.ts`: a component size measurement; `scripts/check-token-render.ts`: a case for `bun run tokens:check`.
 - `.changes/<slug>.md`: one changelog fragment (see "Changelog fragments").
 - md3.io: a docs page and a playground (see below).
 
@@ -141,7 +141,11 @@ bun run build
 bun run size:check
 ```
 
-The size check packs and installs the local distribution in a temporary directory, checks Node ESM and TypeScript imports (and that `require('material')` does not resolve: the package is ESM-only), and measures minified consumer bundles with gzip and Brotli. It enforces budgets for individual imports, a form, CSS, and the initial button chunks. Results are saved to `analysis/package-size.json`. It does not rebuild `dist`.
+The size check packs and installs the local distribution, verifies its Node ESM and TypeScript imports, and measures minified consumer bundles. It writes `analysis/package-size.json` from the existing `dist` build.
+
+CI compares each pull request and push to `main` against the latest `v*` release tag reachable from the base. It reports all measured rows in the package job summary and updates a single size comment where the PR token can write. Growth over 2,048 B for the packed tarball or 1,024 B for a component gzip row requires a `Size:` line in the PR body explaining the increase. This is a cumulative delta since the previous release. A small change can cross a threshold that earlier merges have nearly filled. Only the owner changes the thresholds in `scripts/budgets.ts`.
+
+Release CI generates `SIZES.md` and both README size tables in the `package-sizes` artifact. Keep those tables for release updates. Stylesheet content pins are checked against the measured output and move with the changes they describe.
 
 For a second bundler and real-browser checks:
 
@@ -163,7 +167,7 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 1. Branch from `main`; one topic per pull request.
 2. Include the tests, one `.changes/<slug>.md` fragment (see "Changelog fragments") and, for a new option or behaviour, the md3.io docs change.
 3. A change that breaks the public API or the rendered DOM goes in the fragment's **Changed** section with a `Migration:` line.
-4. CI must pass: types, lint, tests, build, size and adapter budgets, and the browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
+4. CI must pass types, lint, tests, build, the release-delta size check, adapter checks and browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
 5. Reference the issue the change closes.
 
 Every pull request is reviewed against [REVIEW.md](../REVIEW.md): what failure looks like in this
@@ -220,7 +224,7 @@ bun run test:coverage                      # with a coverage report
 
 - TypeDoc comments on every public function and type, with an `@example`.
 - The file path as a comment on the first line of each file.
-- `README.md` is the GitHub page and `npm-readme.md` the npm page; a change to what one says usually belongs in both. Two checks hold them to the packed package. `bun run readme:check` (after `bun run build` and `bun run size:check`) compiles every TypeScript example, resolves every `material/…` specifier, and checks the `<m-…>` tags and attributes, the install line, the size table and the links; with `--online` it also fetches the external links. `bun run readme-browser:check` runs the examples as a reader would: a fence under `<!-- example: run, shows "…" -->` is built with Vite exactly as written, opened in Chromium, and must show that text with its elements upgraded and no error. A whole example carries that mark; a fence that goes on from the previous one carries `<!-- example: continues -->`; a fence with no mark is a fragment, and the text beside it should read that way.
+- `README.md` is the GitHub page and `npm-readme.md` the npm page; a change to what one says usually belongs in both. Two checks hold them to the packed package. `bun run readme:check` (after `bun run build` and `bun run size:check`) compiles every TypeScript example, resolves every `material/…` specifier, and checks the `<m-…>` tags and attributes, the install line and the links. Pass `--sizes` to check the release size table or `--online` to fetch external links. `bun run readme-browser:check` runs the examples as a reader would: a fence under `<!-- example: run, shows "…" -->` is built with Vite exactly as written, opened in Chromium, and must show that text with its elements upgraded and no error. A whole example carries that mark; a fence that goes on from the previous one carries `<!-- example: continues -->`; a fence with no mark is a fragment, and the text beside it should read that way.
 - Both READMEs are written to be read, not consulted. Four rules, the first two held by `readme:check`:
   - no paragraph or list item over about four rendered lines (440 characters as rendered);
   - no sentence with more than two inline code spans (tables and fences apart);
@@ -249,15 +253,38 @@ Releases are published by GitHub Actions with npm trusted publishing
 
 Install the stable release with `npm install material`.
 
+The nightly main build and the tagged release verifier check the hashes for
+`styles.css`, `elements/styles.js`, expanded Sass main and compressed Sass main.
+Use the values printed by the failing CI job when updating the combined pins.
+To run the same check locally, build first and run `bun run combined-stylesheet-pins:check`.
+The workflow also supports manual runs on `main`. Release preparation warns
+when GitHub Actions has no successful scheduled run on `main` in the previous
+36 hours or when its history is unavailable. The warning allows preparation to continue.
+
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), assembles the changelog and updates
    `README.md` and `npm-readme.md` where the release changes them. Merge it
    when CI passes.
 
-   Run `bun run changelog:assemble <version> <YYYY-MM-DD>`: it groups the
-   `.changes/` fragments into the new dated section after `[Unreleased]`,
-   moves the comparison links, and deletes the fragment files. Then add the
-   section's one-line summary and its `### Size` measurements by hand.
+   Build the release tree with CI's pinned Bun (1.4.2), then use CI's Node and
+   npm for the measurement in `release:prepare`:
+
+   ```bash
+   bun run release:prepare --version x.y.z --dry-run   # the plan; writes nothing
+   npx -y -p node@22.23.3 -p npm@10.9.9 -- bun run release:prepare --version x.y.z --trailer "Agent: …"
+   ```
+
+   It groups the `.changes/` fragments into the new dated section after
+   `[Unreleased]`, moves the comparison links and deletes the fragments (the
+   same assembler as `bun run changelog:assemble <version> <YYYY-MM-DD>`),
+   bumps `package.json`, records the version in `conformance/matrix.json`, and
+   fills `SIZES.md` and both README size tables from a local measurement
+   (`bun run size` and `bun run size:check`; `--skip-measure` reuses the
+   `analysis/` they leave). A real run refuses a tree whose index or worktree
+   is not clean, so nothing else rides in the commit. The dry run is plan-only
+   and never measures: run those two commands first, then
+   `--dry-run --skip-measure`. Then add the section's
+   one-line summary and its `### Size` measurements by hand.
 
    **Keep the install sections consistent with the version**, between
    `<!-- install -->` and `<!-- /install -->` in both files.
@@ -265,13 +292,14 @@ Install the stable release with `npm install material`.
    and `npm install material@next` for a 3.0.0 pre-release. A stable version
    must have no paragraph about the `next` tag in its install section.
 
-   **Every release pull request refreshes the size table** of both files,
-   between `<!-- sizes -->` and `<!-- /sizes -->`, from `bun run size:check`
-   (under CI's Node 22: `npx -y -p node@22 -p npm@10 -- bun run size:check`),
-   in kB of 1,000 bytes to one decimal. `readme:check` holds each figure to
-   exactly that measurement rounded to the printed decimal, so a pull request
-   that moves a bundle updates the table too, or fails naming the stated and
-   measured figures.
+   The size tables are a pre-fill, not the gate. Release CI measures the same
+   tree and fails the pull request with `The committed release size tables
+   differ from this run's measurement` when a committed value differs. The
+   same tree and pinned tools produce the same sizes locally and in CI. The
+   packed size report fixes the catalogue's source commit for measurement
+   so the checkout and the PR merge commit are comparable. The release
+   tarball keeps its source commit. Record the packed total and change since
+   the previous release in the release report.
 2. Tag the merge commit `vx.y.z` and push the tag:
 
    ```bash

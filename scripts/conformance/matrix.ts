@@ -1,0 +1,552 @@
+import { dirname, join, resolve } from "node:path";
+import { closeSync, mkdtempSync, openSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { createRequire } from "node:module";
+import pin from "../../conformance/reference.json";
+import { bindings, matrixRowId } from "./matrix-bindings";
+import { colourThemes, parseColour, readColourRoles, type ResolvedColours, type ThemePalettes } from "./matrix-colours";
+import { elevationRole, measureMetric, metricProbe } from "./matrix-metrics";
+import { matrixTokens } from "./matrix-reference";
+import type { CaseResult, PartResult } from "./measure";
+import type { ComposeReference, Override, Probe, ReferenceDetails, RowBinding, SpecReference, Status } from "./matrix-types";
+
+const root = resolve(import.meta.dir, "../..");
+const engines = ["chromium", "webkit"] as const;
+type Engine = typeof engines[number];
+type MaterialValue = {
+  value: string;
+  engines: Record<Engine, string> | null;
+  resolved?: ReferenceDetails;
+  resolvedEngines?: Record<Engine, ResolvedColours>;
+};
+const composeRelease = "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0";
+const kotlin = "compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3";
+
+const urlId = /^[a-z0-9]+(?:[-/][a-z0-9]+)*$/;
+const hex = /#[A-F\d]{6}\b/i;
+const colorMatch = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/;
+const asHex = (r: string, g: string, b: string) =>
+  "#" + [r, g, b].map(value => Number(value).toString(16).padStart(2, "0")).join("").toUpperCase();
+
+function colorValue(value: string): string | undefined {
+  const rgb = colorMatch.exec(value);
+  const srgb = /^color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: \/ ([\d.]+))?\)$/.exec(value);
+  if (!rgb && !srgb) return /^(?:\w+ )?(#[A-F\d]{6})$/i.exec(value)?.[1]?.toUpperCase();
+  const color = rgb ?? srgb!;
+  const alpha = Number(color[4] ?? 1);
+  if (alpha === 0) return "transparent";
+  const channel = (index: number) => rgb ? color[index]! : String(Math.round(Number(color[index]) * 255));
+  const packed = asHex(channel(1), channel(2), channel(3));
+  return alpha === 1 ? packed : `${packed} at ${alpha} opacity`;
+}
+
+function cssValue(value: string): string {
+  return value
+    .replace(/(-?[\d.]+) (px|dp|sp|ms)\b/g, "$1$2")
+    .replace(/^(-?[\d.]+)px$/, (_, magnitude: string) => `${Math.round(Number(magnitude) * 100) / 100}px`);
+}
+
+function comparable(value: string): string {
+  const color = colorValue(value);
+  if (color) return color;
+  const length = /^(-?[\d.]+)\s*(?:px|dp|sp)(?: all corners| corner size)?$/.exec(value);
+  if (length) return `length:${Number(length[1])}`;
+  const time = /^(-?[\d.]+)\s*(ms|s)$/.exec(value);
+  if (time) return `time:${Number(time[1]) * (time[2] === "s" ? 1000 : 1)}`;
+  if (/^-?[\d.]+$/.test(value)) return Number(value).toString();
+  return value.toLowerCase().replace(/(-?[\d.]+)\s*(?:dp|sp)\b/g, "$1px");
+}
+
+function getPart(row: CaseResult, name: string, id: string): PartResult {
+  const part = row.parts[name];
+  if (!part) throw new Error(`${id}: missing part ${name} in ${row.id}`);
+  return part;
+}
+
+const colourProbe = (row: RowBinding) =>
+  row.aspect === "colour" && "style" in row.probe && /(?:^color$|Color$)/.test(row.probe.style)
+    ? row.probe : undefined;
+
+const outlineColourProbe = (row: RowBinding) =>
+  row.aspect === "focus" && "outline" in row.probe ? { part: row.probe.part, style: "outlineColor" } : undefined;
+
+function resolveColourReference<T extends SpecReference | ComposeReference>(reference: T, palettes: ThemePalettes): T {
+  const { value } = reference;
+  if (value === null || value === "transparent") return reference;
+  if (!Object.hasOwn(palettes.light, value)) throw new Error(`Unknown colour role ${value}`);
+  return {
+    ...reference,
+    resolved: { light: palettes.light[value]!, dark: palettes.dark[value]!, seed: palettes.seed[value]! },
+  };
+}
+
+function compareColour(probe: { part: string; style: string; backgroundUnder?: string }, rows: [CaseResult, CaseResult], id: string) {
+  const [left, right] = rows;
+  const palettes = left.themes?.palettes;
+  if (!palettes || JSON.stringify(palettes) !== JSON.stringify(right.themes?.palettes)) {
+    throw new Error(`${id}: three-theme palettes are missing or differ between engines`);
+  }
+  const readings = rows.map(row => {
+    const read = (theme: typeof colourThemes[number]) => {
+      const style = row.themes?.[theme][probe.part]?.style;
+      if (probe.style === "outlineColor" && style?.outlineStyle === "none") return "rgba(0, 0, 0, 0)";
+      const value = style?.[probe.style];
+      if (!value) throw new Error(`${id}: missing ${probe.style} measurement in ${theme}`);
+      if (probe.backgroundUnder && parseColour(value).opacity === 0) {
+        const underlying = row.themes?.[theme][probe.backgroundUnder]?.style.backgroundColor;
+        if (!underlying) throw new Error(`${id}: missing underlying background in ${theme}`);
+        return underlying;
+      }
+      return value;
+    };
+    return { light: read("light"), dark: read("dark"), seed: read("seed") };
+  });
+  const { role, transparent, resolved } = readColourRoles(readings, palettes);
+  const [chromium, webkit] = resolved as [ResolvedColours, ResolvedColours];
+  const comparison = role ?? (transparent ? "transparent" : null);
+  const material: MaterialValue = {
+    value: comparison ?? chromium.light,
+    engines: chromium.light === webkit.light ? null : { chromium: chromium.light, webkit: webkit.light },
+    resolved: chromium,
+    ...(colourThemes.some(theme => chromium[theme] !== webkit[theme]) ? {
+      resolvedEngines: { chromium, webkit },
+    } : {}),
+  };
+  const status = (reference: string | null): Status =>
+    reference === null ? "no-value" : comparison === reference ? "match" : "drift";
+  const note = role === null && !transparent ? "The measured colour does not resolve to a unique theme role across all three themes." : "";
+  return { material, palettes, status, note };
+}
+
+function visibleRect(part: PartResult): PartResult["rect"] {
+  const clip = /^inset\(0px ([\d.]+)px(?: round .*)?\)$/.exec(part.style.clipPath ?? "");
+  if (!clip) return part.rect;
+  const inset = Number(clip[1]);
+  return { ...part.rect, x: part.rect.x + inset, width: part.rect.width - 2 * inset };
+}
+
+const decimal = (value: number) => Math.round(value * 100) / 100;
+
+function readProbe(cases: ReadonlyMap<string, CaseResult>, row: CaseResult, probe: Probe, id: string, roleFor: (value: string) => string): string {
+  if ("read" in probe && probe.read === "present") {
+    if (!Object.hasOwn(row.parts, probe.part)) throw new Error(`${id}: missing presence probe ${probe.part}`);
+    return row.parts[probe.part] ? "Present" : "Absent";
+  }
+  const part = getPart(row, probe.part, id);
+  const { style } = part;
+  const rect = visibleRect(part);
+  const px = (value: number) => `${decimal(value)}px`;
+  if ("contentInset" in probe) {
+    const reference = getPart(row, probe.relativeTo, id).rect;
+    const side = probe.contentInset;
+    const suffix = side[0]!.toUpperCase() + side.slice(1);
+    const padding = Number.parseFloat(style[`padding${suffix}`] ?? "");
+    const border = Number.parseFloat(style[`border${suffix}Width`] ?? "");
+    const distances = {
+      left: rect.x - (reference.x + reference.width),
+      right: reference.x - (rect.x + rect.width),
+      bottom: reference.y + reference.height - (rect.y + rect.height),
+    };
+    if (!Number.isFinite(padding + border)) throw new Error(`${id}: missing content inset geometry`);
+    return px(distances[side] + padding + border);
+  }
+  if ("read" in probe) {
+    if (probe.read === "opacity") {
+      const color = style[probe.paint ?? "backgroundColor"];
+      const ancestor = probe.opacityAncestor ? getPart(row, probe.opacityAncestor, id).style.opacity : "1";
+      if (!color || !style.opacity || !ancestor) throw new Error(`${id}: missing paint colour or opacity`);
+      return String(decimal(parseColour(color).opacity * Number(style.opacity) * Number(ancestor)));
+    }
+    if (probe.read === "translateX") {
+      const matrix = /^matrix\(([^)]+)\)$/.exec(style.transform ?? "");
+      const translated = matrix ? Number(matrix[1]!.split(",")[4]) : 0;
+      return px(translated + (parseFloat(style.translate ?? "") || 0));
+    }
+    if (!style.boxShadow) throw new Error(`${id}: missing box shadow`);
+    if (style.boxShadow === "none") return "Level 0";
+    const shadow = style.boxShadow.replace(/rgba?\([^)]*\)\s*/g, "");
+    if (shadow === "0px 1px 2px 0px, 0px 1px 3px 1px") return "Level 1";
+    return cssValue(style.boxShadow);
+  }
+  if ("transitionDuration" in probe) {
+    const properties = style.transitionProperty?.split(",").map(property => property.trim());
+    const durations = style.transitionDuration?.split(",");
+    const index = properties?.lastIndexOf(probe.transitionDuration) ?? -1;
+    const value = index < 0 || !durations?.length ? undefined : durations[index % durations.length]?.trim();
+    if (!value || !/^[\d.]+m?s$/.test(value)) throw new Error(`${id}: missing ${probe.transitionDuration} transition duration`);
+    return `${decimal(parseFloat(value) * (value.endsWith("ms") ? 1 : 1000))}ms`;
+  }
+  if ("gap" in probe) {
+    const other = visibleRect(getPart(row, probe.relativeTo, id));
+    return px(probe.gap === "right" ? other.x - rect.x - rect.width : other.y - rect.y - rect.height);
+  }
+  if ("sideInsets" in probe) {
+    const other = getPart(row, probe.sideInsets, id).rect;
+    return `${px(rect.x - other.x)} / ${px(other.x + other.width - rect.x - rect.width)}`;
+  }
+  if ("different" in probe) {
+    const other = visibleRect(getPart(row, probe.relativeTo, id));
+    const size = (box: typeof rect) => probe.different === "aspectRatio" ? box.width / box.height : box[probe.different];
+    return Math.abs(size(rect) - size(other)) > 0.01 ? "Present" : "Absent";
+  }
+  if ("widthPair" in probe) {
+    const other = cases.get(probe.widthPair);
+    if (!other) throw new Error(`${id}: missing width comparison ${probe.widthPair}`);
+    return `${px(rect.width)} / ${px(getPart(other, probe.part, id).rect.width)}`;
+  }
+  if ("box" in probe) return px(rect[probe.box]);
+  if ("inset" in probe) {
+    const reference = getPart(row, probe.relativeTo, id).rect;
+    const distances = {
+      left: rect.x - reference.x,
+      right: reference.x + reference.width - rect.x - rect.width,
+      top: rect.y - reference.y,
+      bottom: reference.y + reference.height - rect.y - rect.height,
+    };
+    return px(distances[probe.inset]);
+  }
+  if ("outline" in probe) {
+    if (!style.outlineStyle || !style.outlineWidth || !style.outlineColor || !style.outlineOffset) {
+      throw new Error(`${id}: the fixture did not read the outline`);
+    }
+    if (style.outlineStyle === "none") return "No outline";
+    return `${cssValue(style.outlineWidth)} ${style.outlineStyle} ${roleFor(style.outlineColor)} at ${cssValue(style.outlineOffset)}`;
+  }
+  const value = style[probe.style];
+  if (!value) throw new Error(`${id}: missing ${probe.style} in ${row.id}/${probe.part}`);
+  return colorValue(value) ? roleFor(value) : cssValue(value);
+}
+
+async function readFixture(entry: string, ids: string[], engine: Engine, themeCases: string[] = [], metricCases: string[] = []): Promise<Map<string, CaseResult>> {
+  const command = [process.execPath, join(import.meta.dir, `${entry}.ts`), `--cases=${JSON.stringify(ids)}`];
+  if (ids.length === 1 && ids[0] === "behavior") command.push("--matrix-behavior");
+  if (engine === "webkit") command.push("--webkit");
+  if (themeCases.length) command.push(`--theme-cases=${JSON.stringify(themeCases)}`);
+  if (metricCases.length) command.push(`--metric-cases=${JSON.stringify(metricCases)}`);
+  const temporary = mkdtempSync(join(tmpdir(), "material-conformance-"));
+  const output = join(temporary, "fixture.json");
+  let result: { source: string; engine: string; rows: CaseResult[] };
+  try {
+    const fd = openSync(output, "w");
+    let child: ReturnType<typeof Bun.spawn>;
+    try {
+      child = Bun.spawn(command, { cwd: root, stdout: fd, stderr: "inherit" });
+    } finally {
+      closeSync(fd);
+    }
+    const exitCode = await child.exited;
+    if (exitCode) throw new Error(`${entry} (${engine}) exited ${exitCode}`);
+    try {
+      result = await Bun.file(output).json();
+    } catch (cause) {
+      const saved = join(root, "analysis", `conformance-${entry}-${engine}.log`);
+      await Bun.write(saved, Bun.file(output));
+      throw new Error(`${entry} (${engine}) produced invalid JSON; see ${saved}`, { cause });
+    }
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+  if (result.source !== "dist" || result.engine !== engine) {
+    throw new Error(`${entry}: expected ${engine} against dist, got ${result.engine} against ${result.source}`);
+  }
+  const rows = new Map(result.rows.map(row => [row.id, row]));
+  if (rows.size !== ids.length || ids.some(id => !rows.has(id))) {
+    throw new Error(`${entry}: fixture did not return the requested cases`);
+  }
+  return rows;
+}
+
+export async function generateMatrix(entries: ReadonlyMap<string, string>, check: boolean): Promise<void> {
+  const started = performance.now();
+  if (!await Bun.file(join(root, "dist", "index.js")).exists()) {
+    throw new Error("Build the package with bun run build before generating the conformance matrix");
+  }
+  const overrides: Record<string, Override> = await Bun.file(join(root, "conformance", "overrides.json")).json();
+  const specValues: Record<string, SpecReference> = await Bun.file(join(root, "conformance", "spec-values.json")).json();
+  const ids = new Set<string>();
+  const fixtures = new Set<string>();
+  const files = new Set<string>();
+  for (const binding of bindings) {
+    if (!entries.has(binding.fixture) || fixtures.has(binding.fixture)) {
+      throw new Error(`Unknown or repeated conformance fixture ${binding.fixture}`);
+    }
+    fixtures.add(binding.fixture);
+    for (const row of binding.rows) {
+      const id = matrixRowId(binding.id, row.key);
+      if (!urlId.test(id) || ids.has(id)) throw new Error(`Invalid or repeated row id ${id}`);
+      ids.add(id);
+      if (!overrides[id]?.compose && row.token) files.add(row.token.split(".")[0]!);
+
+    }
+  }
+  if (fixtures.size !== entries.size) throw new Error("Every conformance fixture must participate in the matrix");
+  for (const [id, override] of Object.entries(overrides)) {
+    if (!ids.has(id)) throw new Error(`Unknown override ${id}`);
+    if (override.compose && !override.reason?.trim()) throw new Error(`Compose override ${id} needs a reason`);
+  }
+  for (const [id, spec] of Object.entries(specValues)) {
+    if (!ids.has(id)) throw new Error(`Unknown specification row ${id}`);
+    if (overrides[id]?.spec?.value != null) throw new Error(`Specification row ${id} already has a value`);
+    if (!spec.value?.trim() || !spec.section.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(spec.read) ||
+        !/^https:\/\/m3\.material\.io\/components\/[a-z-]+\/specs$/.test(spec.url)) {
+      throw new Error(`Specification row ${id} needs a value, official specs URL, section and read date`);
+    }
+  }
+  const tokens = await matrixTokens(root, files);
+  const lookup = new Map(tokens.map(row => [`${row.file}.${row.token}`, row]));
+  const roles = new Map<string, string>();
+  for (const token of tokens.filter(row => row.file === "ColorLightTokens")) {
+    const palette = lookup.get(token.raw);
+    if (!palette) continue;
+    const bytes = /^Color\(red = (\d+), green = (\d+), blue = (\d+)\)$/.exec(palette.raw);
+    const color = bytes ? asHex(bytes[1]!, bytes[2]!, bytes[3]!) : /^Color\(0xFF([A-F\d]{6})\)$/i.exec(palette.raw)?.[1];
+    if (color) {
+      const key = color.startsWith("#") ? color : `#${color.toUpperCase()}`;
+      if (!roles.has(key)) roles.set(key, token.token);
+    }
+  }
+
+  const specDefault: SpecReference = {
+    value: null, url: pin.reference.m3Site.url, section: "", read: pin.reference.m3Site.read,
+  };
+  const composeDefault: ComposeReference = { value: null, file: null, symbol: null, line: null, url: composeRelease };
+
+  function composeFor(id: string, binding: RowBinding): ComposeReference {
+    if (overrides[id]?.compose) return overrides[id]!.compose!;
+    if (!binding.token) return composeDefault;
+    const token = lookup.get(binding.token);
+    if (!token) throw new Error(`${id}: no released token ${binding.token}`);
+    const role = /^ColorSchemeKeyTokens\.(\w+)$/.exec(token.raw)?.[1];
+    const light = hex.exec(token.resolved)?.[0];
+    const file = `${token.file}.kt`;
+    const line = Number(token.source.split(":")[1]);
+    const reference: ComposeReference = {
+      value: role && colourProbe(binding) ? role : role && light ? `${role} ${light}` : cssValue(token.resolved),
+      file, symbol: token.token, line,
+      url: `https://github.com/androidx/androidx/blob/${pin.reference.compose.commit}/${kotlin}/tokens/${file}#L${line}`,
+    };
+    const shape = /^ShapeKeyTokens\.(Corner\w+)$/.exec(token.raw)?.[1] ??
+      /^ShapeTokens\.CornerValue(\w+)$/.exec(token.raw)?.[1]?.replace(/^/, "Corner");
+    if (shape && binding.aspect === "shape") {
+      const top = /^topStart ([\d.]+)dp\b/.exec(reference.value ?? "");
+      const size = reference.value === "square (RectangleShape)" ? "0dp" : reference.value!;
+      return { ...reference, value: shape, resolved: { radius: top ? `${top[1]}dp` : size } };
+    }
+    const typeRole = /^TypographyKeyTokens\.(\w+)$/.exec(token.raw)?.[1] ??
+      (token.file === "TypeScaleTokens" ? /^(\w+?)(?:Tracking|LineHeight|Size|Weight)$/.exec(token.token)?.[1] : undefined);
+    if (typeRole && binding.aspect === "typography") {
+      const property = (suffix: string) => {
+        const result = lookup.get(`TypeScaleTokens.${typeRole}${suffix}`);
+        if (!result) throw new Error(`${id}: missing typography role property ${suffix}`);
+        return cssValue(result.resolved);
+      };
+      const weights: Record<string, string> = {
+        "TypefaceTokens.WeightRegular": "400", "TypefaceTokens.WeightMedium": "500", "TypefaceTokens.WeightBold": "700",
+      };
+      const weight = weights[property("Weight")];
+      if (!weight) throw new Error(`${id}: unknown type-scale weight ${property("Weight")}`);
+      return { ...reference, value: typeRole, resolved: { size: property("Size"), weight, lineHeight: property("LineHeight"), tracking: property("Tracking") } };
+    }
+    const elevation = /^ElevationTokens\.(Level[0-5])$/.exec(token.raw)?.[1];
+    if (elevation && binding.aspect === "elevation") {
+      return { ...reference, value: elevation, resolved: { elevation: reference.value! } };
+    }
+    return reference;
+  }
+
+  type MatrixRow = {
+    id: string; property: string; aspect: RowBinding["aspect"]; variant?: string; state: string;
+    density: number; spec: SpecReference; compose: ComposeReference;
+    material: MaterialValue;
+    status: { spec: Status; compose: Status }; note: string; issue: null;
+  };
+  const components = new Map<string, { id: string; name: string; properties: MatrixRow[] }>();
+  for (const binding of bindings) {
+    const entry = entries.get(binding.fixture)!;
+    const cases = [...new Set(binding.rows.flatMap(row => "widthPair" in row.probe
+      ? [row.case, row.probe.widthPair] : [row.case]))];
+    const regular = cases.filter(id => id !== "behavior");
+    const metricCases = [...new Set(binding.rows.filter(metricProbe).map(row => row.case))];
+    const themeCases = [...new Set([
+      ...binding.rows.filter(row => colourProbe(row) || outlineColourProbe(row)).map(row => row.case), ...metricCases,
+    ])];
+    const chromium = await readFixture(entry, regular, "chromium", themeCases, metricCases);
+    const webkit = await readFixture(entry, regular, "webkit", themeCases, metricCases);
+    if (cases.includes("behavior")) {
+      for (const [engine, measurements] of [["chromium", chromium], ["webkit", webkit]] as const) {
+        const extra = await readFixture(entry, ["behavior"], engine);
+        measurements.set("behavior", extra.get("behavior")!);
+      }
+    }
+    const component = components.get(binding.id) ?? { id: binding.id, name: binding.name, properties: [] };
+    for (const row of binding.rows) {
+      const id = matrixRowId(binding.id, row.key);
+      const existingSpec = overrides[id]?.spec ?? specDefault;
+      const publishedSpec = specValues[id];
+      const spec = publishedSpec ?? existingSpec;
+      const compose = composeFor(id, row);
+      const forRole = (value: string) => {
+        const normalized = colorValue(value) ?? value;
+        const referenceColor = [existingSpec.value, compose.value].find(value =>
+          value && /^\w+ (#[A-F\d]{6})$/i.exec(value)?.[1] === normalized);
+        if (referenceColor) return referenceColor;
+        const role = roles.get(normalized);
+        return role ? `${role} ${normalized}` : normalized;
+      };
+      const left = chromium.get(row.case)!;
+      const right = webkit.get(row.case)!;
+      if (left.state !== right.state || left.density !== right.density) throw new Error(`${id}: fixture metadata differs by engine`);
+      const segments = id.split("/");
+      const hasFixtureState = segments.length === 4 && !/^(?:xs|s|m|l|xl)$/.test(segments[3]!);
+      const metadata = {
+        id, property: row.property, aspect: row.aspect,
+        variant: row.variant ?? (hasFixtureState ? segments[2] : undefined),
+        state: hasFixtureState ? segments[3]! : left.state, density: left.density,
+      };
+      const reason = overrides[id]?.reason ?? "";
+      const probe = colourProbe(row);
+      if (probe) {
+        const result = compareColour(probe, [left, right], id);
+        component.properties.push({
+          ...metadata, spec: resolveColourReference(spec, result.palettes), compose: resolveColourReference(compose, result.palettes),
+          material: result.material, status: { spec: result.status(spec.value), compose: result.status(compose.value) },
+          note: [reason, result.note].filter(Boolean).join(" "), issue: null,
+        });
+        continue;
+      }
+      const outline = outlineColourProbe(row);
+      const measuredOutline = outline && [left, right].some(result => getPart(result, outline.part, id).style.outlineStyle !== "none")
+        ? compareColour(outline, [left, right], id) : undefined;
+      const outlineRole = (engine: Engine, value: string) => measuredOutline
+        ? measuredOutline.material.engines?.[engine] ?? measuredOutline.material.value : forRole(value);
+      const values = {
+        chromium: readProbe(chromium, left, row.probe, id, value => outlineRole("chromium", value)),
+        webkit: readProbe(webkit, right, row.probe, id, value => outlineRole("webkit", value)),
+      };
+      const status = (reference: string | null, fromPublishedSpecs = false): Status => {
+        if (reference === null) return "no-value";
+        const comparison = fromPublishedSpecs
+          ? reference.replace(/^(\d+(?:\.\d+)?)pt$/, "$1px")
+            .replace(/^\w+ (#[A-F\d]{6} at [\d.]+ opacity)$/i, "$1")
+          : reference;
+        const target = comparable(comparison);
+        if (reference === "Full rail width") {
+          return [left, right].every(result => {
+            const item = getPart(result, row.probe.part, id).rect;
+            const rail = getPart(result, "container", id).rect;
+            return Math.abs(item.x - rail.x) < 0.01 && Math.abs(item.width - rail.width) < 0.01;
+          }) ? "match" : "drift";
+        }
+        const agrees = (value: string) => {
+          if (reference === "Visible keyboard focus ring") {
+            return Number(/^([\d.]+)px (?:solid|double|dotted|dashed) /.exec(value)?.[1] ?? 0) > 0;
+          }
+          if (reference === "Visible state layer") return Number(value) > 0;
+          if (reference === "Raised") return /^Level [1-5]$/.test(value);
+          if (fromPublishedSpecs && row.aspect === "elevation" && reference === "0dp") {
+            return value === "none" || value === "Level 0";
+          }
+          const limit = /^([\d.]+)dp (minimum|maximum)$/.exec(reference);
+          if (limit && value.endsWith("px")) {
+            const amount = Number.parseFloat(value);
+            return limit[2] === "minimum" ? amount >= Number(limit[1]) : amount <= Number(limit[1]);
+          }
+          return comparable(value) === target;
+        };
+        return engines.every(engine => agrees(values[engine])) ? "match" : "drift";
+      };
+      const metric = metricProbe(row);
+      if (metric) {
+        const result = measureMetric(metric, [left, right], values.chromium, id);
+        const metricStatus = (reference: SpecReference | ComposeReference, fromSpec: boolean): Status => {
+          const details = reference.resolved;
+          if (!details) return status(reference.value, fromSpec);
+          if ("radius" in details && reference.value === "CornerNone" && result.role === null) {
+            return status(details.radius, fromSpec);
+          }
+          if (result.role !== reference.value) return "drift";
+          if ("elevation" in details) return elevationRole(values.chromium) === result.role && elevationRole(values.webkit) === result.role ? "match" : "drift";
+          if ("radius" in details) {
+            if (result.role === "CornerFull" && details.radius === "circle (CornerFull)") return "match";
+            return status(details.radius, fromSpec);
+          }
+          if ("tracking" in details) {
+            const values: Record<string, string> = {
+              fontSize: details.size, fontWeight: details.weight, lineHeight: details.lineHeight, letterSpacing: details.tracking,
+            };
+            const value = values[metric.style];
+            if (value !== undefined) return status(value, fromSpec);
+          }
+          throw new Error(`${id}: unsupported resolved reference for ${metric.style}`);
+        };
+        const note = result.role === null ? "The measured value could not be assigned a unique role." : "";
+        component.properties.push({
+          ...metadata, spec, compose,
+          material: {
+            value: result.role ?? values.chromium,
+            engines: values.chromium === values.webkit ? null : values,
+            resolved: result.resolved,
+          },
+          status: { spec: metricStatus(spec, true), compose: metricStatus(compose, false) },
+          note: [reason, note].filter(Boolean).join(" "), issue: null,
+        });
+        continue;
+      }
+      component.properties.push({
+        ...metadata,
+        spec, compose,
+        material: {
+          value: values.chromium, engines: values.chromium === values.webkit ? null : values,
+          ...(measuredOutline && {
+            resolved: measuredOutline.material.resolved,
+            resolvedEngines: measuredOutline.material.resolvedEngines,
+          }),
+        },
+        status: { spec: status(spec.value, Boolean(publishedSpec)), compose: status(compose.value) },
+        note: [reason, measuredOutline?.note].filter(Boolean).join(" "), issue: null,
+      });
+    }
+    components.set(binding.id, component);
+    console.error(`Measured ${binding.fixture} (${cases.length} cases per engine)`);
+  }
+  const sorted = [...components.values()].sort((a, b) => a.id.localeCompare(b.id, "en"));
+  const version: { version: string } = await Bun.file(join(root, "package.json")).json();
+  const packageFile = createRequire(import.meta.url).resolve("playwright-core/package.json");
+  const web: { browsers: { name: string; browserVersion?: string }[] } = await Bun.file(join(dirname(packageFile), "browsers.json")).json();
+  const versionOf = (name: Engine) => {
+    const found = web.browsers.find(browser => browser.name === name)?.browserVersion;
+    if (!found) throw new Error(`Playwright did not declare a version for ${name}`);
+    return found;
+  };
+  const matrix = {
+    schema: 1, material: version.version, commit: pin.materialCommit, measured: pin.measured,
+    references: {
+      spec: { name: "Material 3 specification", ...pin.reference.m3Site },
+      compose: {
+        name: "Jetpack Compose Material 3", version: pin.reference.compose.version,
+        commit: pin.reference.compose.commit, date: pin.reference.compose.released, url: composeRelease,
+      },
+    },
+    method: {
+      browsers: engines, engines: { chromium: versionOf("chromium"), webkit: versionOf("webkit") },
+      note: "Both engines measure every value. Separate engine values appear where they differ.",
+
+    },
+    components: sorted.map(component => ({
+      ...component, properties: component.properties.sort((a, b) => a.id.localeCompare(b.id, "en")),
+    })),
+  };
+  const destination = join(root, "conformance", "matrix.json");
+  const json = JSON.stringify(matrix, null, 2) + "\n";
+  if (check) {
+    if (await Bun.file(destination).text() !== json) {
+      const actual = join(root, "analysis", "conformance-matrix-actual.json");
+      await Bun.write(actual, json);
+      const diff = Bun.spawnSync(["git", "diff", "--no-index", "--", "conformance/matrix.json", "analysis/conformance-matrix-actual.json"], { cwd: root, stdout: "inherit" });
+      throw new Error(`The regenerated conformance matrix differs from the committed copy (diff exit ${diff.exitCode})`);
+    }
+  } else {
+    await Bun.write(destination, json);
+  }
+  console.log(`Conformance matrix: ${ids.size} rows across ${sorted.length} pages in ${Math.round((performance.now() - started) / 1000)}s`);
+}

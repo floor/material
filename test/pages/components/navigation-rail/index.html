@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>Navigation rail</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createNavigationRail } from "../../../../dist/components/navigation-rail/index.js";
+
+const main = await initPage({ name: "navigation-rail" });
+const icon = '<svg viewBox="0 0 24 24"><path d="M3 5h18v14H3zm2 2v1l7 4 7-4V7l-7 4z"/></svg>';
+let rail;
+let readout;
+let lastReading = "Open the rail to measure its destinations.";
+
+scenario(section(main, "Interaction"), {
+  title: "Expanded modal rail hit width",
+  lookFor: "open the rail and click inside either edge of the Inbox or Saved row, beyond the pill. Repeat with RTL enabled.",
+  expected: "the row selects all the way to both edges. At the default width the rail and target are 280 px, and the pill is 212 px.",
+  measure: () => {
+    if (rail.element.open) {
+      const item = rail.element.querySelector(".mtrl-navigation-rail__item");
+      const indicator = item.querySelector(".mtrl-navigation-rail__indicator");
+      const width = (element) => Math.round(element.getBoundingClientRect().width);
+      const reading = `Rail ${width(rail.element)} px · Target ${width(item)} px · Pill ${width(indicator)} px · ${rail.getActive()}`;
+      if (reading !== lastReading) {
+        lastReading = reading;
+        readout.textContent = reading;
+      }
+    }
+    return lastReading;
+  },
+  mount: (body) => {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.textContent = "Open navigation rail";
+    readout = document.createElement("output");
+    rail = createNavigationRail({
+      ariaLabel: "Demo navigation",
+      layout: "modal",
+      header: readout,
+      items: [
+        { id: "Inbox", label: "Inbox", icon, active: true },
+        { id: "Saved", label: "Saved", icon },
+      ],
+    });
+    open.addEventListener("click", () => rail.expand());
+    body.append(open, rail.element);
+  },
+});
+</script>
+</body>
+</html>

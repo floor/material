@@ -134,6 +134,30 @@ describe('carousel strategy', () => {
     expect(third.size).toBeLessThan(first.size);
   });
 
+  test('a hero opening keeps the small preview at 40dp and still fills the container', () => {
+    // Specs read 2026-11-27: https://m3.material.io/components/carousel/specs
+    // Small items are 40–56dp. At 682px the small slot is already at 40, and
+    // the 16dp leading padding used to push it to 32 (hero) or 34.67 (centred).
+    const open = (centered: boolean) => {
+      const list = heroKeylines(682, null, 8, 6, centered, rules);
+      const strategy = createStrategy(list, 682, 8, 16, 16);
+      const scrollOffset = -snapPositionOffset(strategy, 0, 6);
+      const keylines = keylinesForScrollOffset(strategy, scrollOffset, maxScrollOffset(strategy, 6));
+      const items = keylines.filter((k) => !k.isAnchor);
+      const first = placeItem(strategy, keylines, 0, scrollOffset);
+      const second = placeItem(strategy, keylines, 1, scrollOffset);
+      return { items, first, second };
+    };
+    for (const centered of [false, true]) {
+      const { items, first, second } = open(centered);
+      expect(second.size).toBeGreaterThanOrEqual(40);
+      expect(Math.min(...items.map((k) => k.size))).toBeGreaterThanOrEqual(40);
+      expect(first.center - first.size / 2).toBeCloseTo(16, 0);
+      const sum = items.reduce((total, k) => total + k.size, 0) + (items.length - 1) * 8;
+      expect(sum).toBeCloseTo(682 - 16, 0);
+    }
+  });
+
   test('an invalid strategy snaps at zero', () => {
     const empty = createStrategy([], 0, 8, 16, 16);
     expect(empty.valid).toBe(false);

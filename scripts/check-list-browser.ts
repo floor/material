@@ -42,14 +42,14 @@ export async function checkList(page: Page, artifacts: string): Promise<void> {
   });
   const geometry = await page.locator("#material-list .mtrl-list__item").evaluateAll(elements => elements.map(element => ({ height: element.getBoundingClientRect().height, padding: getComputedStyle(element).paddingInlineStart, gap: getComputedStyle(element).gap })));
   assert.deepEqual(geometry.map(row => row.height), [56, 72, 88, 72, 88, 72, 72, 56, 56, 72]);
-  geometry.forEach(row => { assert.equal(row.padding, "16px"); assert.equal(row.gap, "16px"); });
+  geometry.forEach(row => { assert.equal(row.padding, "16px"); assert.equal(row.gap, "12px"); });
   for (const [name, width, height] of [["icon", 24, 24], ["avatar", 40, 40], ["image", 56, 56], ["video", 100, 56]] as const) {
     const bounds = await page.locator(`#material-list .mtrl-list__leading--${name}`).first().boundingBox();
     assert.equal(bounds?.width, width); assert.equal(bounds?.height, height);
   }
   assert.equal(await page.locator('[data-id="large"] .mtrl-list__leading--video').evaluate(el => el.getBoundingClientRect().width), 114);
   assert.equal(await page.locator(".mtrl-list__divider--inset").evaluate(el => getComputedStyle(el).marginInlineStart), "16px");
-  assert.equal(await page.locator(".mtrl-list__divider--inset").evaluate(el => getComputedStyle(el).marginInlineEnd), "24px");
+  assert.equal(await page.locator(".mtrl-list__divider--inset").evaluate(el => getComputedStyle(el).marginInlineEnd), "16px");
   assert.equal(await page.getByRole("button", { name: "Disabled", exact: true }).count(), 1, "Disabled rows must remain in the accessibility tree");
   const primary = page.locator('[data-id="one"] .mtrl-list__action');
   await primary.focus(); await page.keyboard.press("Space");

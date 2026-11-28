@@ -28,7 +28,7 @@ for (const prefix of ['mtrl', 'custom']) {
     } finally { rmSync(directory, { recursive: true, force: true }); }
     const names = properties(css);
     expect(names.length).toBeGreaterThan(100);
-    expect(css).toContain(`outline: 2px solid var(--${prefix}-sys-color-primary)`);
+    expect(css).toContain(`outline: 3px solid var(--${prefix}-sys-color-secondary)`);
     expect(names).not.toContain(`--${prefix}-primary-color`);
     expect(names.filter(name => !name.startsWith(`--${prefix}-`))).toEqual([]);
     for (const name of ['button-group-height', 'drawer-width', 'extended-fab-height', 'chip-checkmark-color', 'list-item-offset', 'carousel-corner', 'slider-color']) {

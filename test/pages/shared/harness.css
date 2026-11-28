@@ -1,0 +1,28 @@
+/* test/pages/shared/harness.css — the shell and page chrome. */
+* { box-sizing: border-box; }
+body { font: 15px/1.5 system-ui; margin: 0; padding-top: 64px; /* the app bar sits above the shell */ }
+html { scroll-padding-top: 64px; }
+
+.tp-shell { display: grid; grid-template-columns: 96px 1fr; min-height: calc(100vh - 64px); }
+.tp-shell.tp-docked { grid-template-columns: 96px 280px 1fr; }
+.tp-shell > m-navigation-rail { grid-column: 1; position: sticky; top: 64px; height: calc(100vh - 64px); }
+.tp-shell.tp-docked > m-drawer { grid-column: 2; position: sticky; top: 64px; height: calc(100vh - 64px); }
+.tp-shell:not(.tp-docked) > m-drawer { position: fixed; inset-inline-start: 0; top: 64px; z-index: 30; }
+
+#tp-main { grid-column: 2; padding: 16px 24px 48px; max-width: 1200px; }
+.tp-docked #tp-main { grid-column: 3; }
+.tp-commit { color: var(--mtrl-sys-color-on-surface-variant, #666); font-size: 13px; margin-bottom: 8px; }
+
+.tp-section h2 { margin: 8px 0 4px; font-size: 17px; }
+.tp-scenario { border: 1px solid var(--mtrl-sys-color-outline-variant, #ddd); border-radius: 12px; padding: 12px 16px; margin: 12px 0; }
+.tp-scenario h3 { margin: 0 0 6px; font-size: 15px; }
+.tp-look, .tp-expected { margin: 2px 0; color: var(--mtrl-sys-color-on-surface-variant, #555); font-size: 13px; }
+.tp-body { margin: 12px 0; }
+.tp-measure { margin: 6px 0 0; font: 13px/1.4 ui-monospace, monospace; color: var(--mtrl-sys-color-primary, #333); min-height: 1em; }
+.tp-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+/* The slider page's tick guides: green at every tick, red at the ends. */
+.tp-guides { position: absolute; inset: 0; pointer-events: none; }
+.tp-guide { position: absolute; width: 1px; background: #0b7; opacity: 0.85; }
+.tp-guide-end { width: 2px; background: #e00; }
+.tp-readout { font: 13px/1.4 ui-monospace, monospace; color: var(--mtrl-sys-color-primary, #333); margin-top: 6px; }

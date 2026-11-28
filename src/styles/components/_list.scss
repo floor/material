@@ -33,7 +33,10 @@ $component: "#{base.$prefix}-list";
     position: relative;
     display: flex;
     align-items: center;
-    gap: 16px;
+    // md.comp.list.list-item.between-space is 12dp. The 16dp inset on either
+    // side of the row is leading-space and stays. Specs read 2026-11-27:
+    // https://m3.material.io/components/lists/specs
+    gap: 12px;
     box-sizing: border-box;
     min-width: 0;
     // Density takes 4dp a step off the row and 2dp a side off its vertical
@@ -112,7 +115,7 @@ $component: "#{base.$prefix}-list";
     }
     &:hover:not(:disabled)::before { opacity: v.state("hover-state-layer-opacity"); }
     &:active:not(:disabled)::before { opacity: v.state("pressed-state-layer-opacity"); }
-    &:focus-visible { outline: 2px solid t.color("secondary"); outline-offset: -2px; }
+    &:focus-visible { @include m.focus-ring($offset: -3px, $wrap: false); }
     &:focus-visible::before { opacity: v.state("focus-state-layer-opacity"); }
     &:disabled { cursor: default; }
   }
@@ -124,7 +127,7 @@ $component: "#{base.$prefix}-list";
     &::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: t.color("on-surface"); opacity: 0; }
     &:hover:not(.#{$component}__item--disabled)::before { opacity: v.state("hover-state-layer-opacity"); }
     &:active:not(.#{$component}__item--disabled)::before { opacity: v.state("pressed-state-layer-opacity"); }
-    &:focus-visible { outline: 2px solid t.color("secondary"); outline-offset: -2px; }
+    &:focus-visible { @include m.focus-ring($offset: -3px, $wrap: false); }
     &:focus-visible::before { opacity: v.state("focus-state-layer-opacity"); }
     &.#{$component}__item--disabled { cursor: default; }
   }
@@ -150,7 +153,9 @@ $component: "#{base.$prefix}-list";
       transition: m.spring(transform, fast-spatial);
     }
   }
-  &__item--selected &__radio {
+  // Only the row's own radio: a listbox nested in the row keeps its own
+  // unselected ring and empty dot.
+  &__item--selected > &__radio {
     border-color: t.color("primary");
     &::after { transform: translate(-50%, -50%) scale(1); }
   }
@@ -170,8 +175,19 @@ $component: "#{base.$prefix}-list";
   &:not(&--segmented) &__leading--image,
   &:not(&--segmented) &__leading--video { border-radius: 0; }
   // Segmented. The child combinators keep a list nested in a row out of it.
+  // Expressive icon size, 20dp, on this list's own items only. A standard
+  // list nested inside stays at 24dp. A segmented list has no size of its own
+  // (md.comp.list.list-item.leading-icon.expressive.size and
+  // trailing-icon.expressive.size). Specs read 2026-11-27.
+  &--segmented > &__content > &__item > &__leading--icon,
+  &--segmented > &__content > &__item > &__trailing--icon { width: 20px; height: 20px; }
   &--segmented > &__content {
     gap: var(--#{base.$prefix}-list-segmented-gap, 2px);
+    // Unselected trailing icon is on-surface. Leading stays on-surface-variant.
+    // md.comp.list.list-item.unselected.trailing-icon.color. Specs read 2026-11-27.
+    > .#{$component}__item:not(.#{$component}__item--selected) > .#{$component}__trailing--icon {
+      color: t.color("on-surface");
+    }
     // Rest shape: extra-small where a row meets another row.
     > .#{$component}__item { border-radius: var(--#{base.$prefix}-list-item-shape, v.shape('extra-small')); }
     > .#{$component}__item:not(.#{$component}__item--selected) { background: var(--#{base.$prefix}-list-item-container-color, t.color("surface-container")); }
@@ -211,19 +227,49 @@ $component: "#{base.$prefix}-list";
   }
   &__item--selected {
     background: t.color("secondary-container");
-    .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-secondary-container"); }
-    .#{$component}__action::before { background: t.color("on-secondary-container"); }
+    // Only this row's own text and slots take the state colour: a standard
+    // list nested in the row keeps its own text and icon colours (the factory
+    // nesting pattern; md.comp.list.list-item.selected text and icon colours,
+    // read 2026-11-27).
+    > .#{$component}__text > .#{$component}__headline,
+    > .#{$component}__text > .#{$component}__overline,
+    > .#{$component}__text > .#{$component}__supporting,
+    > .#{$component}__leading,
+    > .#{$component}__trailing { color: t.color("on-secondary-container"); }
+    // The row's own action layer: a list nested in the row keeps its own
+    // action's OnSurface layer.
+    > .#{$component}__action::before { background: t.color("on-secondary-container"); }
     &[role="option"]::before { background: t.color("on-secondary-container"); }
+    // Selected rest stays on-secondary-container. Hover, focus and press take
+    // this row's own icon slots to on-surface. A list nested in the row keeps
+    // the rest colour, and only this row's own action counts as its focus
+    // (md.comp.list.list-item.selected.{hover,focus,pressed}
+    // .{leading,trailing}-icon.color). Specs read 2026-11-27.
+    &:not(.#{$component}__item--disabled):is(:hover, :active, :focus-visible, :has(> .#{$component}__action:focus-visible)) {
+      > .#{$component}__leading,
+      > .#{$component}__trailing { color: t.color("on-surface"); }
+    }
   }
   &__item--disabled {
     &.#{$component}__item--selected { background: t.alpha("on-surface", 0.38); }
-    .#{$component}__headline, .#{$component}__overline, .#{$component}__supporting, .#{$component}__leading, .#{$component}__trailing { color: t.color("on-surface"); }
-    .#{$component}__text, .#{$component}__leading, .#{$component}__trailing, .#{$component}__radio { opacity: 0.38; }
+    // This row's own text, radio and slots take the disabled ink and opacity;
+    // a standard list nested in the row is neither recoloured nor faded (the
+    // factory nesting pattern; md.comp.list.list-item.disabled content, read
+    // 2026-11-27).
+    > .#{$component}__text > .#{$component}__headline,
+    > .#{$component}__text > .#{$component}__overline,
+    > .#{$component}__text > .#{$component}__supporting,
+    > .#{$component}__leading,
+    > .#{$component}__trailing { color: t.color("on-surface"); }
+    > .#{$component}__text,
+    > .#{$component}__radio,
+    > .#{$component}__leading,
+    > .#{$component}__trailing { opacity: 0.38; }
   }
   // Specs table, read 2026-11-25: full width, or inset 16dp at the start and
   // 24dp at the end, with nothing above or below. Logical margins mirror.
   &__divider { height: 1px; min-height: 1px; background: t.color("outline-variant"); margin-block: 0; }
-  &__divider--inset { margin-inline-start: 16px; margin-inline-end: 24px; }
+  &__divider--inset { margin-inline-start: 16px; margin-inline-end: 16px; }
   &__subheader { @include m.typography("label-large"); color: t.color("on-surface-variant"); padding: 16px 16px 8px; }
   &__empty { @include m.typography("body-medium"); color: t.color("on-surface-variant"); padding: 16px; }
 }

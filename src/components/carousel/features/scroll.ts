@@ -11,6 +11,7 @@ import { CarouselConfig, CarouselVariant } from "../types";
 import { CAROUSEL_DEFAULTS, CAROUSEL_EVENTS, CAROUSEL_VARIANTS } from "../constants";
 import { resolveLayoutDefaults } from "../config";
 import { cornerToken } from "../../../core/theme/shape";
+import { effectiveZoom } from "../../../core/dom/zoom";
 import {
   KeylineRules,
   multiBrowseKeylines,
@@ -30,6 +31,7 @@ import type { SlidesComponent } from "./slides";
 
 /** A mouse drag faster than this (px per ms) advances one item in its direction */
 const FLING_VELOCITY = 0.4;
+
 /** Pointer travel below this is a click, not a drag */
 const DRAG_THRESHOLD = 4;
 /** 120 ms of quiet separates gestures while retaining a continuous momentum tail. */
@@ -144,11 +146,17 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const nearestIndex = (position: number): number => {
+      // An uncontained strip names the last of its tied end snaps. In a
+      // multi-browse focal group, keep a selection that shares the nearest snap
+      // so a scroll event cannot undo a keyboard or programmatic selection.
+      const lastWins = variant === CAROUSEL_VARIANTS.UNCONTAINED;
+      const keepGroupSelection = variant === CAROUSEL_VARIANTS.MULTI_BROWSE;
       let best = 0;
       let bestDistance = Number.MAX_VALUE;
       snapPositions.forEach((snapPosition, i) => {
         const distance = Math.abs(position - snapPosition);
-        if (distance < bestDistance) {
+        const selectedAtSameSnap = keepGroupSelection && i === currentIndex && snapPosition === snapPositions[best];
+        if (distance < bestDistance || (distance === bestDistance && (lastWins || selectedAtSameSnap))) {
           bestDistance = distance;
           best = i;
         }
@@ -224,10 +232,40 @@ export const withScroll = (config: CarouselConfig) =>
 
       const unit = strategy.itemSize + strategy.gap;
       scrollOffsetAtStart = isUncontained ? 0 : -snapPositionOffset(strategy, 0, count);
+      // Uncontained: the scroll ends where the content ends — the last item
+      // flush with the end edge plus the trailing padding — instead of at
+      // the last item's snap position, which would pull that item to the
+      // start edge and leave an empty space after it wider than an item.
+      // The snap positions beyond the end cap to the range, so goTo(last),
+      // the wheel, the drag and the readout all settle on the same edge.
+      const contentLength = padding + count * unit + padding - strategy.gap;
+      const maxScroll = isUncontained ? Math.max(0, contentLength - containerSize) : Number.MAX_SAFE_INTEGER;
+      // goTo and the settle check clamp to the range; the track covers the
+      // whole content — the last item extends past its own snap, and a
+      // track cut at the snap would clip it when the viewport is narrower
+      // than an item.
+      // The last item's snap IS the content end: in a viewport narrower
+      // than an item, showing that item unclipped means scrolling past its
+      // natural snap to the end of the content, and the goTo(last), End and
+      // wheel paths must all land on the same edge.
       snapPositions = slideElements.map((_, i) =>
-        isUncontained ? i * unit : i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart,
+        isUncontained
+          ? i === count - 1
+            ? maxScroll
+            : Math.min(i * unit, maxScroll)
+          : i * unit - snapPositionOffset(strategy!, i, count) - scrollOffsetAtStart,
       );
-      const scrollRange = Math.max(0, snapPositions[count - 1] ?? 0);
+      const scrollRange = isUncontained ? maxScroll : Math.max(0, snapPositions[count - 1] ?? 0);
+      if (variant === CAROUSEL_VARIANTS.MULTI_BROWSE) {
+        // The strategy can assign a late item to the first focal slot even
+        // when that snap would overshoot the final focal group. Share the
+        // reachable stop with the following items to keep selection in order.
+        let previous = 0;
+        snapPositions = snapPositions.map(position => {
+          previous = Math.min(scrollRange, Math.max(previous, position));
+          return previous;
+        });
+      }
 
       // Track length and one snap point per item
       track.style[vertical ? "height" : "width"] = `${containerSize + scrollRange}px`;
@@ -355,6 +393,7 @@ export const withScroll = (config: CarouselConfig) =>
     };
 
     const handleKeyDown = (e: KeyboardEvent): void => {
+      ignorePointerFocus = false;
       stopWheel();
       const from = indexOf(e.target);
       if (from < 0) return;
@@ -378,6 +417,10 @@ export const withScroll = (config: CarouselConfig) =>
       // press may be a drag. The click after the release selects the slide
       // instead; the keyboard keeps its follow-focus.
       if (dragging) return;
+      if (ignorePointerFocus) {
+        ignorePointerFocus = false;
+        return;
+      }
       const index = indexOf(e.target);
       if (index >= 0 && index !== currentIndex) goTo(index);
     };
@@ -385,6 +428,14 @@ export const withScroll = (config: CarouselConfig) =>
     // ── Mouse drag (touch and trackpad scroll natively) ─────────
 
     let dragging = false;
+    // A pointer gesture moves focus to the slide under it (the press's
+    // default action), and that focus is not the keyboard's follow-focus:
+    // taken as one, it scrolls the strip back to the slide the gesture
+    // started on after every drag — the release's own focus, or the clicked
+    // slide's, glides the strip home with snapping off (owner, 2026-11-25).
+    // The next press or key clears the guard, so a click still selects by its
+    // click and Tab, the arrows and Home/End keep their follow-focus.
+    let ignorePointerFocus = false;
     // The pointer that started the drag: a release of any other pointer (a
     // second mouse, a touch elsewhere) is not this drag's release.
     let dragPointer: number | null = null;
@@ -407,6 +458,7 @@ export const withScroll = (config: CarouselConfig) =>
     const handlePointerDown = (e: PointerEvent): void => {
       stopWheel();
       clearPending();
+      ignorePointerFocus = false;
       if (e.pointerType !== "mouse" || e.button !== 0 || !strategy) return;
       dragging = true;
       dragPointer = e.pointerId;
@@ -438,6 +490,7 @@ export const withScroll = (config: CarouselConfig) =>
       if (e && dragPointer !== null && "pointerId" in e && (e as PointerEvent).pointerId !== dragPointer) return;
       dragging = false;
       dragPointer = null;
+      if (dragged) ignorePointerFocus = true;
       dragged = false;
       delete element.dataset.dragging;
       restoreSnap();
@@ -474,7 +527,11 @@ export const withScroll = (config: CarouselConfig) =>
       dragLastTime = e.timeStamp;
       // No rtl term: the drag follows the pointer physically, and the
       // mirrored gesture (right-drag advances) meets the mirrored range.
-      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta;
+      // A pointer delta is in zoomed viewport pixels and the scroll position
+      // in the element's own: under CSS `zoom` the strip otherwise moves the
+      // delta times the zoom (120 px dragged moved 92 at 0.7 and 66 at 0.5,
+      // md3.io measured 2026-11-25).
+      scroller[vertical ? "scrollTop" : "scrollLeft"] = dragScrollStart - delta / effectiveZoom(scroller);
       e.preventDefault();
     };
 
@@ -490,6 +547,8 @@ export const withScroll = (config: CarouselConfig) =>
         restoreSnap();
         return;
       }
+      // The release focuses the slide it happened on: not a selection.
+      ignorePointerFocus = true;
       if (snap) {
         let target = nearestIndex(scrollPosition());
         // dragVelocity is logical (* sign at its source): the velocity that
@@ -614,6 +673,14 @@ export const withScroll = (config: CarouselConfig) =>
           break;
         }
       }
+      // The capped end ties several snaps to the range: the wheel names the
+      // item actually in view — the last of the tied snaps (the backward
+      // scan already starts there), so a wheel to the end reads 24 / 24.
+      // A multi-browse group keeps its first member on a forward wheel
+      // gesture. Its other members can be selected directly at that stop.
+      if (variant === CAROUSEL_VARIANTS.UNCONTAINED && direction > 0) {
+        while (index + 1 < count && snapPositions[index + 1] === snapPositions[index]) index++;
+      }
       const target = snapPositions[index]!;
       // One spring for notches and momentum avoids switching animation engines
       // when a second wheel event arrives. Suspend native snap until landing.
@@ -672,6 +739,12 @@ export const withScroll = (config: CarouselConfig) =>
     scroller.addEventListener("dragstart", handleDragStart);
     scroller.addEventListener("click", handleClick, true);
     window.addEventListener("blur", endDrag);
+    // A Tab into the carousel from outside sends its keydown elsewhere: the
+    // guard must not swallow that focus, so the window sees every key.
+    const clearPointerFocus = (): void => {
+      ignorePointerFocus = false;
+    };
+    window.addEventListener("keydown", clearPointerFocus, { capture: true });
     reduceMotion?.addEventListener?.("change", rebuild);
 
     const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(rebuild) : null;
@@ -716,6 +789,7 @@ export const withScroll = (config: CarouselConfig) =>
         scroller.removeEventListener("dragstart", handleDragStart);
         scroller.removeEventListener("click", handleClick, true);
         window.removeEventListener("blur", endDrag);
+        window.removeEventListener("keydown", clearPointerFocus, { capture: true });
         destroy?.();
       },
     };

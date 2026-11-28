@@ -303,6 +303,7 @@ $snap: 0s linear $midpoint;
   // Modal expanded rail: a native dialog docked to the start edge.
   // NavigationRailExpandedTokens: surface container, level 2, large corners.
   &--modal {
+    $content-gutter: 14px;
     position: fixed;
     inset-block: 0;
     @include d.sides(0, auto, $arm: false);
@@ -310,6 +311,7 @@ $snap: 0s linear $midpoint;
     border: 0;
     max-inline-size: calc(100vw - 56px);
     max-block-size: 100dvh;
+    padding-inline: 0;
     block-size: 100dvh;
     background: t.color('surface-container');
     // The modal rail's container, corner-large at the end, as the drawer's
@@ -318,6 +320,19 @@ $snap: 0s linear $midpoint;
     @include m.elevation(2);
     &:not([open]) { display: none; }
     &::backdrop { background: t.alpha('scrim', 0.32); }
+
+    // Reserve the old dialog gutter on the visual content so the item
+    // itself can be hit across the full rail.
+    .#{$component}__header { margin-inline: $content-gutter; }
+    .#{$component}__indicator,
+    .#{$component}__icon,
+    .#{$component}__label { margin-inline-start: $content-gutter; }
+    .#{$component}__badge { margin-inline-end: $content-gutter; }
+    .#{$component}__indicator { inline-size: calc(100% - #{40px + 2 * $content-gutter}); }
+    .#{$component}__label { inline-size: calc(100% - #{104px + 2 * $content-gutter}); }
+    .#{$component}__item--badged .#{$component}__label {
+      inline-size: calc(100% - #{140px + 2 * $content-gutter});
+    }
 
     // The modal docks at the start edge and its large corners follow it. One
     // arm carries the whole mirrored form; the logical form needs none of it.
@@ -331,7 +346,7 @@ $snap: 0s linear $midpoint;
     }
   }
 
-  &__toggle:focus-visible { outline: 2px solid t.color('secondary'); outline-offset: -2px; }
+  &__toggle:focus-visible { @include m.focus-ring($offset: -3px, $wrap: false); }
 
   @include m.reduced-motion { &, & *, & *::before, & *::after { transition: none; animation: none; } }
   @include m.high-contrast {

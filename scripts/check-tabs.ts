@@ -31,6 +31,7 @@
 import assert from "node:assert/strict";
 
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import { tabsResponsive } from "../src/components/tabs/responsive";
 import { checkTabsSSRName } from "./check-tabs-ssr-name";
 
@@ -176,7 +177,7 @@ try {
       },
       { scrollable, dir }
     );
-    await page.waitForTimeout(80);
+    await settle(page);
     return page.evaluate(() => {
       const root = document.querySelector(".mtrl-tabs") as HTMLElement;
       const tabs = [...root.querySelectorAll('[role="tab"]')] as HTMLElement[];
@@ -252,7 +253,7 @@ try {
   type DOMRectLike = { left: number; width: number; bottom: number };
   const paint = async (config: Record<string, unknown>): Promise<Painted> => {
     await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), config);
-    await page.waitForTimeout(120);
+    await settle(page);
     return page.evaluate(() => {
       const box = (el: Element | null) => {
         if (!el) return null;
@@ -389,7 +390,7 @@ try {
     { text: "Hotels", value: "h" },
   ] };
   await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), badgeMount);
-  await page.waitForTimeout(80);
+  await settle(page);
   const badgeOf = async () => {
     const all = await page.evaluate(`(${measureBadges})(document)`) as Measured[];
     return { badgeCount: all.length, ...(all[0] ?? { text: null, onTab: null, visible: false, widths: [] as number[], badge: null, tab: null, anchor: null, kids: 0 }) };
@@ -403,7 +404,7 @@ try {
     const tabs = (window as unknown as { t: { getTabs: () => Array<{ setBadge: (v: number) => unknown }> } }).t.getTabs();
     tabs[2].setBadge(3);
   });
-  await page.waitForTimeout(80);
+  await settle(page);
   const afterCreation = await badgeOf();
 
   // The element route: `<m-tab badge="8">` reads the badge into the same
@@ -416,10 +417,10 @@ try {
   await elementPage.waitForFunction(() =>
     !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
     !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
-  await elementPage.waitForTimeout(80);
+  await settle(elementPage);
   const fromElement = await elementPage.evaluate(`(${measureBadges})(document)`) as Measured[];
   await elementPage.evaluate((icon) => document.querySelector('m-tab[value="t"]')!.setAttribute("icon", icon), elementIcon);
-  await elementPage.waitForTimeout(300);
+  await settle(elementPage);
   const elementIconAdded = (await elementPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0];
   await elementPage.close();
 
@@ -430,14 +431,14 @@ try {
     { text: "Trips", value: "t", icon: svg, badge: 8 },
     { text: "Hotels", value: "h", icon: svg },
   ] });
-  await page.waitForTimeout(80);
+  await settle(page);
   const stackedBadge = await badgeOf();
   await page.evaluate((c) => (window as unknown as { mount: (c: unknown) => void }).mount(c), { scrollable: true, tabs: [
     { text: "Flights", value: "f", state: "active" },
     { text: "Trips", value: "t", badge: 8 },
     { text: "Hotels", value: "h" },
   ] });
-  await page.waitForTimeout(80);
+  await settle(page);
   const scrollingBadge = await badgeOf();
 
   // Right-to-left: the same two rows, the badge on the mirrored side.
@@ -450,24 +451,24 @@ try {
   const mountIn = (c: unknown) => page.evaluate((c) => (window as unknown as Win).mount(c), c);
   await page.evaluate(() => { document.documentElement.dir = "rtl"; });
   await mountIn(badgeMount);
-  await page.waitForTimeout(80);
+  await settle(page);
   const rtlInline = await badgeOf();
   await mountIn(stackedMount);
-  await page.waitForTimeout(80);
+  await settle(page);
   const rtlStacked = await badgeOf();
   await page.evaluate(() => { document.documentElement.dir = "ltr"; });
 
   // The anchor follows the tab's icon: the badge was placed on the icon or the
   // label when it was created, and the tab can lose or gain its icon after.
   await mountIn(stackedMount);
-  await page.waitForTimeout(80);
+  await settle(page);
   await page.evaluate(() => (window as unknown as Win).t.getTabs()[1].setIcon(""));
-  await page.waitForTimeout(300);
+  await settle(page);
   const iconRemoved = await badgeOf();
   await mountIn(badgeMount);
-  await page.waitForTimeout(80);
+  await settle(page);
   await page.evaluate((icon) => (window as unknown as Win).t.getTabs()[1].setIcon(icon), svg);
-  await page.waitForTimeout(300);
+  await settle(page);
   const iconAdded = await badgeOf();
 
   const iconElementPage = await browser.browser()!.newPage({ viewport: { width: 900, height: 600 } });
@@ -476,10 +477,10 @@ try {
   await iconElementPage.waitForFunction(() =>
     !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
     !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
-  await iconElementPage.waitForTimeout(80);
+  await settle(iconElementPage);
   const elementStacked = (await iconElementPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0];
   await iconElementPage.evaluate(() => document.querySelector('m-tab[value="t"]')!.removeAttribute("icon"));
-  await iconElementPage.waitForTimeout(300);
+  await settle(iconElementPage);
   const elementIconRemoved = (await iconElementPage.evaluate(`(${measureBadges})(document)`) as Measured[])[0];
   await iconElementPage.close();
 
@@ -500,7 +501,7 @@ try {
         await rtlPage.evaluate(({ where, dir }) => {
           (where === "html" ? document.documentElement : document.querySelector("main")!).setAttribute("dir", dir);
         }, { where, dir });
-        await rtlPage.waitForTimeout(100);
+        await settle(rtlPage);
         elementRtl.push({
           name: `<m-tabs> under ${where} dir=${dir} step ${step}, ${stackedRow ? "stacked" : "inline"}`,
           direction: await rtlPage.evaluate(() => getComputedStyle(document.querySelector("m-tabs")!).direction),
@@ -620,7 +621,7 @@ try {
     { text: "Trips", value: "t", badge: 8 },
     { text: "Hotels", value: "h" },
   ] });
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips, 8", "Hotels"],
     "a badge given in the config: its number read after the tab's label");
   checks++;
@@ -629,19 +630,19 @@ try {
     (window as unknown as NameWin).mount({ scrollable: false });
     (window as unknown as NameWin).t.getTabs()[2].setBadge(3);
   });
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels, 3"],
     "setBadge after creation: the tab it was set on carries the count");
   await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[2].setBadge(5));
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels, 5"],
     "setBadge update: the name follows the new count");
   await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[2].hideBadge());
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels"],
     "hideBadge: the name drops the hidden count");
   await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[2].showBadge());
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips", "Hotels, 5"],
     "showBadge: the name carries the count again");
   checks += 4;
@@ -653,7 +654,7 @@ try {
     { text: "Trips", value: "t", badge: 1000, badgeConfig: { max: 999 } },
     { text: "Hotels", value: "h" },
   ] });
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips, 999+", "Hotels"],
     "a large count: the overflow display is what the name reads");
   checks++;
@@ -664,7 +665,7 @@ try {
     { text: "", value: "t", icon: '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/></svg>', ariaLabel: "Trips", badge: 8 },
     { text: "Hotels", value: "h" },
   ] });
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips, 8", "Hotels"],
     "an icon-only tab: the ariaLabel keeps the badge after it");
   checks++;
@@ -675,7 +676,7 @@ try {
     { text: "Trips", value: "t", badge: 8, badgeConfig: { variant: "small" } },
     { text: "Hotels", value: "h" },
   ] });
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips, New notification", "Hotels"],
     "a non-counting dot announces New notification after the tab name");
   checks++;
@@ -687,7 +688,7 @@ try {
     { text: "Hotels", value: "h" },
   ] });
   await page.evaluate(() => (window as unknown as NameWin).t.getTabs()[1].setText("Passports"));
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Passports, 8", "Hotels"],
     "setText on a badged tab: the name follows the new label");
   checks++;
@@ -699,7 +700,7 @@ try {
     { text: "Trips", value: "t", badge: 8 },
     { text: "Hotels", value: "h" },
   ] });
-  await page.waitForTimeout(80);
+  await settle(page);
   assert.deepEqual(await namesOf(page), ["Flights", "Trips, 8", "Hotels"],
     "rtl: the name is the same");
   await page.evaluate(() => { document.documentElement.dir = "ltr"; });
@@ -713,7 +714,7 @@ try {
   await nameElementPage.waitForFunction(() =>
     !!(window as unknown as { tabsElementReady?: boolean }).tabsElementReady &&
     !!(document.querySelector("m-tabs") as HTMLElement | null)?.shadowRoot?.querySelector(".mtrl-tabs"));
-  await nameElementPage.waitForTimeout(80);
+  await settle(nameElementPage);
   assert.deepEqual(await namesOf(nameElementPage), ["Flights", "Trips, 8", "Hotels"],
     "the element route: a shadow-root tab carries its badge in the name");
   await nameElementPage.close();

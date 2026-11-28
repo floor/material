@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>Material test pages</title>
+<link rel="stylesheet" href="../../dist/styles.css">
+<link rel="stylesheet" href="shared/harness.css">
+</head>
+<body>
+<main>
+<h1 style="margin:0;font-size:22px">Component test pages</h1>
+<p style="color:var(--mtrl-sys-color-on-surface-variant,#555);font-size:13px">Build first (<code>bun run build</code>) and serve (<code>bun run test:pages</code>). Every page carries the same toolbar — light/dark, RTL, density, slow motion — and the same section order.</p>
+<ul>
+<li><a href="components/split-button/">split-button</a> — sizes, both directions; the chevron's painted centre readout, closed and open</li>
+<li><a href="components/fab-menu/">fab-menu</a> — every placement; the long-list fit-then-shift readout</li>
+<li><a href="components/carousel/">carousel</a> — drag, flick, trackpad overscroll; the scroll readout with ghost lines</li>
+<li><a href="components/bottom-sheet/">bottom-sheet</a> — standard and modal; drag and settle with the state/offset/velocity readout</li>
+<li><a href="components/drawer/">drawer</a> — diagram paddings, child indent, chevron ink vs badge, density, the section reveal next to the menu, and the divider's 16 px gap with 28 px insets</li>
+<li><a href="components/menu/">menu</a> — baseline and vertical, the vibrant leading icon across states, the item end padding and the marks' room</li>
+<li><a href="components/progress/">progress</a> — buffer colour candidates, value scrubbing</li>
+<li><a href="components/slider/">slider</a> — the handle on the tick scale, pressed handle, ends readout, and the Sound demo</li>
+<li><a href="components/radios/">radios</a> — ripple off still shows the keyboard focus ring and the focus layer</li>
+<li><a href="components/select/">select</a> — the trailing arrow takes its colour with the field and turns 180° when open</li>
+<li><a href="components/extended-fab/">extended-fab</a> — undefined variant and width match omitted ones, and a global default wins</li>
+<li><a href="components/navigation-rail/">navigation-rail</a> — measure and click the full-width destinations in an expanded modal rail</li>
+<li><a href="components/list/">list</a> — 12 px between the slots, 20 px segmented icons, the selected icon colour, and a list nested in a selected or disabled row</li>
+<li><a href="components/tooltip/">tooltip</a> — an undefined variant matches an omitted one and a global default wins; the plain label stays 1.5 s after the pointer leaves and Escape closes it at once</li>
+</ul>
+</main>
+<script type="module">
+import { initPage } from "./shared/harness.js";
+await initPage({ name: "component test pages" });
+</script>
+</body>
+</html>

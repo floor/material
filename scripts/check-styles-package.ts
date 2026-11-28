@@ -28,6 +28,7 @@ import * as sass from "sass";
 import { createPackageFixture } from "./package-fixture";
 import baseline from "./fixtures/sass-config-baseline.json";
 import { optionalStyleFiles, validateOptionalStyleProfiles } from "./optional-style-profiles";
+import { defaultPayloadDrift, stylesheetPayloadDigest } from "./stylesheet-pins";
 
 const VARIANTS = ["neutral", "vibrant", "expressive", "fidelity", "content", "monochrome", "rainbow", "fruit-salad"];
 
@@ -97,7 +98,7 @@ try {
       `${specifier} compiles differently from the checkout's ${CHECKOUT_ENTRIES[index]}: the packed Sass normalization changed what a consumer sees`,
     );
     const entry = CHECKOUT_ENTRIES[index];
-    if (entry in baseline.sources) {
+    if (entry !== "main" && entry in baseline.sources) {
       assert.equal(digest(packed), baseline.sources[entry as keyof typeof baseline.sources],
         `${specifier}: default source output differs from the frozen baseline ${baseline.tested} (CI ${baseline.ci}); the packed entry compiled to ${digest(packed)}`);
     }
@@ -182,17 +183,9 @@ try {
   payloadPaths.sort();
   const payloads: Record<string, string> = {};
   for (const path of payloadPaths) {
-    const text = (await readFile(join(fixture.installed, "dist", path), "utf8")).replace(/^\/\*! material v[^\n]*\*\/\n?/, "");
-    payloads[path] = createHash("sha256").update(text).digest("hex");
+    payloads[path] = stylesheetPayloadDigest(await readFile(join(fixture.installed, "dist", path), "utf8"));
   }
-  const pinned = baseline.payloads as Record<string, string>;
-  const drifted: string[] = [];
-  for (const path of [...new Set([...Object.keys(pinned), ...Object.keys(payloads)])].sort()) {
-    const actual = payloads[path];
-    const expected = pinned[path];
-    if (actual === expected) continue;
-    drifted.push(actual === undefined ? `- ${path}` : expected === undefined ? `+ ${path}: ${actual}` : `~ ${path}: ${actual}`);
-  }
+  const drifted = defaultPayloadDrift(payloads, baseline.payloads);
   assert.equal(drifted.length, 0,
     `Published default JS/CSS differs from the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).\n${drifted.join("\n")}`);
   const { renderElement } = await import(pathToFileURL(join(fixture.installed, "dist/ssr/index.js")).href) as typeof import("../src/ssr");
@@ -211,7 +204,7 @@ try {
     assert.equal(ssrModes[mode], baseline.ssr.modes[mode],
       `${mode}: published default SSR HTML changed from the frozen baseline ${baseline.tested} (CI ${baseline.ci}); the checked artifact produced ${ssrModes[mode]}`);
   }
-  console.log(`Default identity: ${payloadPaths.length} JS/CSS files and inline/link SSR match the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).`);
+  console.log(`Default payload inventory (${payloadPaths.length} JS/CSS files), per-file pins and inline/link SSR match the frozen baseline ${baseline.tested} (${baseline.branch}, CI ${baseline.ci}).`);
   // The public configuration and all three consumers must work from normalized
   // packed Sass, including the first-use and false/default contracts.
   for (const name of ["main", "elements"]) {

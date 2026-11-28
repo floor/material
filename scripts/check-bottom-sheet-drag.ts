@@ -22,6 +22,7 @@ import { join } from "node:path";
 import { inflateSync } from "node:zlib";
 import * as sass from "sass";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 
 const css = sass.compileString(`@use 'components/bottom-sheet';`, {
   loadPaths: ["src/styles"],
@@ -191,7 +192,7 @@ try {
     await page.mouse.down();
     for (let step = 1; step <= steps; step += 1) {
       await page.mouse.move(start.x, start.y + (toY - start.y) * (step / steps));
-      if (ms > 0) await page.waitForTimeout(ms / steps);
+      if (ms > 0) await page.waitForTimeout(ms / steps); // stays: pointer pacing inside a drag
     }
     return start;
   };
@@ -252,7 +253,7 @@ try {
   const slowSteps = 12;
   for (let step = 1; step <= slowSteps; step += 1) {
     await page.mouse.move(back.x, back.y + 180 * (step / slowSteps));
-    await page.waitForTimeout(40);
+    await page.waitForTimeout(40); // stays: pointer pacing inside a drag
   }
   await page.mouse.move(back.x, back.y + 70);
   await settled();
@@ -363,20 +364,20 @@ try {
   await page.mouse.down();
   for (let step = 1; step <= 10; step += 1) {
     await page.mouse.move(sparseUp.x, sparseUp.y - 12 * step);
-    await page.waitForTimeout(40);
+    await page.waitForTimeout(40); // stays: pointer pacing inside a drag
   }
   await page.mouse.up();
-  await page.waitForTimeout(900);
+  await settle(page);
   assert.equal((await read()).state, "expanded", "the upward drag did not expand");
   const sparseDown = await handleCenter();
   await page.mouse.move(sparseDown.x, sparseDown.y);
   await page.mouse.down();
   for (let step = 1; step <= 10; step += 1) {
     await page.mouse.move(sparseDown.x, sparseDown.y + 9 * step);
-    await page.waitForTimeout(50);
+    await page.waitForTimeout(50); // stays: pointer pacing inside a drag
   }
   await page.mouse.up();
-  await page.waitForTimeout(400);
+  await settle(page);
   assert.equal((await read()).state, "partial", "a sparse 90px downward drag settled expanded");
 
   // The opening spring peaks at 1.015, which lifts the sheet by 1.5% of its

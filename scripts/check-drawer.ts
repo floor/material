@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 /** Browser coverage for the standalone MD3 drawer. Run after build. */
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
@@ -124,8 +125,7 @@ try {
     window.drawer.destroy();
     for (let i = 0; i < 40; i++) { window.mountDrawer({ variant: 'modal', open: true }); window.drawer.destroy(); }
   });
-  await page.waitForTimeout(50);
-  assert.equal(await page.locator('.mtrl-drawer').count(), 0);
+  await settle(page);assert.equal(await page.locator('.mtrl-drawer').count(), 0);
   assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   assert.equal(await page.locator('main[inert]').count(), 0);
   assert.deepEqual(errors, []);
@@ -204,8 +204,7 @@ try {
       (window as unknown as { drawer: { element: HTMLElement } }).drawer.element.style.setProperty('--mtrl-density', String(d));
     }, density);
     await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
-    await page.waitForTimeout(60);
-    const row = await page.evaluate(() => {
+    await settle(page);const row = await page.evaluate(() => {
       const header = document.querySelector('[data-id="labels"]') as HTMLElement;
       const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
       const ib = header.getBoundingClientRect();
@@ -262,8 +261,7 @@ try {
     });
   });
   await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
-  await page.waitForTimeout(60);
-  const denseRow = await page.evaluate(() => {
+  await settle(page);const denseRow = await page.evaluate(() => {
     const header = document.querySelector('[data-id="labels"]') as HTMLElement;
     const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
     const ib = header.getBoundingClientRect();
@@ -288,8 +286,7 @@ try {
       (window as unknown as { drawer: { element: HTMLElement } }).drawer.element.style.setProperty('--mtrl-density', String(d));
     }, density);
     await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
-    await page.waitForTimeout(60);
-    const row = await page.evaluate(() => {
+    await settle(page);const row = await page.evaluate(() => {
       const header = document.querySelector('[data-id="labels"]') as HTMLElement;
       const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
       const ib = header.getBoundingClientRect();
@@ -333,8 +330,7 @@ try {
     });
   });
   await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
-  await page.waitForTimeout(60);
-  const inkOf = () => page.evaluate(() => {
+  await settle(page);const inkOf = () => page.evaluate(() => {
     const header = document.querySelector('[data-id="labels"]') as HTMLElement;
     const chevron = header.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
     const svg = chevron.querySelector('svg') as SVGSVGElement;
@@ -590,8 +586,7 @@ try {
       });
     });
     await page.waitForFunction(() => !!document.querySelector('[data-id="labels"]'));
-    await page.waitForTimeout(60);
-    // Starts expanded (the selected child auto-expands its section); collapse it.
+    await settle(page);
     await page.click('[data-id="labels"]');
     await page.waitForFunction(() => document.querySelector('[data-id="labels"]')?.getAttribute('aria-expanded') === 'false');
     let cue = await readCue();

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>navigation-drawer</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createDrawer } from "../../../../dist/components/drawer/index.js";
+import { defineDrawer } from "../../../../dist/elements/index.js";
+import "../../../../dist/elements/css/drawer.js";
+defineDrawer();
+
+// Both forms, one per scenario: the toolbar's Factory / Element switch repaints
+// every scenario with the chosen form, and each scenario measures its own box.
+// (A single shared callback let the interaction's mount overwrite the
+// variant's, so the switch repainted one scenario and the Element button
+// repainted the factory.)
+let form = "factory";
+const painters = new Set();
+const repaint = () => { for (const paint of painters) paint(); };
+const host = () => document.getElementById("tp-main");
+
+const items = [
+  { id: "inbox", label: "Inbox", badge: "24" },
+  { type: "section", id: "labels", label: "Labels", items: [
+    { id: "family", label: "Family", active: true }, { id: "work", label: "Work" },
+  ] },
+  { type: "section", id: "more", label: "More", expanded: false, items: [
+    { id: "social", label: "Social" }, { id: "updates", label: "Updates" },
+  ] },
+  { id: "archive", label: "Archive", badge: "12" },
+];
+
+/** Each scenario's factory instance, keyed by its box, for the section API. */
+const factoryInstances = new WeakMap();
+const mountFactory = (container) => {
+  const drawer = createDrawer({ headline: "Mail", variant: "standard", open: true, items });
+  factoryInstances.set(container, drawer);
+  container.append(drawer.element);
+  return drawer.element;
+};
+const mountElement = (container) => {
+  const host = document.createElement("m-drawer");
+  host.setAttribute("open", "");
+  host.setAttribute("value", "family");
+  host.innerHTML = `
+    <m-drawer-item value="inbox">Inbox</m-drawer-item>
+    <m-drawer-item value="labels">Labels
+      <m-drawer-item value="family">Family</m-drawer-item>
+      <m-drawer-item value="work">Work</m-drawer-item>
+    </m-drawer-item>
+    <m-drawer-item value="more">More
+      <m-drawer-item value="social">Social</m-drawer-item>
+      <m-drawer-item value="updates">Updates</m-drawer-item>
+    </m-drawer-item>
+    <m-drawer-item value="archive">Archive</m-drawer-item>`;
+  container.append(host);
+  return host;
+};
+
+const mountMenu = (container) => {
+  const button = document.createElement("button");
+  button.id = "menu-opener";
+  button.textContent = "Open the menu";
+  container.append(button);
+  import("../../../../dist/components/menu/index.js").then(({ createMenu }) => {
+    createMenu({ opener: "#menu-opener", items: [
+      { id: "a", text: "Alpha" }, { id: "b", text: "Beta" }, { id: "c", text: "Gamma" },
+    ] });
+  });
+};
+
+await initPage({
+  name: "drawer",
+  toolbar: {
+    density: true,
+    forms: [
+      { label: "Factory", render: () => { form = "factory"; repaint(); } },
+      { label: "Element", render: () => { form = "element"; repaint(); } },
+    ],
+  },
+});
+
+/** One scenario's drawer, in the chosen form. */
+const mountIn = (box) => {
+  box.replaceChildren();
+  (form === "element" ? mountElement : mountFactory)(box);
+  return box;
+};
+
+const variants = section(host(), "Variants & sizes");
+const variantBox = document.createElement("div");
+scenario(variants, {
+  title: "Standard drawer with sections",
+  lookFor: "the sheet's 360 dp width, the section rows and their chevrons",
+  expected: "rows at the density height; the chevron's ink ends on the badge text's 24 dp line",
+  measure: () => {
+    const shadow = variantBox.querySelector("m-drawer")?.shadowRoot ?? variantBox;
+    const header = shadow.querySelector('[data-id="labels"]');
+    const chevron = header?.querySelector(".mtrl-drawer__item-chevron");
+    const svg = chevron?.querySelector("svg");
+    const path = svg?.querySelector("path");
+    if (!header || !chevron || !path) return "open the section to measure";
+    const ib = header.getBoundingClientRect();
+    const cb = chevron.getBoundingClientRect();
+    const bbox = path.getBBox();
+    const screenX = (x) => { const p = svg.createSVGPoint(); p.x = x; p.y = bbox.y + bbox.height / 2; return p.matrixTransform(path.getScreenCTM()).x; };
+    const inkStart = Math.min(screenX(bbox.x), screenX(bbox.x + bbox.width));
+    const inkEnd = Math.max(screenX(bbox.x), screenX(bbox.x + bbox.width));
+    // The inset that matters is from the reading direction's end: the right in
+    // LTR, the left in RTL. Reading only the right edge reported 299 px in RTL
+    // where the chevron's ink ends 24 px from the item's start side.
+    // Both numbers are from the reading direction's end — the right in LTR,
+    // the left in RTL — so the label reads the same in both.
+    const rtl = getComputedStyle(header).direction === "rtl";
+    const boxInset = rtl ? cb.left - ib.left : ib.right - cb.right;
+    const inkInset = rtl ? inkStart - ib.left : ib.right - inkEnd;
+    return `item h ${ib.height.toFixed(0)} · chevron box end inset ${boxInset.toFixed(1)} (ink 24) · ink end inset ${inkInset.toFixed(1)}`;
+  },
+  mount: (body) => {
+    body.append(variantBox);
+    const paint = () => mountIn(variantBox);
+    painters.add(paint);
+    paint();
+  },
+});
+
+// The divider takes its own mount in both forms: the shared items carry no
+// divider, and the element draws one from `<m-drawer-item type="divider">`.
+const dividerBox = document.createElement("div");
+const mountDivider = () => {
+  dividerBox.replaceChildren();
+  if (form === "element") {
+    const host = document.createElement("m-drawer");
+    host.setAttribute("open", "");
+    host.setAttribute("value", "one");
+    host.innerHTML = `
+      <m-drawer-item value="one">One</m-drawer-item>
+      <m-drawer-item type="divider"></m-drawer-item>
+      <m-drawer-item value="two">Two</m-drawer-item>`;
+    dividerBox.append(host);
+    return;
+  }
+  const drawer = createDrawer({
+    headline: "Divider",
+    variant: "standard",
+    open: true,
+    items: [
+      { id: "one", label: "One" },
+      { type: "divider" },
+      { id: "two", label: "Two" },
+    ],
+  });
+  dividerBox.append(drawer.element);
+};
+scenario(variants, {
+  title: "Divider gap and side insets",
+  lookFor: "the divider between two rows: the space above and below it, and its distance from the sheet's edges",
+  expected: "16 px between the divider and each row, and 28 px from each sheet edge (m3 navigation drawer specs)",
+  measure: () => {
+    const shadow = dividerBox.querySelector("m-drawer")?.shadowRoot ?? dividerBox;
+    const sheet = shadow.querySelector(".mtrl-drawer__sheet");
+    const divider = shadow.querySelector(".mtrl-drawer__divider");
+    const before = shadow.querySelector('[data-id="one"]');
+    const after = shadow.querySelector('[data-id="two"]');
+    if (!sheet || !divider || !before || !after) return "no drawer";
+    const s = sheet.getBoundingClientRect();
+    const d = divider.getBoundingClientRect();
+    const b = before.getBoundingClientRect();
+    const a = after.getBoundingClientRect();
+    const round = (value) => Math.round(value * 10) / 10;
+    return `gap ${round(d.top - b.bottom)} / ${round(a.top - d.bottom)} px · inset ${round(d.left - s.left)} / ${round(s.right - d.right)} px`;
+  },
+  mount: (body) => {
+    body.append(dividerBox);
+    const paint = () => mountDivider();
+    painters.add(paint);
+    paint();
+  },
+});
+
+const states = section(host(), "States");
+const stateBox = document.createElement("div");
+scenario(states, {
+  title: "Parent cue and selected pill",
+  lookFor: "the Labels header keeps a faint persistent layer while its child Family is selected",
+  expected: "the header shows the hover-opacity state layer, no pill, no bold; the child carries the pill",
+  measure: () => {
+    const shadow = stateBox.querySelector("m-drawer")?.shadowRoot ?? stateBox;
+    const header = shadow?.querySelector('[data-id="labels"]');
+    const indicator = header?.querySelector(".mtrl-drawer__active-indicator");
+    if (!indicator) return "open the section to measure";
+    return `cue layer opacity ${getComputedStyle(indicator, "::after").opacity} · pill opacity ${getComputedStyle(indicator, "::before").opacity}`;
+  },
+  mount: (body) => {
+    body.append(stateBox);
+    const paint = () => mountIn(stateBox);
+    painters.add(paint);
+    paint();
+  },
+});
+
+const interaction = section(host(), "Interaction");
+
+// The comparison the owner reads: one control starts both motions, and the
+// readout samples them every frame (the harness ticks the readouts with
+// requestAnimationFrame). The drawer's fraction is against the content height
+// measured now — `scrollHeight` — so a density change moves the denominator
+// with it; a running maximum would read the open drawer as a fraction of its
+// tallest state and drift downwards as the density goes from 0 to −5.
+const interactionBox = document.createElement("div");
+let menu = null;
+let liveDrawer = null;
+// The demo is either the factory's own root or the `<m-drawer>` element, whose
+// sections live in its shadow root: the control and the readout both resolve it.
+const drawerRoot = () => {
+  const element = liveDrawer?.querySelector("m-drawer");
+  if (element) return element.shadowRoot ?? element;
+  return liveDrawer?.querySelector(".mtrl-drawer") ?? null;
+};
+// The drawer's own section API: toggling through it emits no DOM click, so the
+// menu's document dismissal never sees one (a header.click() did, and lost the
+// menu a third of the way into a slowed close).
+const drawerComponent = () => {
+  const element = liveDrawer?.querySelector("m-drawer");
+  if (element?.component) return element.component;
+  return liveDrawer ? factoryInstances.get(liveDrawer) : null;
+};
+const sectionExpanded = () => {
+  const component = drawerComponent();
+  if (component?.isSectionExpanded) return component.isSectionExpanded("labels");
+  const header = drawerRoot()?.querySelector('[data-id="labels"]');
+  return header
+    ? header.getAttribute("aria-expanded") !== null
+      ? header.getAttribute("aria-expanded") === "true"
+      : header.classList.contains("mtrl-drawer__item--expanded")
+    : false;
+};
+const toggleSection = () => {
+  const component = drawerComponent();
+  if (component?.toggleSection) { component.toggleSection("labels"); return; }
+  // The public component API carries expand/collapse/isSectionExpanded.
+  if (component?.expandSection && component?.collapseSection && component?.isSectionExpanded) {
+    if (component.isSectionExpanded("labels")) component.collapseSection("labels");
+    else component.expandSection("labels");
+    return;
+  }
+  drawerRoot()?.querySelector('[data-id="labels"]')?.click();
+};
+// The two motions start a frame or two apart, so their fractions at one wall
+// time differ while the curves agree: each transition is recorded against its
+// own local time, and the readout compares one motion's fraction with the
+// other's at the same local time. Interpolation stays inside both recorded
+// spans. A time before the first sample, after the last, or on a track that
+// has no span covering it is not a comparison: extrapolating backwards from
+// the first two samples invented a delta.
+const tracks = { menu: [], drawer: [] };
+let trackStart = null;
+const record = (track, startTime, localTime, value) => {
+  if (startTime !== trackStart) {
+    tracks.menu.length = 0;
+    tracks.drawer.length = 0;
+    trackStart = startTime;
+  }
+  const list = tracks[track];
+  if (list.length && localTime <= list[list.length - 1].t) return;
+  list.push({ t: localTime, value });
+};
+const atLocal = (track, localTime) => {
+  const list = tracks[track];
+  if (!list.length || localTime < list[0].t || localTime > list[list.length - 1].t) return null;
+  // One sample covers only that instant. It has no span to interpolate.
+  if (list.length === 1) return localTime === list[0].t ? list[0].value : null;
+  for (let i = 1; i < list.length; i++) {
+    const a = list[i - 1];
+    const b = list[i];
+    if (localTime < a.t || localTime > b.t) continue;
+    const span = b.t - a.t;
+    const ratio = span > 0 ? (localTime - a.t) / span : 0;
+    return a.value + (b.value - a.value) * ratio;
+  }
+  return null;
+};
+const transitionTime = (element, property) => {
+  const animation = element?.getAnimations?.().find((entry) => entry.transitionProperty === property);
+  if (!animation || animation.currentTime === null) return null;
+  return { start: Number(animation.startTime ?? 0), local: Number(animation.currentTime), started: animation.startTime !== null };
+};
+
+const fractions = () => {
+  const root = drawerRoot();
+  const group = root?.querySelector(".mtrl-drawer__group-items");
+  const inner = root?.querySelector(".mtrl-drawer__group-items-inner");
+  // The rows keep their full height inside the clipped panel, so their sum is
+  // the denominator at the current density — not a running maximum, and not
+  // the clipped inner's scrollHeight (0 while closed).
+  const rows = inner ? [...inner.children].reduce((sum, row) => sum + row.getBoundingClientRect().height, 0) : 0;
+  const full = rows > 0 ? rows : inner?.scrollHeight ?? 0;
+  const panel = group ? group.getBoundingClientRect().height : 0;
+  const drawer = full > 0 ? Math.min(1, panel / full) : 0;
+  const menuElement = liveDrawer ? document.querySelector(".mtrl-menu") : null;
+  const transform = menuElement ? getComputedStyle(menuElement).transform : "none";
+  const menuScale = transform && transform !== "none" ? new DOMMatrixReadOnly(transform).d : null;
+  const show = (value) => (value === null ? "–" : value.toFixed(3));
+  const moving = (value) => value !== null && value > 0.02 && value < 0.98;
+  const timing = {
+    menu: transitionTime(menuElement, "transform"),
+    drawer: transitionTime(group, "grid-template-rows") ?? transitionTime(group, "height"),
+  };
+  if (timing.menu?.started && timing.drawer?.started) {
+    const start = Math.min(timing.menu.start, timing.drawer.start);
+    record("menu", start, timing.menu.local, menuScale ?? 0);
+    record("drawer", start, timing.drawer.local, drawer);
+  }
+  const skew = timing.menu?.started && timing.drawer?.started ? Math.abs(timing.menu.start - timing.drawer.start) : null;
+  // Both curves at one local time: what "the same motion" means here, where the
+  // two transitions do not start on the same frame. Until both tracks contain
+  // that time the readout is a dash, not a number from outside the samples.
+  let equalLocal = null;
+  const comparing = moving(menuScale) && moving(drawer) && timing.menu?.started && timing.drawer?.started;
+  if (comparing) {
+    const local = Math.min(timing.menu.local, timing.drawer.local);
+    const menuAt = atLocal("menu", local);
+    const drawerAt = atLocal("drawer", local);
+    if (menuAt !== null && drawerAt !== null) equalLocal = Math.abs(menuAt - drawerAt);
+  }
+  const parts = [`menu scaleY ${show(menuScale)}`, `drawer visible height ${drawer.toFixed(3)}`];
+  if (skew !== null) parts.push(`starts ${skew.toFixed(0)} ms apart`);
+  if (comparing) parts.push(`at equal local time Δ ${equalLocal === null ? "–" : equalLocal.toFixed(3)}`);
+  return parts.join(" · ");
+};
+
+scenario(interaction, {
+  title: "Section open/close next to the menu",
+  lookFor: "the rows scale from their top edge with a fade, the same motion as the menu",
+  expected: "both run duration-medium1 + easing-emphasized; closing is the same motion in reverse; the two transitions start a frame or two apart, and at equal local times their fractions agree",
+  measure: fractions,
+  mount: (body) => {
+    body.append(interactionBox);
+    const row = document.createElement("div");
+    row.className = "tp-row";
+    const drawerBox = document.createElement("div");
+    drawerBox.style.width = "360px";
+    const menuBox = document.createElement("div");
+    row.append(drawerBox, menuBox);
+    interactionBox.append(row);
+    const paint = () => {
+      drawerBox.replaceChildren();
+      (form === "element" ? mountElement : mountFactory)(drawerBox);
+      liveDrawer = drawerBox;
+      // Start collapsed, with the menu closed: the comparison's first press
+      // then runs both motions the same way (open), the second both closed.
+      if (sectionExpanded()) toggleSection();
+    };
+    painters.add(paint);
+    paint();
+    const opener = document.createElement("button");
+    opener.id = "menu-opener";
+    opener.textContent = "Open the menu";
+    menuBox.append(opener);
+    import("../../../../dist/components/menu/index.js").then(({ createMenu }) => {
+      menu = createMenu({ opener: "#menu-opener", items: [
+        { id: "a", text: "Alpha" }, { id: "b", text: "Beta" }, { id: "c", text: "Gamma" },
+      ] });
+    });
+    // One control starts both, driven through the components' own API so the
+    // menu is not dismissed as an outside press before the section moves.
+    // The menu's own close removes it from the document on fixed 50 ms and
+    // 300 ms timers, whatever the animations are doing: at 5x slow that is a
+    // third of the way into a 1.25 s curve, so the closing half lost the menu
+    // while the drawer was still 42.5% open. Closing here removes the
+    // visibility class (the same transition the component uses), keeps the
+    // element present for the whole curve, and tells the component once the
+    // transition has ended.
+    // A close in progress is owned by the control: its settle step is kept so
+    // a reversal can finish it before reopening — otherwise the drawer moves
+    // while the menu still believes it is open.
+    let pendingClose = null;
+    const closeMenuAfterItsCurve = () => {
+      const element = menu?.element;
+      if (!element) return;
+      element.classList.remove("mtrl-menu--visible");
+      element.setAttribute("aria-hidden", "true");
+      let finished = false;
+      const settle = () => {
+        if (finished) return;
+        finished = true;
+        if (pendingClose === settle) pendingClose = null;
+        menu?.close?.();
+      };
+      pendingClose = settle;
+      element.addEventListener("transitionend", settle, { once: true });
+      // A reduced-motion run fires no transition; settle the state anyway.
+      setTimeout(settle, 2000);
+    };
+    const both = document.createElement("button");
+    both.textContent = "Open / close both";
+    both.addEventListener("click", (event) => {
+      // The menu dismisses on a document click; this control is not its opener,
+      // so its own click would close what it just opened. Keep it local.
+      event.stopPropagation();
+      // A reversal during a deferred close finishes that close first: the
+      // menu's state and its painted class move together, then both motions
+      // start from the same state.
+      pendingClose?.();
+      toggleSection();
+      // The menu follows the section's new state, so both motions run the same
+      // way at once and the two fractions can be read against each other.
+      if (sectionExpanded()) menu?.open?.(); else closeMenuAfterItsCurve();
+    });
+    const note = document.createElement("p");
+    note.style.margin = "4px 0 0";
+    note.style.fontSize = "12px";
+    note.style.opacity = "0.7";
+    note.textContent = "The section reveal is the shipped one (#458): the panel's clipped height grows on duration-medium1 + easing-emphasized with the fade on the same tokens, and the rows keep their full height inside it. The menu's scaleY and the drawer's visible height are two live values. Their transitions can start a frame or two apart, and the readout compares them at the same local time.";
+    interactionBox.append(both, note);
+  },
+});
+
+const edge = section(host(), "Edge cases");
+const edgeBox = document.createElement("div");
+scenario(edge, {
+  title: "RTL and density",
+  lookFor: "mirrored paddings and indent; the child pill starts the indent further in",
+  expected: "the insets mirror with the direction and follow the density",
+  measure: () => {
+    const shadow = edgeBox.querySelector("m-drawer")?.shadowRoot ?? edgeBox;
+    const child = shadow.querySelector('[data-id="family"]');
+    const indicator = child?.querySelector(".mtrl-drawer__active-indicator");
+    const label = child?.querySelector(".mtrl-drawer__item-label");
+    const sheet = shadow.querySelector(".mtrl-drawer");
+    if (!child || !indicator || !label || !sheet) return "open the section to measure";
+    const rtl = getComputedStyle(sheet).direction === "rtl";
+    const ib = indicator.getBoundingClientRect();
+    const sb = sheet.getBoundingClientRect();
+    const lb = label.getBoundingClientRect();
+    // The pill's own inset from the sheet, then the label's from the pill:
+    // measuring the label against the row reported 16 px where the painted
+    // pill sits 24 px in.
+    const pillInset = rtl ? sb.right - ib.right : ib.left - sb.left;
+    const labelInset = rtl ? ib.right - lb.right : lb.left - ib.left;
+    return `pill inset from the sheet ${pillInset.toFixed(1)} · label inset from the pill ${labelInset.toFixed(1)} · dir ${rtl ? "rtl" : "ltr"}`;
+  },
+  mount: (body) => {
+    body.append(edgeBox);
+    const paint = () => mountIn(edgeBox);
+    painters.add(paint);
+    paint();
+  },
+});
+
+</script>
+</body>
+</html>

@@ -17,6 +17,131 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.11] - 2026-11-28
+
+Carousel layout and snap fixes, reliable menu keyboard focus, and corrected list and navigation geometry.
+
+### Fixed
+
+- **Carousels.** The container has 8dp of padding at the top and bottom on every layout except full-screen, and the small item beside an opening hero stays at least 40dp (m3.material.io/components/carousel/specs, read 2026-11-27).
+- **Carousels.** Advancing through a wide multi-browse carousel keeps the final group in view and reports each selected slide in order.
+- **List inset dividers** leave 16 px at both ends, matching the Compose list tokens.
+- **Lists.** A selected or disabled row paints only its own content: a standard list, a listbox or a segmented list nested in the row keeps its own unselected icon, text, radio and action-layer colours, and a disabled parent does not fade it (m3.material.io/components/lists/specs, read 2026-11-27).
+- **Menu keyboard focus** reaches the first item even when a delayed render interrupts opening.
+- **Navigation drawer.** The section divider has 16 dp above it and 28 dp side insets in both the standard and the modal drawer; the standard sheet's edge border no longer counts into the inset (m3.material.io/components/navigation-drawer/specs, read 2026-11-27).
+- **Expanded modal navigation rail.** Destinations respond to clicks across the full width of the rail and keep their inset indicators.
+
+### Size
+
+The normalized release measurement was **925,924 B** packed (**+1,303 B** since v3.16.10),
+**5,280,537 B** unpacked and **1,304 files**. The root JavaScript bundle was **136,972 B** gzip.
+
+## [3.16.10] - 2026-11-27
+
+Faster slider bubble exit, tooltip hide delay, and menu and list values matched to the spec
+
+### Fixed
+
+- **Lists.** The space between a list item's slots is 12 dp, segmented icons are 20 dp, a segmented trailing icon is on-surface, and a selected icon turns on-surface while hovered, focused, or pressed.
+- **Menu drifts against the M3 specs.** A vibrant menu's leading icon is Tertiary as the item is hovered, focused or pressed, while the rest state keeps the vibrant mapping's on-tertiary-container; a disabled item takes no hover colour, and a selected item keeps its selection colours. A baseline menu item's end padding is 12dp on every item, in both directions: the selected check and the submenu arrow sit in that padding and the content row reserves their room once (18dp check + 10dp, 24dp arrow + 12dp), so a label, a supporting line or a shortcut beside it stays clear and keeps main's width. The vertical menu keeps its own padding and marks (m3.material.io/components/menus/specs, read 2026-11-27: left/right padding 12dp, with-icon too, padding between elements 12dp, icons 24dp).
+- **Slider value indicator.** The pill stays visible while it shrinks and drops in 200 ms after release. It takes 250 ms to appear.
+- **A plain tooltip stays up for 1.5 seconds after the pointer leaves its trigger.**
+
+### Size
+
+Release CI measured **924,649 B** packed (**+466 B** since 3.16.9), **5,271,995 B**
+unpacked and **1,304 files**. The root JavaScript bundle measured **136,598 B** gzip,
+and the every-component scenario measured **133,580 B** gzip.
+[Release CI run 46038719613](https://github.com/floor/material/actions/runs/46038719613/job/140641176204)
+
+## [3.16.9] - 2026-11-27
+
+Slider value indicator, text field label and notch geometry, and coverage of the Compose tokens.
+
+### Fixed
+
+- **A radio with the press ripple turned off keeps its keyboard focus ring and its focus layer.**
+- **The select's trailing arrow inherits its colour from the icon span, so WebKit no longer eases that colour a second time, and the open rotation still animates.**
+- **Slider value indicator.** The whole pill grows and rises from above the handle, then shrinks and returns along the same path when dismissed.
+- **Slider value indicator.** The pill stays visible as it shrinks and drops back toward the handle after release.
+- **Slider value indicator.** The value appears directly above its handle without sliding into place, and stays visible over an adjacent slider's handle when they overlap.
+- **Filled text field labels float to an 8 dp top inset. Outlined text field notches leave 4 dp on each side, including when the label has a fractional width.**
+- **Extended FAB and tooltip defaults.** Options set to `undefined` now use a defined component-wide default or fall back to the built-in value. This keeps the extended FAB's default variant and width classes and gives tooltips the same variant as when the option is omitted.
+
+### Size
+
+Release CI measured **924,184 B** packed (**+665 B** since 3.16.8), **5,265,261 B**
+unpacked and **1,304 files**. The root JavaScript bundle measured **136,601 B** gzip,
+and the every-component scenario measured **133,579 B** gzip.
+[Release CI run 46015808859](https://github.com/floor/material/actions/runs/46015808859/job/140563277407)
+
+## [3.16.8] - 2026-11-27
+
+Search bars leave 16 px at the end when they have no trailing action, and cards use the correct focus elevation and state-layer opacities.
+
+### Fixed
+
+- **Search bar spacing.** With no trailing action, the browser measured 8 px between the text area and the bar’s end when the clear button was disabled, and 56 px when the default clear button was hidden. Both cases now leave 16 px in contained and divided bars, in left-to-right and right-to-left layouts ([#495](https://github.com/floor/material/pull/495)).
+- **Card focus, hover and drag.** In Chromium and WebKit, focused filled and outlined cards measured elevation Level 1 and now stay at Level 0. Elevated cards still focus at Level 1. The elevated card’s hover layer went from 0% to 8% opacity, and all three variants’ drag layers went from 0% to 16% ([#497](https://github.com/floor/material/pull/497)).
+
+The conformance matrix in the repository compares [Material Design 3](https://m3.material.io/) with Compose Material 3 1.5.0 and verifies colour, type, shape and elevation roles across three themes ([#496](https://github.com/floor/material/pull/496), [#501](https://github.com/floor/material/pull/501), [#502](https://github.com/floor/material/pull/502)). CI skips browser jobs for changes outside their scope ([#499](https://github.com/floor/material/pull/499)), and browser checks use a shared, tested helper to wait for animations and scrolling to settle ([#503](https://github.com/floor/material/pull/503), [#505](https://github.com/floor/material/pull/505), [#506](https://github.com/floor/material/pull/506)).
+
+The release PR’s package job measured **923,516 B** compressed,
+**5,264,682 B** unpacked and **1,303 files**, with **136,267 B** of
+gzip-compressed root JavaScript and **133,251 B** for the every-component
+scenario. The compressed package grew by **339 B** from 3.16.7
+([run 45938273038](https://github.com/floor/material/actions/runs/45938273038/job/140306764571)).
+
+## [3.16.7] - 2026-11-26
+
+Menus and selects keep their items in view, hidden bottom app bars stay out of the Tab order, and keyboard focus is clearer across the library.
+
+### Fixed
+
+- **Select when the popup flips above the field.** The selected option was scrolled before the menu settled. In Chromium and WebKit, the second option landed at y −197–−153, above a popup spanning y 215–495. The select now scrolls using the option’s layout position, putting it at y 265–309 inside the same popup for both filled and outlined fields ([#485](https://github.com/floor/material/pull/485)).
+- **Hidden bottom app bar.** At 300 px of page scroll, Tab from the preceding control used to focus the first off-screen action. The bar now makes its actions inert while hidden, so Tab reaches the following control. At scroll 0, the actions are reachable again ([#489](https://github.com/floor/material/pull/489)).
+- **Hidden toolbar-based bottom app bar.** At 41 px of scroll, Tab used to enter the hidden opt-in bar. With the fix, scrolling from 30 to 41 to 20 px sends Tab to the bar action, then the following control, then back to the bar action from the same starting control ([#491](https://github.com/floor/material/pull/491)).
+- **Keyboard focus rings.** The browser inventory found 41 rows with differing ring styles across light and dark themes. All 41 now draw a 3 dp Secondary ring at the control’s prescribed offset. The expanded Search input and the trailing avatar also gain a ring ([#490](https://github.com/floor/material/pull/490)).
+- **Menus in scrolling or positioned containers.** A scrolling container could clip 125 px of the menu, and opening it could move an ancestor’s scroll position from 120 to 40 px. In a positioned host, the menu could land 371 px off at 0.5 zoom. The menu now uses the space visible through the container and aligns with its opener even under zoom. The ancestor stays at 120 px in the same check, and End reveals the whole last item by scrolling the menu’s own list, including at 0.7 zoom ([#487](https://github.com/floor/material/pull/487), including [#472](https://github.com/floor/material/pull/472)).
+- **Search avatar button.** Inside `<m-search>`, a clickable avatar had a 2 px outset border, a grey fill and browser padding. It now rests transparent with zero border and padding. In both render paths it uses the trailing buttons’ 8% hover and 10% focus and press layers, plus a 3 px Secondary keyboard focus ring set 2 px outside the button ([#492](https://github.com/floor/material/pull/492)).
+
+The push-to-main package job measured **923,177 B** compressed,
+**5,258,247 B** unpacked and **1,303 files**, with **136,267 B** of
+gzip-compressed root JavaScript and **133,251 B** for the every-component
+scenario. The compressed package grew by **1,346 B** (about 1.3 KB) from
+3.16.6 ([run 45866092028](https://github.com/floor/material/actions/runs/45866092028/job/140069674394)).
+
+## [3.16.6] - 2026-11-26
+
+Menus, selects and carousel drags follow the page zoom, time pickers with seconds fit their fields, icon buttons keep their round shape, and tall dialogs scroll within small windows.
+
+### Fixed
+
+- **Carousel drag in a zoomed document.** A pointer delta is in zoomed viewport pixels while the scroller's position is in the element's own, so under a CSS `zoom` the strip moved the drag times the zoom — a 120 px drag moved 92 px at 0.7 and 66 at 0.5 (md3.io, 2026-11-25). The drag now divides its delta by the effective zoom (`currentCSSZoom`, or the computed zoom product where the engine lacks it), so a drag follows the pointer at any zoom.
+- **Menu and select in a zoomed document.** `zoom` scales the used values, so `getBoundingClientRect()` reports zoomed viewport pixels while `style.left/top/width` inside the zoomed subtree are local pixels. A menu copied its opener's rect straight into those styles, so under `zoom` it landed at the zoom times its offset — at 0.5 it opened at half its anchor's coordinates, over the field, and a select's listbox was half its field's width (md3.io, 2026-11-25). Both are placed and sized through the element's effective zoom now (`rect.width / offsetWidth`), so a menu keeps its opener's edge and its gap at 1, 0.7 and 0.5 and a listbox is always its field's width.
+- **Time picker with seconds.** M3's dialog width, 328 px, is what an hh:mm row needs; the seconds field is our extension and its row is wider — 388 px at 12h and 356 at 24h — so the content overflowed and the hour, or the AM/PM column, was clipped. A dialog holding seconds now takes the row's width (440 px, capped by the viewport), while the hours-and-minutes dialog keeps its M3 width exactly: 280 px for the 24h input, 304 px for the 24h dial, 328 px for 12h.
+- **Icon button resting shape.** An options object with `shape: undefined` dropped the default round shape and left every size with a 20 px radius. The button now resolves the shape after merging its options, so each size keeps its round radius and its selected and pressed shape changes ([#476](https://github.com/floor/material/pull/476)).
+- **A dialog taller than a small window.** Bottom alignment could push a tall dialog's headline and the start of its content above the window, where scrolling could never reach them. The dialog now fits within the window, with its content scrolling between the header and actions. A dialog that fits still sits at the bottom ([#478](https://github.com/floor/material/pull/478)).
+
+The push-to-main package job measured **921,831 B** compressed,
+**5,251,059 B** unpacked and **1,303 files**, with **135,579 B** of
+gzip-compressed root JavaScript and **132,494 B** for the every-component
+scenario ([run 45820063921](https://github.com/floor/material/actions/runs/45820063921/job/139910426458)).
+
+## [3.16.5] - 2026-11-25
+
+A carousel drag after a click settles at the release position, and uncontained carousels stop at the end of their content.
+
+### Fixed
+
+- **Carousel drag after a click.** A pointer gesture moves focus to the slide under it, and the carousel's focus-follow — meant for the keyboard — took that focus as a selection: after a click, a drag, and the focus the release left on the leading slide, the strip glided back to the clicked slide even with snapping off. A drag's end now disarms focus-following until the next press or key, so a drag rests where it is released (snapping on still settles on the nearest snap), while a click still selects its slide and Tab, the arrows and Home/End keep their follow-focus.
+- **Carousel uncontained end of content.** Navigating to the last item no longer scrolls it to the start edge: the uncontained scroll range caps at the content length minus the viewport, so the last item settles flush with the end edge plus the trailing padding — in both directions — and the readout names the item actually in view at the capped end.
+
+Release measurements: the push-to-main package job measures **921,141 B**
+compressed, **5,246,966 B** unpacked and **1,302 files**, with **135,484 B**
+of gzip-compressed root JavaScript and **132,396 B** for the every-component
+scenario ([run 45687409445](https://github.com/floor/material/actions/runs/45687409445/job/139464080742)).
+
 ## [3.16.4] - 2026-11-25
 
 Drawer sections follow the menu's motion with 1 px under expanded headers, and the slider track keeps its gap as the pressed handle narrows.
@@ -7429,7 +7554,14 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.4...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.11...HEAD
+[3.16.11]: https://github.com/floor/material/compare/v3.16.10...v3.16.11
+[3.16.10]: https://github.com/floor/material/compare/v3.16.9...v3.16.10
+[3.16.9]: https://github.com/floor/material/compare/v3.16.8...v3.16.9
+[3.16.8]: https://github.com/floor/material/compare/v3.16.7...v3.16.8
+[3.16.7]: https://github.com/floor/material/compare/v3.16.6...v3.16.7
+[3.16.6]: https://github.com/floor/material/compare/v3.16.5...v3.16.6
+[3.16.5]: https://github.com/floor/material/compare/v3.16.4...v3.16.5
 [3.16.4]: https://github.com/floor/material/compare/v3.16.3...v3.16.4
 [3.16.3]: https://github.com/floor/material/compare/v3.16.2...v3.16.3
 [3.16.2]: https://github.com/floor/material/compare/v3.16.1...v3.16.2

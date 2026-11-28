@@ -51,9 +51,8 @@ $component: "#{$prefix}-menu";
     // drawer's sections use too, so the two cannot drift.
     @include m.reveal-motion($withVisibility: true);
     pointer-events: none;
-    // Closed, the menu is out of the tab order and the accessibility tree: an
-    // <m-menu> keeps its closed menu in its shadow root, where its first item
-    // was a tab stop. A transition keeps it visible while it moves either way.
+    // Visibility keeps the closed menu out of the tab order and accessibility
+    // tree. Delay hiding on close so the exit animation can finish.
     visibility: hidden;
 
     // A top-layer menu is a popover (`layer: "top"`). The browser's popover
@@ -65,10 +64,9 @@ $component: "#{$prefix}-menu";
         border: 0;
     }
 
-    // Visible state: only the values flip — the base rule's single
-    // transition carries both directions (the shared mixin holds the closed
-    // values and the timing, so the two cannot drift).
     &--visible {
+        // Make items focusable as soon as opening starts, even before a paint.
+        transition-property: transform, opacity;
         transform: scaleY(1);
         opacity: 1;
         pointer-events: auto;
@@ -123,10 +121,12 @@ $component: "#{$prefix}-menu";
 
         position: relative;
         min-height: 48px;
-        // 12dp each side (m3.material.io menu specs, "Measurements"), with
-        // room at the end for a trailing mark
+        // 12dp each side (m3.material.io menus specs, "Baseline menu padding
+        // and size measurements": left/right padding 12dp, with-icon too).
+        // The trailing marks sit in that end padding; the label reserves their
+        // room plus the 12dp between elements, so the item's own padding stays
+        // 12dp on every item.
         padding: 12px;
-        padding-inline-end: 40px;
         cursor: pointer;
         user-select: none;
         color: t.color("on-surface");
@@ -179,8 +179,6 @@ $component: "#{$prefix}-menu";
 
         // Submenu indicator
         &--submenu {
-            padding-right: 48px;
-
             &::after {
                 content: "";
                 position: absolute;
@@ -239,6 +237,7 @@ $component: "#{$prefix}-menu";
         &--selected {
             background-color: t.color("secondary-container");
             color: t.color("on-secondary-container");
+
 
             &:hover {
                 @include m.state-layer(t.color("on-secondary-container"), "hover");
@@ -355,6 +354,25 @@ $component: "#{$prefix}-menu";
         }
     }
 
+    // The baseline menu's trailing marks (the selected check, the submenu
+    // arrow) sit in the item's 12dp end padding. The content row reserves
+    // their room once -- the mark and the 12dp between elements -- so the
+    // label and any shortcut beside it stay clear, however many nested text
+    // elements carry them. The vertical menu places its own marks and keeps
+    // its own padding.
+    &:not(&--vertical) {
+        .#{$component}__item--selected:not(.#{$component}__item--submenu) .#{$component}__item-content {
+            // The 18dp check and the 12dp between elements the baseline
+            // measurements give ("Padding between elements within a list
+            // item 12dp").
+            padding-inline-end: 30px;
+        }
+
+        .#{$component}__item--submenu .#{$component}__item-content {
+            padding-inline-end: 36px;
+        }
+    }
+
     // Divider
     &__divider {
         height: 1px;
@@ -418,6 +436,19 @@ $component: "#{$prefix}-menu";
             // No container token for the vibrant selected disabled state: the
             // container is the enabled selection's, at full opacity
             --#{$prefix}-menu-selected-disabled-container: var(--#{$prefix}-menu-selected-container);
+
+            // The vibrant leading icon is Tertiary as the item is hovered,
+            // focused or pressed (owner decision 2026-11-27; the vibrant
+            // mapping is tertiary-based, m3.material.io/components/menus/specs).
+            // A selected item keeps the selection's own colours.
+            .#{$component}__item:not(.#{$component}__item--selected):not(.#{$component}__item--disabled) {
+                &:hover .#{$component}__item-icon,
+                &:focus-visible .#{$component}__item-icon,
+                &.#{$component}__item--active .#{$component}__item-icon,
+                &:active .#{$component}__item-icon {
+                    color: t.color("tertiary");
+                }
+            }
         }
 
         .#{$component}__list {
@@ -648,9 +679,13 @@ $component: "#{$prefix}-menu";
         transition:
             transform v.motion("duration-medium1") v.motion("easing-emphasized"),
             opacity v.motion("duration-medium1") v.motion("easing-emphasized"),
-            visibility v.motion("duration-medium1"),
             border-radius v.motion("spring-fast-spatial-duration")
-                v.motion("spring-fast-spatial-easing");
+                v.motion("spring-fast-spatial-easing"),
+            visibility v.motion("duration-medium1");
+
+        &:where(.#{$component}--visible) {
+            transition-property: transform, opacity, border-radius;
+        }
 
         &.#{$component}--active {
             border-radius: 24px;
@@ -689,6 +724,15 @@ $component: "#{$prefix}-menu";
     // Reduced motion preference support
     @include m.reduced-motion {
         transition: opacity v.motion("duration-short2") linear, visibility v.motion("duration-short2");
+
+        &--visible {
+            transition-property: opacity;
+            // The global reduced-motion rule can also enable opacity, color,
+            // background-color, border-color, box-shadow and visibility in
+            // that order. Keep the fades and make only visibility immediate.
+            $fade: v.motion("duration-short2");
+            transition-duration: $fade, $fade, $fade, $fade, $fade, 0s;
+        }
 
         &,
         &--visible {
@@ -743,12 +787,10 @@ $component: "#{$prefix}-menu";
 
     @include mirrored {
         .#{$component}__item--submenu {
-            padding-right: 16px;
-            padding-left: 48px;
-
+            // The item's own ends stay 12dp; the label reserves the arrow.
             &::after {
                 right: auto;
-                left: 16px;
+                left: 12px;
                 transform: translateY(-50%) rotate(180deg);
             }
         }

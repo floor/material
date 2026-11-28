@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>list</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createList } from "../../../../dist/components/list/index.js";
+await initPage({ name: "list", toolbar: { density: true } });
+const main = document.getElementById("tp-main");
+
+const ICON = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2 4 20h16z"/></svg>';
+const icon = { type: "icon", content: ICON };
+
+const token = (name) => {
+  const probe = document.createElement("span");
+  probe.style.color = `var(--mtrl-sys-color-${name})`;
+  document.body.append(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return color;
+};
+const roleOf = (color) => {
+  if (color === token("on-surface")) return "OnSurface";
+  if (color === token("on-secondary-container")) return "OnSecondaryContainer";
+  if (color === token("on-surface-variant")) return "OnSurfaceVariant";
+  return color;
+};
+const item = (root, id) => root.querySelector(`[data-id="${id}"]`);
+const gapOf = (row) => {
+  const leading = row.querySelector(".mtrl-list__leading");
+  const text = row.querySelector(".mtrl-list__text");
+  const a = leading.getBoundingClientRect();
+  const b = text.getBoundingClientRect();
+  const gap = a.right <= b.left + 0.5 ? b.left - a.right : a.left - b.right;
+  return Math.round(gap);
+};
+const widthOf = (el) => Math.round(el.getBoundingClientRect().width);
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Standard and segmented icons",
+  lookFor: "a 24 px icon on the standard row and 20 px icons on the segmented row; the segmented trailing icon in on-surface",
+  expected: "segmented icons are the expressive 20 dp size, and the unselected trailing icon is on-surface",
+  measure: () => {
+    const standard = item(document.getElementById("list-standard"), "standard");
+    const segmented = item(document.getElementById("list-segmented"), "segmented");
+    if (!standard || !segmented) return "no list";
+    const leading = widthOf(segmented.querySelector(".mtrl-list__leading > *"));
+    const trailing = widthOf(segmented.querySelector(".mtrl-list__trailing"));
+    const standardIcon = widthOf(standard.querySelector(".mtrl-list__leading > *"));
+    const colour = roleOf(getComputedStyle(segmented.querySelector(".mtrl-list__trailing")).color);
+    return `standard ${standardIcon} px · segmented leading ${leading} px · trailing ${trailing} px ${colour}`;
+  },
+  mount: (body) => {
+    const standard = createList({
+      ariaLabel: "Standard",
+      items: [{ id: "standard", headline: "Standard", leading: icon, trailing: icon }],
+    });
+    const segmented = createList({
+      ariaLabel: "Segmented",
+      variant: "segmented",
+      items: [{ id: "segmented", headline: "Segmented", leading: icon, trailing: icon }],
+    });
+    standard.element.id = "list-standard";
+    segmented.element.id = "list-segmented";
+    body.append(standard.element, segmented.element);
+  },
+});
+
+scenario(variants, {
+  title: "Inset and full-width dividers",
+  lookFor: "the inset line between the first two rows, then the full-width line. Toggle RTL to compare both directions.",
+  expected: "the inset line is 16 px from both edges. The full-width line meets both edges.",
+  measure: () => {
+    const root = document.getElementById("list-dividers");
+    const gaps = Array.from(root.querySelectorAll(".mtrl-list__divider"), (divider) => {
+      const line = divider.getBoundingClientRect();
+      const content = divider.parentElement.getBoundingClientRect();
+      return `${Math.round(line.left - content.left)} px / ${Math.round(content.right - line.right)} px`;
+    });
+    return `Left / right · Inset ${gaps[0]} · Full width ${gaps[1]}`;
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "Divider sizes",
+      items: [
+        { id: "inset", headline: "Above inset divider" },
+        { kind: "divider", inset: true },
+        { id: "full", headline: "Above full-width divider" },
+        { kind: "divider" },
+        { id: "last", headline: "Last row" },
+      ],
+    });
+    list.element.id = "list-dividers";
+    body.append(list.element);
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Selected icon colour",
+  lookFor: "the selected icons at rest, then while the pointer is on the row, the row is focused, or the row is pressed",
+  expected: "rest is on-secondary-container; hover, focus and press are on-surface",
+  measure: () => {
+    const row = item(document.getElementById("list-states"), "selected");
+    if (!row) return "no list";
+    const action = row.querySelector(".mtrl-list__action");
+    const state = action?.matches(":focus-visible") || row.matches(":focus-visible")
+      ? "focus"
+      : row.matches(":active")
+        ? "pressed"
+        : row.matches(":hover")
+          ? "hover"
+          : "rest";
+    const leading = roleOf(getComputedStyle(row.querySelector(".mtrl-list__leading")).color);
+    const trailing = roleOf(getComputedStyle(row.querySelector(".mtrl-list__trailing")).color);
+    return `${state} · leading ${leading} · trailing ${trailing}`;
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "States",
+      items: [{ id: "selected", headline: "Selected", selected: true, leading: icon, trailing: icon }],
+    });
+    list.element.id = "list-states";
+    body.append(list.element);
+  },
+});
+
+scenario(states, {
+  title: "A list nested in a selected or disabled row",
+  lookFor: "the nested list's unselected icons, headline and text opacity beside the rows' own",
+  expected: "the nested list keeps OnSurfaceVariant icons, an OnSurface headline and full opacity; the rows' own icons keep OnSecondaryContainer, and OnSurface at 0.38 when disabled, with its text at 0.38",
+  measure: () => {
+    const held = item(document.getElementById("list-held"), "held");
+    const frozen = item(document.getElementById("list-frozen"), "frozen");
+    if (!held || !frozen) return "no list";
+    const role = (row, part) => roleOf(getComputedStyle(row.querySelector(`.mtrl-list__${part}`)).color);
+    const opacity = (row, part) => getComputedStyle(row.querySelector(`.mtrl-list__${part}`)).opacity;
+    const textRole = (row) => roleOf(getComputedStyle(row.querySelector(".mtrl-list__text .mtrl-list__headline")).color);
+    const inside = item(held, "inside");
+    const chill = item(frozen, "chill");
+    return [
+      `selected row ${role(held, "leading")}/${role(held, "trailing")} ${textRole(held)}`,
+      `nested ${role(inside, "leading")}/${role(inside, "trailing")} ${textRole(inside)} @ ${opacity(inside, "text")}`,
+      `disabled row ${role(frozen, "leading")}/${role(frozen, "trailing")} @ ${opacity(frozen, "leading")}, text @ ${opacity(frozen, "text")}`,
+      `nested ${role(chill, "leading")}/${role(chill, "trailing")} ${textRole(chill)} @ ${opacity(chill, "text")}`,
+    ].join(" · ");
+  },
+  mount: (body) => {
+    const held = createList({
+      ariaLabel: "Selected",
+      items: [{ id: "held", headline: "Selected row", selected: true, leading: icon, trailing: icon }],
+    });
+    const inside = createList({
+      ariaLabel: "Nested in selected",
+      items: [{ id: "inside", headline: "Nested", leading: icon, trailing: icon }],
+    });
+    item(held.element, "held").append(inside.element);
+    const frozen = createList({
+      ariaLabel: "Disabled",
+      items: [{ id: "frozen", headline: "Disabled row", disabled: true, leading: icon, trailing: icon }],
+    });
+    const chill = createList({
+      ariaLabel: "Nested in disabled",
+      items: [{ id: "chill", headline: "Nested", leading: icon, trailing: icon }],
+    });
+    item(frozen.element, "frozen").append(chill.element);
+    held.element.id = "list-held";
+    frozen.element.id = "list-frozen";
+    body.append(held.element, frozen.element);
+  },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Space between the icon and the text",
+  lookFor: "the gap from the leading icon to the label",
+  expected: "12 px, the spec between-space",
+  measure: () => {
+    const row = item(document.getElementById("list-gap"), "one");
+    return row ? `${gapOf(row)} px` : "no list";
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "Gap",
+      items: [{ id: "one", headline: "One line", leading: icon, trailing: icon }],
+    });
+    list.element.id = "list-gap";
+    body.append(list.element);
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "Lines, a checkbox, a switch, and density",
+  lookFor: "two-line and three-line rows, a checkbox, a switch, and the density control",
+  expected: "the gap stays 12 px. Row heights stay 72 and 88, and a control keeps its own size. Density changes the row height, not the gap",
+  measure: () => {
+    const root = document.getElementById("list-edge");
+    if (!root) return "no list";
+    const height = (id) => Math.round(item(root, id).getBoundingClientRect().height);
+    const box = item(root, "box").querySelector("input");
+    const sw = item(root, "sw").querySelector("[role=switch]");
+    const text = item(root, "sw").querySelector(".mtrl-list__text").getBoundingClientRect();
+    const trail = item(root, "sw").querySelector(".mtrl-list__trailing").getBoundingClientRect();
+    const switchGap = Math.round(text.right <= trail.left + 0.5 ? trail.left - text.right : text.left - trail.right);
+    const density = getComputedStyle(document.documentElement).getPropertyValue("--mtrl-density").trim() || "0";
+    return [
+      `two ${gapOf(item(root, "two"))} px / ${height("two")} px`,
+      `three ${gapOf(item(root, "three"))} px / ${height("three")} px`,
+      `checkbox gap ${gapOf(item(root, "box"))} px, box ${Math.round(box.getBoundingClientRect().width)} px`,
+      `switch gap ${switchGap} px, switch ${Math.round(sw.getBoundingClientRect().width)} px`,
+      `density ${density}`,
+    ].join(" · ");
+  },
+  mount: (body) => {
+    const list = createList({
+      ariaLabel: "Edge",
+      items: [
+        { id: "two", headline: "Two lines", supportingText: "Supporting", leading: icon },
+        { id: "three", headline: "Three lines", overline: "Overline", supportingText: "Supporting", leading: icon },
+        { id: "box", headline: "Checkbox", leading: { type: "control", content: '<input type="checkbox" aria-label="Pick">' } },
+        { id: "sw", headline: "Switch", trailing: { type: "control", content: '<span role="switch" aria-checked="false" aria-label="Alert" style="display:inline-block;width:52px;height:32px"></span>' } },
+      ],
+    });
+    list.element.id = "list-edge";
+    body.append(list.element);
+  },
+});
+</script>
+</body>
+</html>

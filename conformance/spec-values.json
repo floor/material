@@ -1,0 +1,3644 @@
+{
+  "app-bar/container-height/centre": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/app-bars/specs",
+    "section": "Tokens & specs · App bar - Size - Small · App bar small container height",
+    "read": "2026-11-26"
+  },
+  "badge/container-colour/large": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/badges/specs",
+    "section": "Tokens & specs · Badges · Badge large color",
+    "read": "2026-11-26"
+  },
+  "badge/container-colour/small": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/badges/specs",
+    "section": "Tokens & specs · Badges · Badge color",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-colour/no-fab/rest": {
+    "value": "SurfaceContainer",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container color",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-height/centred-fab/rest": {
+    "value": "72dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar with FAB container height",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-height/end-fab/rest": {
+    "value": "72dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar with FAB container height",
+    "read": "2026-11-26"
+  },
+  "bottom-app-bar/container-height/no-fab/rest": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Bottom app bar (baseline) · Tokens & specs · Bottom app bar container height",
+    "read": "2026-11-26"
+  },
+  "bottom-sheet/container-colour/modal": {
+    "value": "SurfaceContainerLow",
+    "url": "https://m3.material.io/components/bottom-sheets/specs",
+    "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container color",
+    "read": "2026-11-26"
+  },
+  "bottom-sheet/corner/modal-partial": {
+    "value": "CornerExtraLargeTop",
+    "url": "https://m3.material.io/components/bottom-sheets/specs",
+    "section": "Tokens & specs · Sheets - Bottom · Sheet bottom docked container shape (top corners)",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
+  },
+  "button/container-colour/filled": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Color - Filled · Button filled container color",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/elevated/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/filled/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/outlined/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/text/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button/container-height/tonal/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button/corner/square-s/selected": {
+    "value": "CornerFull",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small selected container shape square (Corner Full on a 40dp container)",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "20dp"
+    }
+  },
+  "button/elevation/filled": {
+    "value": "Level0",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Color - Filled · Button filled elevation",
+    "read": "2026-11-26",
+    "resolved": {
+      "elevation": "0dp"
+    }
+  },
+  "button/icon-label-gap/l": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/m": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/s": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/xl": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-label-gap/xs": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall between icon label space",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/l": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/m": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/s": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/xl": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge icon size",
+    "read": "2026-11-26"
+  },
+  "button/icon-size/xs": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall icon size",
+    "read": "2026-11-26"
+  },
+  "button/outline-width/outlined": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium outline width",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/l": {
+    "value": "48dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Large · Button large leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/m": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Medium · Button medium leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/s": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Small · Button small leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/xl": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xlarge · Button xlarge leading space",
+    "read": "2026-11-26"
+  },
+  "button/padding-start/xs": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/buttons/specs",
+    "section": "Tokens & specs · Button - Size - Xsmall · Button xsmall leading space",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Large · Button group connected large container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Medium · Button group connected medium container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Small · Button group connected small container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xlarge · Button group connected xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/round/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xsmall · Button group connected xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Large · Button group connected large container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Medium · Button group connected medium container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Small · Button group connected small container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xlarge · Button group connected xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/connected/square/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group connected - Size - Xsmall · Button group connected xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Large · Button group large container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Medium · Button group medium container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Small · Button group small container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Xlarge · Button group xlarge container height",
+    "read": "2026-11-26"
+  },
+  "button-group/button-height/standard/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Xsmall · Button group xsmall container height",
+    "read": "2026-11-26"
+  },
+  "button-group/gap/standard": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/button-groups/specs",
+    "section": "Tokens & specs · Button group standard - Size - Small · Button group small between space",
+    "read": "2026-11-26"
+  },
+  "card/container-colour/elevated": {
+    "value": "SurfaceContainerLow",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Elevated · Elevated card container color",
+    "read": "2026-11-26"
+  },
+  "card/container-colour/filled": {
+    "value": "SurfaceContainerHighest",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Filled · Filled card container color",
+    "read": "2026-11-26"
+  },
+  "card/container-colour/outlined": {
+    "value": "Surface",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Outlined · Outlined card container color",
+    "read": "2026-11-26"
+  },
+  "card/focus-elevation/filled/focus": {
+    "value": "Level0",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Filled · Filled card focus container elevation",
+    "read": "2026-11-26",
+    "resolved": {
+      "elevation": "0dp"
+    }
+  },
+  "card/focus-elevation/outlined/focus": {
+    "value": "Level0",
+    "url": "https://m3.material.io/components/cards/specs",
+    "section": "Tokens & specs · Card - Outlined · Outlined card focus container elevation",
+    "read": "2026-11-26",
+    "resolved": {
+      "elevation": "0dp"
+    }
+  },
+  "checkbox/box-height/default": {
+    "value": "18dp",
+    "url": "https://m3.material.io/components/checkbox/specs",
+    "section": "Tokens & specs · Checkbox · Checkbox container height",
+    "read": "2026-11-26"
+  },
+  "checkbox/box-width/default": {
+    "value": "18dp",
+    "url": "https://m3.material.io/components/checkbox/specs",
+    "section": "Tokens & specs · Checkbox · Checkbox container width",
+    "read": "2026-11-26"
+  },
+  "checkbox/checked-colour": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/checkbox/specs",
+    "section": "Tokens & specs · Checkbox · Checkbox selected container color",
+    "read": "2026-11-26"
+  },
+  "chips/selected-colour/filter": {
+    "value": "SecondaryContainer",
+    "url": "https://m3.material.io/components/chips/specs",
+    "section": "Tokens & specs · Chip - Filter · Filter chip (selected) outline color",
+    "read": "2026-11-26"
+  },
+  "datepicker/modal-colour": {
+    "value": "SurfaceContainerHigh",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Container color",
+    "read": "2026-11-26"
+  },
+  "datepicker/modal-corner": {
+    "value": "CornerExtraLarge",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Container shape",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
+  },
+  "datepicker/modal-width": {
+    "value": "360dp",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Container width",
+    "read": "2026-11-26"
+  },
+  "datepicker/year-width": {
+    "value": "72dp",
+    "url": "https://m3.material.io/components/date-pickers/specs",
+    "section": "Tokens & specs · Date picker - Modal · Year selection year container width",
+    "read": "2026-11-26"
+  },
+  "dialog/body-tracking/basic": {
+    "value": "BodyMedium",
+    "url": "https://m3.material.io/components/dialogs/specs",
+    "section": "Tokens & specs · Dialog - Basic · Dialog supporting text tracking",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
+  },
+  "dialog/colour/basic": {
+    "value": "SurfaceContainerHigh",
+    "url": "https://m3.material.io/components/dialogs/specs",
+    "section": "Tokens & specs · Dialog - Basic · Dialog container color",
+    "read": "2026-11-26"
+  },
+  "divider/colour/horizontal": {
+    "value": "OutlineVariant",
+    "url": "https://m3.material.io/components/divider/specs",
+    "section": "Tokens & specs · Divider · Divider color",
+    "read": "2026-11-26"
+  },
+  "extended-fab/container-height/large": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large container height",
+    "read": "2026-11-26"
+  },
+  "extended-fab/container-height/medium": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium container height",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-label-gap/large": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large icon label space",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-label-gap/medium": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium icon label space",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-label-gap/small": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small icon label space",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-size/large": {
+    "value": "36dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Large · Extended FAB large icon size",
+    "read": "2026-11-26"
+  },
+  "extended-fab/icon-size/medium": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Medium · Extended FAB medium icon size",
+    "read": "2026-11-26"
+  },
+  "extended-fab/label-tracking/small": {
+    "value": "TitleMedium",
+    "url": "https://m3.material.io/components/extended-fab/specs",
+    "section": "Tokens & specs · Extended FAB - Size - Small · Extended FAB small label text",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "16pt",
+      "weight": "500",
+      "lineHeight": "24pt",
+      "tracking": "0.15pt"
+    }
+  },
+  "fab/container-height/default": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) container height",
+    "read": "2026-11-26"
+  },
+  "fab/container-height/large": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Large · FAB large container height",
+    "read": "2026-11-26"
+  },
+  "fab/container-height/medium": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Medium · FAB medium container height",
+    "read": "2026-11-26"
+  },
+  "fab/container-width/default": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) container width",
+    "read": "2026-11-26"
+  },
+  "fab/container-width/large": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Large · FAB large container width",
+    "read": "2026-11-26"
+  },
+  "fab/container-width/medium": {
+    "value": "80dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Medium · FAB medium container width",
+    "read": "2026-11-26"
+  },
+  "fab/icon-size/default": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Color - Primary · FAB (primary) icon size",
+    "read": "2026-11-26"
+  },
+  "fab/icon-size/large": {
+    "value": "36dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Large · FAB large icon size",
+    "read": "2026-11-26"
+  },
+  "fab/icon-size/medium": {
+    "value": "28dp",
+    "url": "https://m3.material.io/components/floating-action-button/specs",
+    "section": "Tokens & specs · FAB - Size - Medium · FAB medium icon size",
+    "read": "2026-11-26"
+  },
+  "fab-menu/button-icon": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu close button icon size",
+    "read": "2026-11-26"
+  },
+  "fab-menu/item-height": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item container height",
+    "read": "2026-11-26"
+  },
+  "fab-menu/item-icon": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item icon size",
+    "read": "2026-11-26"
+  },
+  "fab-menu/item-tracking": {
+    "value": "TitleMedium",
+    "url": "https://m3.material.io/components/fab-menu/specs",
+    "section": "Tokens & specs · FAB menu - Common · FAB menu - menu item label text",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "16pt",
+      "weight": "500",
+      "lineHeight": "24pt",
+      "tracking": "0.15pt"
+    }
+  },
+  "icon-button/container-height/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Large · Icon button large container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Medium · Icon button medium container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Small · Icon button small container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Xlarge · Icon button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/container-height/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Xsmall · Icon button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "icon-button/icon-size/size-s": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/icon-buttons/specs",
+    "section": "Tokens & specs · Icon button - Size - Small · Icon button small icon size",
+    "read": "2026-11-26"
+  },
+  "list/avatar-colour/standard/rest": {
+    "value": "PrimaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-avatar.color",
+    "read": "2026-11-27"
+  },
+  "list/avatar-corner-radius/standard/rest": {
+    "value": "CornerFull",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-avatar.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "50%"
+    }
+  },
+  "list/avatar-label-colour/standard/rest": {
+    "value": "OnPrimaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-avatar-label.color",
+    "read": "2026-11-27"
+  },
+  "list/avatar-size/standard/rest": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-avatar.size",
+    "read": "2026-11-27"
+  },
+  "list/avatar-typography/standard/rest": {
+    "value": "TitleMedium",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-avatar-label.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "16pt",
+      "weight": "500",
+      "lineHeight": "24pt",
+      "tracking": "0.15pt"
+    }
+  },
+  "list/between-space/segmented-one-line/rest": {
+    "value": "2dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.segmented.gap",
+    "read": "2026-11-27"
+  },
+  "list/bottom-space/segmented-one-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.bottom-space",
+    "read": "2026-11-27"
+  },
+  "list/container-colour/segmented/rest": {
+    "value": "Surface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.segmented.container.color",
+    "read": "2026-11-27"
+  },
+  "list/container-colour/standard/selected-disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.container.color",
+    "read": "2026-11-27"
+  },
+  "list/container-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.container.opacity",
+    "read": "2026-11-27"
+  },
+  "list/divider-bottom-space/standard/rest": {
+    "value": "0dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.divider.bottom-space",
+    "read": "2026-11-27"
+  },
+  "list/divider-colour/standard/rest": {
+    "value": "Outline",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.divider.color",
+    "read": "2026-11-27"
+  },
+  "list/divider-height/standard/rest": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.divider.height",
+    "read": "2026-11-27"
+  },
+  "list/divider-leading-space/standard/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.divider.leading-space",
+    "read": "2026-11-27"
+  },
+  "list/divider-top-space/standard/rest": {
+    "value": "0dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.divider.top-space",
+    "read": "2026-11-27"
+  },
+  "list/focus-ring-colour/standard/focus": {
+    "value": "Secondary",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.focus.indicator.color",
+    "read": "2026-11-27"
+  },
+  "list/group-outer-corner/segmented/rest": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/image-corner-radius/segmented/rest": {
+    "value": "CornerSmall",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-image.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "8dp"
+    }
+  },
+  "list/image-corner-radius/standard/rest": {
+    "value": "CornerNone",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-image.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "0dp"
+    }
+  },
+  "list/image-height/standard/rest": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-image.height",
+    "read": "2026-11-27"
+  },
+  "list/image-width/standard/rest": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-image.width",
+    "read": "2026-11-27"
+  },
+  "list/item-container-colour/standard/rest": {
+    "value": "Surface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.container.color",
+    "read": "2026-11-27"
+  },
+  "list/item-content-gap/standard/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.between-space",
+    "read": "2026-11-27"
+  },
+  "list/item-corner-radius/segmented/disabled": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "list/item-corner-radius/segmented/focus": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.focused.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-corner-radius/segmented/hover": {
+    "value": "CornerMedium",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.hovered.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "12dp"
+    }
+  },
+  "list/item-corner-radius/segmented/pressed": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.pressed.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-corner-radius/segmented/rest": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "list/item-corner-radius/segmented/selected-disabled": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-corner-radius/segmented/selected-focus": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.focused.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-corner-radius/segmented/selected-hover": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.hovered.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-corner-radius/segmented/selected-pressed": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.pressed.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-corner-radius/segmented/selected-rest": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.container.expressive.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-corner-radius/standard/rest": {
+    "value": "CornerNone",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "0dp"
+    }
+  },
+  "list/item-corner-radius/standard/selected-rest": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "list/item-elevation/standard/rest": {
+    "value": "Level0",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.container.elevation",
+    "read": "2026-11-27",
+    "resolved": {
+      "elevation": "0dp"
+    }
+  },
+  "list/label-text-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.focus.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.hover.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/pressed": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.pressed.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/rest": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/selected-disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/selected-focus": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.focus.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/selected-hover": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.hover.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/selected-pressed": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.pressed.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-colour/standard/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.label-text.color",
+    "read": "2026-11-27"
+  },
+  "list/label-text-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "list/label-text-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "list/label-typography/standard/rest": {
+    "value": "BodyLarge",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.label-text.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "16pt",
+      "weight": "400",
+      "lineHeight": "24pt",
+      "tracking": "0.5pt"
+    }
+  },
+  "list/large-video-height/standard/rest": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.large.leading-video.height",
+    "read": "2026-11-27"
+  },
+  "list/large-video-width/standard/rest": {
+    "value": "114dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.large.leading-video.width",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.focus.leading-icon.icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.hover.leading-icon.icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/pressed": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.pressed.leading-icon.icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/selected-disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/selected-focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.focus.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/selected-hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.hover.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/selected-pressed": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.pressed.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-colour/standard/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-size/segmented/rest": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-icon.expressive.size",
+    "read": "2026-11-27"
+  },
+  "list/leading-icon-size/standard/rest": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-icon.size",
+    "read": "2026-11-27"
+  },
+  "list/leading-space/standard/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-space",
+    "read": "2026-11-27"
+  },
+  "list/metadata-typography/standard/rest": {
+    "value": "LabelSmall",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.trailing-supporting-text.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "11pt",
+      "weight": "500",
+      "lineHeight": "16pt",
+      "tracking": "0.5pt"
+    }
+  },
+  "list/one-line-item-height/standard/rest": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.one-line.container.height",
+    "read": "2026-11-27"
+  },
+  "list/overline-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.overline.color",
+    "read": "2026-11-27"
+  },
+  "list/overline-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.overline.color",
+    "read": "2026-11-27"
+  },
+  "list/overline-colour/standard/selected-disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.overline.color",
+    "read": "2026-11-27"
+  },
+  "list/overline-colour/standard/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.overline.color",
+    "read": "2026-11-27"
+  },
+  "list/overline-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.overline.opacity",
+    "read": "2026-11-27"
+  },
+  "list/overline-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.overline.opacity",
+    "read": "2026-11-27"
+  },
+  "list/overline-typography/standard/rest": {
+    "value": "LabelSmall",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.overline.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "11pt",
+      "weight": "500",
+      "lineHeight": "16pt",
+      "tracking": "0.5pt"
+    }
+  },
+  "list/selected-colour/segmented": {
+    "value": "SecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.container.color",
+    "read": "2026-11-27"
+  },
+  "list/selected-colour/standard": {
+    "value": "SecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.container.color",
+    "read": "2026-11-27"
+  },
+  "list/small-video-height/standard/rest": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.small.leading-video.height",
+    "read": "2026-11-27"
+  },
+  "list/small-video-width/standard/rest": {
+    "value": "100dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.small.leading-video.width",
+    "read": "2026-11-27"
+  },
+  "list/supporting-text-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "list/supporting-text-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "list/supporting-text-colour/standard/selected-disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "list/supporting-text-colour/standard/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "list/supporting-text-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "list/supporting-text-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "list/supporting-tracking": {
+    "value": "BodyMedium",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · List - Common · List list item supporting text tracking",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
+  },
+  "list/supporting-typography/standard/rest": {
+    "value": "BodyMedium",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.supporting-text.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
+  },
+  "list/three-line-item-height/standard/rest": {
+    "value": "88dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.three-line.container.height",
+    "read": "2026-11-27"
+  },
+  "list/top-space/segmented-one-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.top-space",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/segmented/rest": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.unselected.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.focus.trailing-icon.icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.hover.trailing-icon.icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/pressed": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.pressed.trailing-icon.icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/selected-disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/selected-focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.focus.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/selected-hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.hover.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/selected-pressed": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.pressed.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-colour/standard/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.disabled.trailing-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.trailing-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-size/segmented/rest": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.trailing-icon.expressive.size",
+    "read": "2026-11-27"
+  },
+  "list/trailing-icon-size/standard/rest": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.trailing-icon.size",
+    "read": "2026-11-27"
+  },
+  "list/trailing-supporting-text-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-supporting-text-colour/standard/selected-disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-supporting-text-colour/standard/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "list/trailing-supporting-text-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.selected.disabled.trailing-supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "list/two-line-item-height/standard/rest": {
+    "value": "72dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.two-line.container.height",
+    "read": "2026-11-27"
+  },
+  "list/vertical-padding/segmented-three-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.top-space",
+    "read": "2026-11-27"
+  },
+  "list/vertical-padding/segmented-two-line/rest": {
+    "value": "10dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.top-space",
+    "read": "2026-11-27"
+  },
+  "list/video-corner-radius/segmented/rest": {
+    "value": "CornerSmall",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-video.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "8dp"
+    }
+  },
+  "list/video-width/standard/rest": {
+    "value": "100dp",
+    "url": "https://m3.material.io/components/lists/specs",
+    "section": "Tokens & specs · md.comp.list.list-item.leading-video.width",
+    "read": "2026-11-27"
+  },
+  "menu/active-container-radius/segmented/active": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.active.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "menu/container-colour/baseline": {
+    "value": "SurfaceContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-colour/standard": {
+    "value": "SurfaceContainerLow",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-colour/standard/rest": {
+    "value": "SurfaceContainerLow",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-colour/standard/selected-disabled": {
+    "value": "TertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-colour/standard/selected-rest": {
+    "value": "TertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-colour/vibrant": {
+    "value": "TertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-colour/vibrant/rest": {
+    "value": "TertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-colour/vibrant/selected-rest": {
+    "value": "Tertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/container-corner/baseline": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "menu/container-corner/segmented": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "menu/container-elevation/baseline/rest": {
+    "value": "Level2",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.container.elevation",
+    "read": "2026-11-27",
+    "resolved": {
+      "elevation": "3dp"
+    }
+  },
+  "menu/container-elevation/segmented/rest": {
+    "value": "Level2",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.container.elevation",
+    "read": "2026-11-27",
+    "resolved": {
+      "elevation": "3dp"
+    }
+  },
+  "menu/container-max-width/baseline/rest": {
+    "value": "280dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Baseline menu padding and size measurements · Container maximum width",
+    "read": "2026-11-27"
+  },
+  "menu/container-min-width/baseline/rest": {
+    "value": "112dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Baseline menu padding and size measurements · Container minimum width",
+    "read": "2026-11-27"
+  },
+  "menu/container-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.container.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/divider-height/baseline/rest": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.divider.height",
+    "read": "2026-11-27"
+  },
+  "menu/focus-ring-colour/baseline/focus": {
+    "value": "Secondary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.focus.indicator.color",
+    "read": "2026-11-27"
+  },
+  "menu/focus-ring-colour/segmented/focus": {
+    "value": "Secondary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.focus.indicator.color",
+    "read": "2026-11-27"
+  },
+  "menu/group-container-colour/segmented/rest": {
+    "value": "SurfaceContainerLow",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Standard colors · Container surface in the grouped configuration",
+    "read": "2026-11-27"
+  },
+  "menu/group-inner-corner/segmented/rest": {
+    "value": "CornerSmall",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.group.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "8dp"
+    }
+  },
+  "menu/group-padding/segmented/rest": {
+    "value": "2dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.group.padding",
+    "read": "2026-11-27"
+  },
+  "menu/inactive-container-radius/segmented/inactive": {
+    "value": "CornerSmall",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.inactive.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "8dp"
+    }
+  },
+  "menu/item-between-space/segmented/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.between-space",
+    "read": "2026-11-27"
+  },
+  "menu/item-bottom-space/segmented/rest": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.bottom-space",
+    "read": "2026-11-27"
+  },
+  "menu/item-corner-radius/segmented/rest": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "menu/item-corner-radius/segmented/selected-rest": {
+    "value": "CornerMedium",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.selected.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "12dp"
+    }
+  },
+  "menu/item-first-inner-corner/segmented/rest": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.first-child.inner-corner.corner-size",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "menu/item-first-outer-corner/segmented/rest": {
+    "value": "CornerMedium",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.first-child.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "12dp"
+    }
+  },
+  "menu/item-gap/segmented/rest": {
+    "value": "2dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.gap",
+    "read": "2026-11-27"
+  },
+  "menu/item-height/baseline/rest": {
+    "value": "48dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.list-item.container.height",
+    "read": "2026-11-27"
+  },
+  "menu/item-height/segmented/rest": {
+    "value": "44dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.height",
+    "read": "2026-11-27"
+  },
+  "menu/item-icon-gap/baseline/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Baseline menu padding and size measurements · Padding between icon and label",
+    "read": "2026-11-27"
+  },
+  "menu/item-last-inner-corner/segmented/rest": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.last-child.inner-corner.corner-size",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "menu/item-last-outer-corner/segmented/rest": {
+    "value": "CornerMedium",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.last-child.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "12dp"
+    }
+  },
+  "menu/item-leading-space/segmented/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.leading-space",
+    "read": "2026-11-27"
+  },
+  "menu/item-padding-left/baseline/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Baseline menu padding and size measurements · Item left padding with icon",
+    "read": "2026-11-27"
+  },
+  "menu/item-padding-right/baseline/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Baseline menu padding and size measurements · Item right padding with icon",
+    "read": "2026-11-27"
+  },
+  "menu/item-top-space/segmented/rest": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.top-space",
+    "read": "2026-11-27"
+  },
+  "menu/item-trailing-space/segmented/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.trailing-space",
+    "read": "2026-11-27"
+  },
+  "menu/label-colour/baseline/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.list-item.selected.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.focused.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.hovered.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/pressed": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.pressed.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/rest": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/selected-disabled": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/selected-focus": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/selected-hover": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/selected-pressed": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/standard/selected-rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/disabled": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/focus": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/hover": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/pressed": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/selected-focus": {
+    "value": "OnTertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.focused.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/selected-hover": {
+    "value": "OnTertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.hovered.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/selected-pressed": {
+    "value": "OnTertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.pressed.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-colour/vibrant/selected-rest": {
+    "value": "OnTertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.label-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-opacity/vibrant/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/label-text-opacity/vibrant/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/label-typography/segmented/rest": {
+    "value": "LabelLarge",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.label-text.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "14pt",
+      "weight": "500",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
+  },
+  "menu/leading-icon-colour/baseline/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.list-item.with-leading-icon.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/baseline/selected-rest": {
+    "value": "OnSecondaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.list-item.selected.with-leading-icon.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.focused.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.hovered.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/pressed": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.pressed.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/selected-disabled": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/selected-focus": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/selected-hover": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/selected-pressed": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/standard/selected-rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/vibrant/disabled": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/vibrant/focus": {
+    "value": "Tertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/vibrant/hover": {
+    "value": "Tertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/vibrant/pressed": {
+    "value": "Tertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/vibrant/rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-colour/vibrant/selected-rest": {
+    "value": "OnTertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-opacity/standard/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-opacity/vibrant/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-opacity/vibrant/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-size/baseline/rest": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.list-item.with-leading-icon.leading-icon.size",
+    "read": "2026-11-27"
+  },
+  "menu/leading-icon-size/segmented/rest": {
+    "value": "20dp",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.leading-icon.size",
+    "read": "2026-11-27"
+  },
+  "menu/selected-colour/baseline": {
+    "value": "SecondaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menu.list-item.selected.container.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/standard/selected-focus": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/standard/selected-hover": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/standard/selected-pressed": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/standard/selected-rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/vibrant/disabled": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/vibrant/focus": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/vibrant/hover": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/vibrant/pressed": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/vibrant/rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-colour/vibrant/selected-rest": {
+    "value": "OnTertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-opacity/vibrant/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-text-opacity/vibrant/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/supporting-typography/segmented/rest": {
+    "value": "BodySmall",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.supporting-text.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "12pt",
+      "weight": "400",
+      "lineHeight": "16pt",
+      "tracking": "0.4pt"
+    }
+  },
+  "menu/trailing-supporting-text-colour/standard/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/standard/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/standard/selected-disabled": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.disabled.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/standard/selected-focus": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.focused.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/standard/selected-hover": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.hovered.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/standard/selected-pressed": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.pressed.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/standard/selected-rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.selected.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/vibrant/disabled": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/vibrant/focus": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.focused.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/vibrant/hover": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.hovered.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/vibrant/pressed": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.pressed.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/vibrant/rest": {
+    "value": "OnTertiaryContainer",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-colour/vibrant/selected-rest": {
+    "value": "OnTertiary",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.trailing-supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-opacity/standard/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.standard.menu-item.disabled.trailing-supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-opacity/vibrant/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.disabled.trailing-supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-supporting-text-opacity/vibrant/selected-disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.vibrant.menu-item.selected.disabled.trailing-supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "menu/trailing-typography/segmented/rest": {
+    "value": "LabelLarge",
+    "url": "https://m3.material.io/components/menus/specs",
+    "section": "Tokens & specs · md.comp.menus.menu-item.trailing-supporting-text.font",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "14pt",
+      "weight": "500",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
+  },
+  "navigation-bar/container-colour": {
+    "value": "SurfaceContainer",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar container color",
+    "read": "2026-11-26"
+  },
+  "navigation-bar/container-height/horizontal": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar height",
+    "read": "2026-11-26"
+  },
+  "navigation-bar/container-height/vertical": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar height",
+    "read": "2026-11-26"
+  },
+  "navigation-bar/label-colour/horizontal/selected": {
+    "value": "Secondary",
+    "url": "https://m3.material.io/components/navigation-bar/specs",
+    "section": "Tokens & specs · Nav bar - Common · Nav bar item active label text color",
+    "read": "2026-11-26"
+  },
+  "navigation-drawer/indicator-colour": {
+    "value": "SecondaryContainer",
+    "url": "https://m3.material.io/components/navigation-drawer/specs",
+    "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator color",
+    "read": "2026-11-26"
+  },
+  "navigation-drawer/indicator-width/standard/selected": {
+    "value": "336dp",
+    "url": "https://m3.material.io/components/navigation-drawer/specs",
+    "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active indicator width",
+    "read": "2026-11-26"
+  },
+  "navigation-drawer/label-weight/standard/selected": {
+    "value": "LabelLargeProminent",
+    "url": "https://m3.material.io/components/navigation-drawer/specs",
+    "section": "Tokens & specs · Navigation drawers (baseline) · Navigation drawers active label text weight",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "700",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
+  },
+  "navigation-rail/container-shape/modal-expanded/rest": {
+    "value": "CornerLarge",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail - Expanded · Nav rail expanded modal container shape",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "16dp"
+    }
+  },
+  "navigation-rail/container-width/collapsed": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail - Collapsed · Nav rail collapsed container width",
+    "read": "2026-11-26"
+  },
+  "navigation-rail/icon-size/expanded": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail item - Common · Nav rail item icon size",
+    "read": "2026-11-26"
+  },
+  "navigation-rail/item-height/expanded": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/navigation-rail/specs",
+    "section": "Tokens & specs · Nav rail item - Common · Nav rail item container height",
+    "read": "2026-11-26"
+  },
+  "progress/height/circular": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/progress-indicators/specs",
+    "section": "Tokens & specs · Progress indicator - Circular · Progress indicator circular size",
+    "read": "2026-11-26"
+  },
+  "progress/width/circular": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/progress-indicators/specs",
+    "section": "Tokens & specs · Progress indicator - Circular · Progress indicator circular size",
+    "read": "2026-11-26"
+  },
+  "radios/selected-colour": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/radio-button/specs",
+    "section": "Tokens & specs · Radio Button · Radio button icon selected color",
+    "read": "2026-11-26"
+  },
+  "search/bar-colour/contained": {
+    "value": "SurfaceContainerHigh",
+    "url": "https://m3.material.io/components/search/specs",
+    "section": "Tokens & specs · Search - Bar · Search bar container color",
+    "read": "2026-11-26"
+  },
+  "slider/active-colour/xs": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/sliders/specs",
+    "section": "Tokens & specs · Slider · Slider active track color",
+    "read": "2026-11-26"
+  },
+  "snackbar/container-colour": {
+    "value": "InverseSurface",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container color",
+    "read": "2026-11-26"
+  },
+  "snackbar/corner": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container shape",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "snackbar/height/single-line": {
+    "value": "48dp",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container with single line height",
+    "read": "2026-11-26"
+  },
+  "snackbar/height/two-lines": {
+    "value": "68dp",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar container with two lines height",
+    "read": "2026-11-26"
+  },
+  "snackbar/label-tracking": {
+    "value": "BodyMedium",
+    "url": "https://m3.material.io/components/snackbar/specs",
+    "section": "Tokens & specs · Snackbars · Snackbar supporting text tracking",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
+  },
+  "split-button/container-height/l": {
+    "value": "96dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Large · Split button large container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/m": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/s": {
+    "value": "40dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Small · Split button small container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/xl": {
+    "value": "136dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge container height",
+    "read": "2026-11-26"
+  },
+  "split-button/container-height/xs": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Xsmall · Split button xsmall container height",
+    "read": "2026-11-26"
+  },
+  "split-button/gap/size-m": {
+    "value": "2dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium between space",
+    "read": "2026-11-26"
+  },
+  "split-button/inner-corner/filled-l/rest": {
+    "value": "CornerSmall",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Large · Split button large inner corner size",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "8dp"
+    }
+  },
+  "split-button/inner-corner/filled-m/rest": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium inner corner size",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "split-button/inner-corner/filled-xl/rest": {
+    "value": "CornerMedium",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Xlarge · Split button xlarge inner corner size",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "12dp"
+    }
+  },
+  "split-button/pressed-opacity/size-m": {
+    "value": "0.1",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Button - Color - Filled · Button filled pressed container state layer opacity (leading button)",
+    "read": "2026-11-26"
+  },
+  "split-button/trailing-icon/size-m": {
+    "value": "26dp",
+    "url": "https://m3.material.io/components/split-button/specs",
+    "section": "Tokens & specs · Split button - Size - Medium · Split button medium trailing button icon size",
+    "read": "2026-11-26"
+  },
+  "switch/selected-disabled-handle-colour": {
+    "value": "Surface",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch disabled selected handle color",
+    "read": "2026-11-26"
+  },
+  "switch/selected-handle-width": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch selected handle width",
+    "read": "2026-11-26"
+  },
+  "switch/selected-track-colour": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch selected track color",
+    "read": "2026-11-26"
+  },
+  "switch/track-colour/unselected/disabled": {
+    "value": "SurfaceContainerHighest",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch disabled unselected track color",
+    "read": "2026-11-26"
+  },
+  "switch/track-opacity/unselected/disabled": {
+    "value": "0.12",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Disabled track opacity",
+    "read": "2026-11-26"
+  },
+  "switch/track-height": {
+    "value": "32dp",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch track height",
+    "read": "2026-11-26"
+  },
+  "switch/track-width": {
+    "value": "52dp",
+    "url": "https://m3.material.io/components/switch/specs",
+    "section": "Tokens & specs · Switch · Switch track width",
+    "read": "2026-11-26"
+  },
+  "tabs/container-colour/primary/selected": {
+    "value": "Surface",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab container color",
+    "read": "2026-11-26"
+  },
+  "tabs/container-colour/secondary/selected": {
+    "value": "Surface",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab container color",
+    "read": "2026-11-26"
+  },
+  "tabs/indicator-colour/primary": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator color",
+    "read": "2026-11-26"
+  },
+  "tabs/indicator-height/primary": {
+    "value": "3dp",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab active indicator height",
+    "read": "2026-11-26"
+  },
+  "tabs/label-line-height/primary/rest": {
+    "value": "TitleSmall",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Primary navigation · Primary navigation tab with label text line height",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "500",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
+  },
+  "tabs/label-line-height/secondary/rest": {
+    "value": "TitleSmall",
+    "url": "https://m3.material.io/components/tabs/specs",
+    "section": "Tokens & specs · Tabs - Secondary navigation · Secondary navigation tab label text line height",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "500",
+      "lineHeight": "20pt",
+      "tracking": "0.1pt"
+    }
+  },
+  "text-field/active-indicator-colour/filled/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.active-indicator.color",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-colour/filled/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.active-indicator.color",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-colour/filled/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.focus.active-indicator.color",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-colour/filled/error-hover": {
+    "value": "OnErrorContainer",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.hover.active-indicator.color",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-colour/filled/focus": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.focus.active-indicator.color",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-colour/filled/hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.hover.active-indicator.color",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-colour/filled/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.active-indicator.color",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-height/filled/disabled": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.active-indicator.height",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-height/filled/focus": {
+    "value": "2dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.focus.active-indicator.height",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-height/filled/hover": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.hover.active-indicator.height",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-height/filled/rest": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.active-indicator.height",
+    "read": "2026-11-27"
+  },
+  "text-field/active-indicator-opacity/filled/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.active-indicator.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/caret-colour/filled/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.focus.caret.color",
+    "read": "2026-11-27"
+  },
+  "text-field/caret-colour/filled/focus": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.caret.color",
+    "read": "2026-11-27"
+  },
+  "text-field/caret-colour/outlined/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.focus.caret.color",
+    "read": "2026-11-27"
+  },
+  "text-field/caret-colour/outlined/focus": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.caret.color",
+    "read": "2026-11-27"
+  },
+  "text-field/container-colour/filled/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.container.color",
+    "read": "2026-11-27"
+  },
+  "text-field/container-colour/filled/rest": {
+    "value": "SurfaceContainerHighest",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.container.color",
+    "read": "2026-11-27"
+  },
+  "text-field/container-opacity/filled/disabled": {
+    "value": "0.04",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.container.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/container-shape/filled/rest": {
+    "value": "CornerExtraSmallTop",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "text-field/corner/outlined": {
+    "value": "CornerExtraSmall",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.container.shape",
+    "read": "2026-11-27",
+    "resolved": {
+      "radius": "4dp"
+    }
+  },
+  "text-field/height/outlined": {
+    "value": "56dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.container.height",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/filled/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/filled/error": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/filled/error-focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.focus.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/filled/error-hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.hover.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/filled/focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.focus.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/filled/hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.hover.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/filled/rest": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/outlined/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/outlined/error": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/outlined/error-focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.focus.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/outlined/error-hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.hover.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/outlined/focus": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.focus.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/outlined/hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.hover.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-colour/outlined/rest": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.input-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/input-opacity/filled/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.input-text.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/input-opacity/outlined/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.input-text.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/input-typography/filled/rest": {
+    "value": "BodyLarge",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.input-text.type",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "16pt",
+      "weight": "400",
+      "lineHeight": "24pt",
+      "tracking": "0.5pt"
+    }
+  },
+  "text-field/input-typography/outlined/rest": {
+    "value": "BodyLarge",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.input-text.type",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "16pt",
+      "weight": "400",
+      "lineHeight": "24pt",
+      "tracking": "0.5pt"
+    }
+  },
+  "text-field/label-colour/filled/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/filled/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/filled/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.focus.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/filled/error-hover": {
+    "value": "OnErrorContainer",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.hover.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/filled/focus": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.focus.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/filled/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.hover.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/filled/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/outlined/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/outlined/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/outlined/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.focus.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/outlined/error-hover": {
+    "value": "OnErrorContainer",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.hover.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/outlined/focus": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.focus.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/outlined/hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.hover.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-colour/outlined/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.label-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/label-opacity/filled/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/label-opacity/outlined/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.label-text.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/label-typography/filled/rest": {
+    "value": "BodyLarge",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.label-text.type",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "16pt",
+      "weight": "400",
+      "lineHeight": "24pt",
+      "tracking": "0.5pt"
+    }
+  },
+  "text-field/label-typography/outlined/rest": {
+    "value": "BodyLarge",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.label-text.type",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "16pt",
+      "weight": "400",
+      "lineHeight": "24pt",
+      "tracking": "0.5pt"
+    }
+  },
+  "text-field/leading-icon-colour/filled/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/filled/error": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/filled/error-focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.focus.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/filled/error-hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.hover.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/filled/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.focus.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/filled/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.hover.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/filled/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/outlined/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/outlined/error": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/outlined/error-focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.focus.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/outlined/error-hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.hover.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/outlined/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.focus.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/outlined/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.hover.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-colour/outlined/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.leading-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-opacity/filled/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-opacity/outlined/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.leading-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-size/outlined/rest": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.leading-icon.size",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-text-gap/filled/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Padding between icons and text",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon-text-gap/outlined/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Padding between icons and text",
+    "read": "2026-11-27"
+  },
+  "text-field/leading-icon/filled": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.leading-icon.size",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-colour/outlined/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.outline.color",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-colour/outlined/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.outline.color",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-colour/outlined/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.focus.outline.color",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-colour/outlined/error-hover": {
+    "value": "OnErrorContainer",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.hover.outline.color",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-colour/outlined/focus": {
+    "value": "Primary",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.focus.outline.color",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-colour/outlined/hover": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.hover.outline.color",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-colour/outlined/rest": {
+    "value": "Outline",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.outline.color",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-opacity/outlined/disabled": {
+    "value": "0.12",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.outline.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-width/outlined-focus": {
+    "value": "3dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.focus.outline.width",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-width/outlined/disabled": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.outline.width",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-width/outlined/hover": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.hover.outline.width",
+    "read": "2026-11-27"
+  },
+  "text-field/outline-width/outlined/rest": {
+    "value": "1dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.outline.width",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-left-with-icons/filled/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Left/right padding with icons",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-left-with-icons/outlined/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Left/right padding with icons",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-left-without-icons/filled/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Left/right padding without icons",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-left-without-icons/outlined/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Left/right padding without icons",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-right-with-icons/filled/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Left/right padding with icons",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-right-with-icons/outlined/rest": {
+    "value": "12dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Left/right padding with icons",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-right-without-icons/filled/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Left/right padding without icons",
+    "read": "2026-11-27"
+  },
+  "text-field/padding-right-without-icons/outlined/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Left/right padding without icons",
+    "read": "2026-11-27"
+  },
+  "text-field/placeholder-colour/filled/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.input-text.placeholder.color",
+    "read": "2026-11-27"
+  },
+  "text-field/placeholder-colour/outlined/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.input-text.placeholder.color",
+    "read": "2026-11-27"
+  },
+  "text-field/populated-bottom-padding/filled/rest": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Top/bottom padding",
+    "read": "2026-11-27"
+  },
+  "text-field/populated-label-left-padding/outlined/rest": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Left/right padding populated label text",
+    "read": "2026-11-27"
+  },
+  "text-field/populated-label-right-padding/outlined/rest": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Left/right padding populated label text",
+    "read": "2026-11-27"
+  },
+  "text-field/populated-top-padding/filled/rest": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Top/bottom padding",
+    "read": "2026-11-27"
+  },
+  "text-field/prefix-colour/filled/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.input-text.prefix.color",
+    "read": "2026-11-27"
+  },
+  "text-field/prefix-colour/outlined/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.input-text.prefix.color",
+    "read": "2026-11-27"
+  },
+  "text-field/suffix-colour/filled/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.input-text.suffix.color",
+    "read": "2026-11-27"
+  },
+  "text-field/suffix-colour/outlined/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.input-text.suffix.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/filled/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/filled/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/filled/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.focus.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/filled/error-hover": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.hover.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/filled/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.focus.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/filled/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.hover.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/filled/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/outlined/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/outlined/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/outlined/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.focus.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/outlined/error-hover": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.hover.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/outlined/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.focus.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/outlined/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.hover.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-colour/outlined/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.supporting-text.color",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-counter-gap/filled/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Padding between supporting text and character counter",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-counter-gap/outlined/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Padding between supporting text and character counter",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-opacity/filled/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-opacity/outlined/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.supporting-text.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-top-padding/filled/rest": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Supporting text and character counter top padding",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-top-padding/outlined/rest": {
+    "value": "4dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Supporting text and character counter top padding",
+    "read": "2026-11-27"
+  },
+  "text-field/supporting-typography/filled/rest": {
+    "value": "BodySmall",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.supporting-text.type",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "12pt",
+      "weight": "400",
+      "lineHeight": "16pt",
+      "tracking": "0.4pt"
+    }
+  },
+  "text-field/supporting-typography/outlined/rest": {
+    "value": "BodySmall",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.supporting-text.type",
+    "read": "2026-11-27",
+    "resolved": {
+      "size": "12pt",
+      "weight": "400",
+      "lineHeight": "16pt",
+      "tracking": "0.4pt"
+    }
+  },
+  "text-field/trailing-icon-colour/filled/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/filled/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/filled/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.focus.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/filled/error-hover": {
+    "value": "OnErrorContainer",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.error.hover.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/filled/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.focus.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/filled/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.hover.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/filled/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/outlined/disabled": {
+    "value": "OnSurface",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/outlined/error": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/outlined/error-focus": {
+    "value": "Error",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.focus.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/outlined/error-hover": {
+    "value": "OnErrorContainer",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.error.hover.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/outlined/focus": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.focus.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/outlined/hover": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.hover.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-colour/outlined/rest": {
+    "value": "OnSurfaceVariant",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.trailing-icon.color",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-opacity/filled/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.disabled.trailing-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-opacity/outlined/disabled": {
+    "value": "0.38",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.disabled.trailing-icon.opacity",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-size/filled/rest": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Filled · md.comp.filled-text-field.trailing-icon.size",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-size/outlined/rest": {
+    "value": "24dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Tokens & specs · Text field - Outlined · md.comp.outlined-text-field.trailing-icon.size",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-text-gap/filled/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Filled text field measurements · Padding between icons and text",
+    "read": "2026-11-27"
+  },
+  "text-field/trailing-icon-text-gap/outlined/rest": {
+    "value": "16dp",
+    "url": "https://m3.material.io/components/text-fields/specs",
+    "section": "Outlined text field measurements · Padding between icons and text",
+    "read": "2026-11-27"
+  },
+  "timepicker/dial-diameter": {
+    "value": "256dp",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker clock dial container size",
+    "read": "2026-11-26"
+  },
+  "timepicker/dialog-colour/dial": {
+    "value": "SurfaceContainerHigh",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker container color",
+    "read": "2026-11-26"
+  },
+  "timepicker/dialog-corner/dial": {
+    "value": "CornerExtraLarge",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker container shape",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
+  },
+  "timepicker/dialog-corner/input": {
+    "value": "CornerExtraLarge",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Input · Time input container shape",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "28dp"
+    }
+  },
+  "timepicker/period-tracking/dial": {
+    "value": "TitleMedium",
+    "url": "https://m3.material.io/components/time-pickers/specs",
+    "section": "Tokens & specs · Time picker - Dial · Time picker period selector label text tracking",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "16pt",
+      "weight": "500",
+      "lineHeight": "24pt",
+      "tracking": "0.15pt"
+    }
+  },
+  "toolbar/docked/height": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Docked · Docked toolbar container height",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/height": {
+    "value": "64dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Floating · Floating toolbar container height",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/standard-colour": {
+    "value": "SurfaceContainer",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Color - Standard · Toolbar standard container color",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/start-padding": {
+    "value": "8dp",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Floating · Floating toolbar leading space",
+    "read": "2026-11-26"
+  },
+  "toolbar/floating/vibrant-colour": {
+    "value": "PrimaryContainer",
+    "url": "https://m3.material.io/components/toolbars/specs",
+    "section": "Tokens & specs · Toolbar - Color - Vibrant · Toolbar standard container color",
+    "read": "2026-11-26"
+  },
+  "tooltip/body-tracking/rich": {
+    "value": "BodyMedium",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Rich · Rich tooltip supporting text tracking",
+    "read": "2026-11-26",
+    "resolved": {
+      "size": "14pt",
+      "weight": "400",
+      "lineHeight": "20pt",
+      "tracking": "0.25pt"
+    }
+  },
+  "tooltip/colour/plain": {
+    "value": "InverseSurface",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container color",
+    "read": "2026-11-26"
+  },
+  "tooltip/colour/rich": {
+    "value": "SurfaceContainer",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container color",
+    "read": "2026-11-26"
+  },
+  "tooltip/corner/plain": {
+    "value": "CornerMedium",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Plain · Plain tooltip container shape",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "12dp"
+    }
+  },
+  "tooltip/corner/rich": {
+    "value": "CornerMedium",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Rich · Rich tooltip container shape",
+    "read": "2026-11-26",
+    "resolved": {
+      "radius": "12dp"
+    }
+  },
+  "tooltip/max-width/plain": {
+    "value": "444dp",
+    "url": "https://m3.material.io/components/tooltips/specs",
+    "section": "Tokens & specs · Tooltip - Plain · Plain tooltip max width",
+    "read": "2026-11-26"
+  }
+}

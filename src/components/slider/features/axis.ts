@@ -57,12 +57,12 @@ export const handleTransform = (axis: SliderAxis): string =>
     : axis.start === "right" ? "translate(50%, -50%)"
       : "translate(-50%, -50%)";
 
-/** The value indicator is centred on the value along the axis. */
-export const bubbleTransform = (axis: SliderAxis): string =>
-  axis.start === "left" ? "translateX(-50%)"
-    : axis.start === "right" ? "translateX(50%)"
-      : axis.start === "bottom" ? "translateY(50%)"
-        : "translateY(-50%)";
+/** Centre the indicator on its value before the entrance transform is applied. */
+export const bubbleTranslate = (axis: SliderAxis): string =>
+  axis.start === "left" ? "-50%"
+    : axis.start === "right" ? "50%"
+      : axis.start === "bottom" ? "0 50%"
+        : "0 -50%";
 
 /**
  * +1 when the arrow keys along the track raise the value toward its end, -1 when

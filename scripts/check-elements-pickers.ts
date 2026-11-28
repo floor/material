@@ -123,7 +123,8 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
 
   await stage(DATE_FORM);
   {
-    await dateTrigger().click();
+    // Open from a focused trigger so dismissal can verify focus restoration.
+    await dateTrigger().press("Enter");
     await wait(300);
     const opened = await state();
     const inert = await outsideInert();
@@ -176,7 +177,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     });
     check("datepicker: Cancel commits nothing, dispatches no change, and focus returns to the trigger");
 
-    await dateTrigger().click();
+    await dateTrigger().press("Enter");
     await wait(200);
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("Space");
@@ -188,7 +189,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     });
     check("datepicker: Escape commits nothing");
 
-    await dateTrigger().click();
+    await dateTrigger().press("Enter");
     await wait(200);
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("Space");
@@ -302,9 +303,11 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     const attempts: boolean[] = [];
     // The factory's read-only state disables the trigger: it cannot change the date.
     attempts.push(!(await dateTrigger().isDisabled()));
-    await page.locator("#wrap #x input").first().click();
+    const field = page.locator("#wrap #x input").first();
+    // WebKit's pointer hit test reports the outer shadow host for this field.
+    await field.evaluate((input) => (input as HTMLInputElement).click());
     attempts.push(await opened());
-    await page.keyboard.press("ArrowDown");
+    await field.press("ArrowDown");
     attempts.push(await opened());
     const blocked = await page.evaluate(() => {
       const host = document.getElementById("wrap")?.shadowRoot?.getElementById("x") as HTMLElement & { show: () => void };
@@ -433,7 +436,8 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
 
   await stage(TIME_FORM);
   {
-    await page.locator("#wrap #opener").click();
+    const opener = page.locator("#wrap #opener");
+    await opener.press("Enter");
     await wait(300);
     const opened = await state();
     const inert = await outsideInert();
@@ -480,7 +484,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     });
     check("timepicker: Cancel commits nothing, dispatches no change, puts the dial back and returns focus to the opener");
 
-    await page.locator("#wrap #opener").click();
+    await opener.press("Enter");
     await wait(200);
     await focusDial();
     await page.keyboard.press("ArrowRight");
@@ -493,7 +497,7 @@ export const checkPickers = async ({ page, browser, js, fresh, check }: PickerCh
     });
     check("timepicker: Escape commits nothing and puts the dial back");
 
-    await page.locator("#wrap #opener").click();
+    await opener.press("Enter");
     await wait(200);
     await focusDial();
     await page.keyboard.press("ArrowRight");

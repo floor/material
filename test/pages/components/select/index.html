@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>select</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createSelect } from "../../../../dist/components/select/index.js";
+await initPage({ name: "select" });
+const main = document.getElementById("tp-main");
+
+const options = [
+  { id: "us", text: "United States" },
+  { id: "ca", text: "Canada" },
+  { id: "mx", text: "Mexico" },
+];
+
+const token = (role) => {
+  const probe = document.createElement("span");
+  probe.style.color = `var(--mtrl-sys-color-${role})`;
+  document.body.append(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return color;
+};
+
+const degrees = (transform) => {
+  if (!transform || transform === "none") return 0;
+  const match = transform.match(/matrix\(([^)]+)\)/);
+  if (!match) return 0;
+  const [a, b] = match[1].split(",").map((part) => Number(part));
+  return Math.round(Math.atan2(b, a) * 180 / Math.PI);
+};
+
+const arrowReadout = (root) => {
+  const icon = root.querySelector(".mtrl-text-field__trailing-icon");
+  const svg = icon?.querySelector("svg");
+  const field = root.querySelector(".mtrl-text-field__input");
+  if (!icon || !svg || !field) return "no arrow";
+  const arrow = getComputedStyle(icon).color;
+  const open = root.classList.contains("mtrl-select--open");
+  const focused = root.matches(":focus-within");
+  const expected = open || focused ? token("primary") : getComputedStyle(field).borderBottomColor;
+  const turned = degrees(getComputedStyle(svg).transform);
+  const colour = arrow === expected ? "with the field" : "apart from the field";
+  return `${open ? "open" : "closed"} · arrow ${colour} · rotation ${turned}°`;
+};
+
+const mountSelect = (body, id) => {
+  const select = createSelect({ label: "Country", options, value: "us" });
+  select.element.id = id;
+  body.append(select.element);
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "Filled field",
+  lookFor: "the trailing arrow in the field",
+  expected: "the arrow is part of the field",
+  measure: () => {
+    const root = document.getElementById("select-filled");
+    return root ? arrowReadout(root) : "no select";
+  },
+  mount: (body) => mountSelect(body, "select-filled"),
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Focused field",
+  lookFor: "the arrow's colour while the field is focused",
+  expected: "the arrow takes primary with the field",
+  measure: () => {
+    const root = document.getElementById("select-focus");
+    return root ? arrowReadout(root) : "no select";
+  },
+  mount: (body) => mountSelect(body, "select-focus"),
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Open rotation",
+  lookFor: "the arrow's colour with the field, and its turn while the menu is open",
+  expected: "open, the arrow is primary and rotated 180°; closed, it matches the field and sits at 0°",
+  measure: () => {
+    const root = document.getElementById("select-open");
+    return root ? arrowReadout(root) : "no select";
+  },
+  mount: (body) => mountSelect(body, "select-open"),
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "Closed arrow",
+  lookFor: "the arrow at rest, before the menu opens",
+  expected: "the resting arrow matches the field's border and is not rotated",
+  measure: () => {
+    const root = document.getElementById("select-closed");
+    return root ? arrowReadout(root) : "no select";
+  },
+  mount: (body) => mountSelect(body, "select-closed"),
+});
+</script>
+</body>
+</html>

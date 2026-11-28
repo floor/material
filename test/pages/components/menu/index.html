@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en" data-theme="baseline" data-theme-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>menu</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+<style>
+  .tp-opener { inline-size: max-content; }
+</style>
+</head>
+<body>
+<script type="module">
+  import { initPage, section, scenario } from "../../shared/harness.js";
+  import { createMenu } from "../../../../dist/index.js";
+  import { defineMenu } from "../../../../dist/elements/menu.js";
+  import "../../../../dist/elements/css/menu.js";
+
+  const main = await initPage({ name: "menu" });
+  const icon = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>';
+  const json = (value) => JSON.stringify(value);
+  const opener = (body) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "tp-opener";
+    button.textContent = "Open menu";
+    body.append(button);
+    return button;
+  };
+  const menuOf = (body, config) => {
+    const button = opener(body);
+    const menu = createMenu({ opener: button, ...config });
+    const row = document.createElement("div");
+    const open = document.createElement("button");
+    open.type = "button";
+    open.textContent = "Show";
+    open.addEventListener("click", () => menu.open());
+    row.append(open);
+    body.append(row);
+    return menu;
+  };
+
+  // ------------------------------------------------------- Variants and sizes
+  const variants = section(main, "Variants and sizes");
+  scenario(variants, {
+    title: "Baseline and vertical menus",
+    lookFor: "the baseline menu's 48dp items with 12dp end padding, and the expressive vertical menu's 44dp items 2dp apart in a 16dp container.",
+    expected: "the readout names each menu's item height and the baseline item's end padding.",
+    mount: (body) => {
+      window.__baseline = menuOf(body, {
+        variant: "baseline",
+        items: [{ id: "b1", text: "Cut", icon }, { id: "b2", text: "Copy", icon }],
+      });
+      window.__vertical = menuOf(body, {
+        variant: "vertical",
+        items: [{ id: "v1", text: "Alpha", icon }, { id: "v2", text: "Beta", icon }],
+      });
+    },
+    measure: () => {
+      // Each menu shows its own reading: opening one closes the other, so a
+      // closed menu says so instead of hiding the open one's numbers.
+      const read = (menu, closed) => {
+        if (!menu.element.classList.contains("mtrl-menu--visible")) return closed;
+        const item = menu.element.querySelector(".mtrl-menu__item");
+        return item
+          ? {
+              height: Math.round(item.getBoundingClientRect().height),
+              padding: getComputedStyle(item).paddingInlineEnd,
+              reserved: getComputedStyle(item.querySelector(".mtrl-menu__item-content")).paddingInlineEnd,
+            }
+          : closed;
+      };
+      return json({
+        baseline: read(window.__baseline, "menu closed - press Show"),
+        vertical: read(window.__vertical, "menu closed - press its Show"),
+      });
+    },
+  });
+
+  // ----------------------------------------------------------------- States
+  const states = section(main, "States");
+  scenario(states, {
+    title: "A selected baseline item and a submenu item",
+    lookFor: "the selected item's check and the submenu arrow at the item's end.",
+    expected: "the item keeps 12dp end padding; the content reserves 30dp for the 18dp check and 36dp for the 24dp arrow, each with the 12dp between elements.",
+    mount: (body) => {
+      const menu = menuOf(body, {
+        variant: "baseline",
+        items: [
+          { id: "p", text: "Plain", icon },
+          { id: "s", text: "Chosen", icon },
+          { id: "m", text: "More", icon, hasSubmenu: true, submenu: [{ id: "m1", text: "Deep" }] },
+        ],
+      });
+      menu.setSelected("s");
+      window.__statesMenu = menu;
+    },
+    measure: () => {
+      if (!window.__statesMenu.element.classList.contains("mtrl-menu--visible")) return "menu closed - press Show";
+      const items = [...window.__statesMenu.element.querySelectorAll(".mtrl-menu__item")];
+      const read = (item) => ({
+        padding: getComputedStyle(item).paddingInlineEnd,
+        reserved: getComputedStyle(item.querySelector(".mtrl-menu__item-content")).paddingInlineEnd,
+      });
+      return json({ plain: read(items[0]), selected: read(items[1]), submenu: read(items[2]) });
+    },
+  });
+
+  // ------------------------------------------------------------- Interaction
+  const interaction = section(main, "Interaction");
+  scenario(interaction, {
+    title: "The vibrant leading icon follows the item's state",
+    lookFor: "open the vibrant menu, then hover an item, arrow onto it with the keyboard, and press it.",
+    expected: "the leading icon is the vibrant mapping's on-tertiary-container at rest, and Tertiary on hover, focus and press.",
+    mount: (body) => {
+      window.__vibrant = menuOf(body, {
+        variant: "vertical",
+        color: "vibrant",
+        items: [{ id: "h1", text: "Alpha", icon }, { id: "h2", text: "Beta", icon }, { id: "h3", text: "Disabled", icon, disabled: true }],
+      });
+    },
+    measure: () => {
+      const menu = window.__vibrant.element;
+      const tertiary = (() => {
+        const probe = document.getElementById("tp-tertiary-probe");
+        if (probe) return getComputedStyle(probe).color;
+        const span = document.createElement("span");
+        span.id = "tp-tertiary-probe";
+        span.style.cssText = "position:absolute;left:-9999px;color:var(--mtrl-sys-color-tertiary)";
+        document.body.append(span);
+        return getComputedStyle(span).color;
+      })();
+      if (!menu.classList.contains("mtrl-menu--visible")) return `menu closed - press Show (tertiary is ${tertiary})`;
+      const item = menu.querySelector(".mtrl-menu__item:hover") ?? menu.querySelector(".mtrl-menu__item:focus-visible") ?? menu.querySelector(".mtrl-menu__item");
+      const iconNode = item.querySelector(".mtrl-menu__item-icon");
+      return json({
+        state: menu.querySelector(".mtrl-menu__item:hover") ? "hover" : menu.querySelector(".mtrl-menu__item:focus-visible") ? "focus" : "rest",
+        disabled: item.classList.contains("mtrl-menu__item--disabled"),
+        icon: iconNode ? getComputedStyle(iconNode).color : null,
+        tertiary,
+      });
+    },
+  });
+
+  let keyboardFocus = {};
+  scenario(interaction, {
+    title: "Initial keyboard focus after an opening stall",
+    lookFor: "focus Actions, press Enter, then Escape. Try it with the simulated stall enabled and disabled.",
+    expected: "Copy receives focus on Enter, and Escape returns focus to Actions. The menu keeps its opening and closing animation.",
+    mount: (body) => {
+      defineMenu();
+      body.innerHTML = `
+        <label><input type="checkbox" checked> Stall opening for 350 ms</label>
+        <button type="button" id="tp-menu-actions">Actions</button>
+        <m-menu anchor="tp-menu-actions" aria-label="Actions">
+          <m-menu-item value="copy">Copy</m-menu-item>
+          <m-menu-item value="paste">Paste</m-menu-item>
+        </m-menu>`;
+      const open = body.querySelector("button");
+      const slow = body.querySelector("input");
+      const root = body.querySelector("m-menu").shadowRoot;
+      let started = null;
+      open.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          started = performance.now();
+          keyboardFocus = { focus: "Actions" };
+        }
+      }, true);
+      const updateFocus = () => {
+        keyboardFocus.focus = root.activeElement?.textContent?.trim() || (document.activeElement === open ? "Actions" : "Outside");
+        if (started !== null && keyboardFocus.focus === "Copy") {
+          keyboardFocus.firstFocusMs = Math.round(performance.now() - started);
+          started = null;
+        }
+      };
+      open.addEventListener("focus", updateFocus);
+      root.addEventListener("focusin", updateFocus);
+      new MutationObserver(() => {
+        const surface = root.querySelector(".mtrl-menu--visible");
+        if (started === null || !surface || "openingVisibility" in keyboardFocus) return;
+        if (slow.checked) {
+          const resume = performance.now() + 350;
+          while (performance.now() < resume) { /* Simulate a stalled rendering task. */ }
+        }
+        keyboardFocus.openingVisibility = getComputedStyle(surface.querySelector('[data-id="copy"]')).visibility;
+      }).observe(root, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    },
+    measure: () => json(keyboardFocus),
+  });
+
+  // ------------------------------------------------------------- Edge cases
+  const edges = section(main, "Edge cases");
+  scenario(edges, {
+    title: "A shortcut beside the check or the arrow",
+    lookFor: "a selected item and a submenu item, each with a shortcut at the end.",
+    expected: "the shortcut ends 12dp before the check or the arrow (24dp in RTL); the label takes the rest of the row.",
+    mount: (body) => {
+      window.__shortcut = menuOf(body, {
+        variant: "baseline",
+        items: [
+          { id: "s1", text: "Save changes and exit", icon, shortcut: "Ctrl+S", supportingText: "Selected shortcut" },
+          { id: "s2", text: "Save changes and exit", icon, shortcut: "Ctrl+M", hasSubmenu: true, submenu: [{ id: "s3", text: "Deep" }] },
+        ],
+      });
+      window.__shortcut.setSelected("s1");
+    },
+    measure: () => {
+      const menu = window.__shortcut.element;
+      if (!menu.classList.contains("mtrl-menu--visible")) return "menu closed - press Show";
+      const rtl = getComputedStyle(menu).direction === "rtl";
+      const read = (item) => {
+        const itemBox = item.getBoundingClientRect();
+        const shortcut = item.querySelector(".mtrl-menu__item-shortcut").getBoundingClientRect();
+        const mark = item.classList.contains("mtrl-menu__item--submenu") ? 36 : 30;
+        const clearance = rtl ? Math.round(shortcut.left - (itemBox.left + mark)) : Math.round(itemBox.right - mark - shortcut.right);
+        const label = item.querySelector(".mtrl-menu__item-label") ?? item.querySelector(".mtrl-menu__item-text");
+        return { clearance, labelWidth: Math.round(label.getBoundingClientRect().width) };
+      };
+      const items = [...menu.querySelectorAll(".mtrl-menu__item")];
+      return json({ direction: rtl ? "rtl" : "ltr", selected: read(items[0]), submenu: read(items[1]) });
+    },
+  });
+  scenario(edges, {
+    title: "The baseline menu in right-to-left",
+    lookFor: "turn RTL on in the toolbar first, then press Show: the same menu with the page in RTL.",
+    expected: "the item's end padding is still 12dp, the label still reserves the mark's room, and the arrow mirrors to the other side.",
+    mount: (body) => {
+      // The menu lives in the top layer, which an ancestor's dir does not
+      // reach: the page's direction is the harness toolbar's RTL switch.
+      window.__rtl = menuOf(body, {
+        variant: "baseline",
+        items: [{ id: "r1", text: "Cut", icon }, { id: "r2", text: "More", icon, hasSubmenu: true, submenu: [{ id: "r3", text: "Deep" }] }],
+      });
+    },
+    measure: () => {
+      if (!window.__rtl.element.classList.contains("mtrl-menu--visible")) return "menu closed - press Show";
+      const items = [...window.__rtl.element.querySelectorAll(".mtrl-menu__item")];
+      const item = items[0];
+      const text = item.querySelector(".mtrl-menu__item-text");
+      const rtl = getComputedStyle(item).direction === "rtl";
+      const boxToEnd = rtl
+        ? text.getBoundingClientRect().left - item.getBoundingClientRect().left
+        : item.getBoundingClientRect().right - text.getBoundingClientRect().right;
+      return json({
+        direction: rtl ? "rtl" : "ltr",
+        padding: getComputedStyle(item).paddingInlineEnd,
+        boxToEnd: Math.round(boxToEnd),
+        submenuReserve: items[1] ? getComputedStyle(items[1].querySelector(".mtrl-menu__item-content")).paddingInlineEnd : null,
+      });
+    },
+  });
+</script>
+</body>
+</html>

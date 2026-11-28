@@ -3,6 +3,7 @@ import {
   createComponentConfig,
   createElementConfig,
 } from "../../core/config/component";
+import { keepDefaults } from "../../core/config/keep-defaults";
 import { TooltipConfig } from "./types";
 import { TOOLTIP_DEFAULTS } from "./constants";
 import type { LifecycleComponent } from "../../core/compose/features/lifecycle";
@@ -28,6 +29,7 @@ export const defaultConfig: TooltipConfig = {
  */
 export const createBaseConfig = (config: TooltipConfig = {}): TooltipConfig => {
   const merged = createComponentConfig(defaultConfig, config, "tooltip") as TooltipConfig;
+  keepDefaults(merged, defaultConfig, "tooltip");
   // Without popover support the tooltip keeps its usual layer
   if (merged.layer === "top" && !supportsTopLayer("popover-manual")) {
     merged.layer = undefined;

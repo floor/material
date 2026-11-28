@@ -76,7 +76,7 @@ try {
       && text('card-buttons-promoted').includes('Promoted shorthand detail')
       && text('card-element-actions-promoted').includes('Promoted element detail');
   });
-  await page.waitForTimeout(20);
+  await page.waitForTimeout(20); // stays: the warning is raised on a later task
   assert.deepEqual(errors, []);
 
   const dom = await page.evaluate(() => {
@@ -154,7 +154,7 @@ try {
       tabindex: string | null;
       action: string;
     };
-    await page.waitForTimeout(20);
+    await page.waitForTimeout(20); // stays: the warning is raised on a later task
     check(`card-${part}-article`, dynamic.role === 'article' && dynamic.tabIndex === -1 && dynamic.tabindex === null && dynamic.action === '<button>Dynamic action</button>');
     check(`card-${part}-silent`, warnings.length === before);
   }

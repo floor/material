@@ -117,7 +117,7 @@ try {
   assert.equal(closed.visible, false, `closing the menu does not show the tooltip without a new hover ${JSON.stringify(closed)}`);
 
   await page.mouse.move(0, 0);
-  await page.waitForTimeout(20);
+  await page.waitForTimeout(20); // stays: the tooltip's show delay is under test
   await page.hover("#anchor");
   await page.waitForFunction(() => document.querySelector(".mtrl-tooltip")?.classList.contains("mtrl-tooltip--visible") === true);
   const again = await read();
@@ -205,7 +205,7 @@ try {
   });
   await page.mouse.move(0, 0);
   await page.hover("#anchor");
-  await page.waitForTimeout(TOOLTIP_DEFAULTS.SHOW_DELAY + 50);
+  await page.waitForTimeout(TOOLTIP_DEFAULTS.SHOW_DELAY + 50); // stays: the tooltip's show delay is under test
   const pending = await read();
   assert.equal(pending.expanded, "true", `the menu opened while the default-delay show was waiting ${JSON.stringify(pending)}`);
   assert.equal(pending.visible, false, `a default-delay show scheduled before the menu opened stays hidden ${JSON.stringify(pending)}`);

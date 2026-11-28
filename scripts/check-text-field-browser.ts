@@ -10,6 +10,7 @@
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 import type createTextField from "../src/components/text-field";
+import { settle } from "./browser-settle";
 
 type FieldWindow = Window & {
   inputs: { createTextField: typeof createTextField };
@@ -50,8 +51,8 @@ export async function checkTextField(page: Page): Promise<void> {
   });
   assert.equal(measured.stillEmpty, true, "the case needs a value the script did not see");
   // Floated: the filled label rises into the container's top, the outlined one onto the outline.
-  assert.ok(measured.filledRose > 8, `filled label should float, rose ${measured.filledRose}px`);
-  assert.ok(measured.filledTop >= 0 && measured.filledTop < 16, `filled floated label top ${measured.filledTop}px`);
+  assert.ok(Math.abs(measured.filledRose - 8) <= 0.5, `filled label should rise 8px, rose ${measured.filledRose}px`);
+  assert.ok(Math.abs(measured.filledTop - 8) <= 0.5, `filled floated label top ${measured.filledTop}px`);
   assert.ok(measured.outlinedRose > 16, `outlined label should float, rose ${measured.outlinedRose}px`);
   assert.ok(measured.outlinedTop < 0, `outlined floated label sits on the outline, top ${measured.outlinedTop}px`);
   assert.equal(measured.outlinedOpacity, "1");
@@ -60,6 +61,81 @@ export async function checkTextField(page: Page): Promise<void> {
   assert.equal(measured.restingOpacity, "1");
   await page.evaluate(() => (window as unknown as FieldWindow).fields.forEach(field => field.destroy()));
   console.log("Passed text field label: floats from the input's own value (filled, outlined) and dims with a disabled input.");
+}
+
+export async function checkTextFieldLabelGeometry(page: Page): Promise<void> {
+  const measured = await page.evaluate(async () => {
+    const { createTextField } = (window as unknown as FieldWindow).inputs;
+    const filled = createTextField({ label: "Email", variant: "filled", value: "a@b.c" });
+    const animated = createTextField({ label: "Email", variant: "filled" });
+    const stage = document.createElement("div");
+    const sizes = [["ltr", 120.625], ["rtl", 120.625], ["rtl", 232.625]] as const;
+    const outlined = sizes.map(([direction, width]) => {
+      const wrapper = document.createElement("div");
+      wrapper.dir = direction;
+      const field = createTextField({ label: "Email", variant: "outlined", value: "a@b.c" });
+      const label = field.element.querySelector("label")!;
+      // Exercise the same fractional width in both engines, independent of fonts.
+      label.style.width = `${width}px`;
+      wrapper.append(field.element);
+      stage.append(wrapper);
+      return { direction, width, field, label };
+    });
+    stage.append(filled.element, animated.element);
+    document.body.append(stage);
+    try {
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const filledLabel = filled.element.querySelector("label")!.getBoundingClientRect();
+      const filledTop = filledLabel.top - filled.field.getBoundingClientRect().top;
+      const notches = outlined.map(({ direction, width, field, label }) => {
+        const notch = field.element.querySelector(".mtrl-text-field__outline-notch")!.getBoundingClientRect();
+        const box = label.getBoundingClientRect();
+        return {
+          direction,
+          width,
+          labelWidth: parseFloat(getComputedStyle(label).width),
+          padding: [box.left - notch.left, notch.right - box.right],
+        };
+      });
+      const animation = (() => {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
+        const animatedLabel = animated.element.querySelector("label")!;
+        const top = () => animatedLabel.getBoundingClientRect().top - animated.field.getBoundingClientRect().top;
+        const restingTop = top();
+        animated.setValue("a@b.c");
+        const startTop = top();
+        for (const transition of animatedLabel.getAnimations()) {
+          transition.pause();
+          transition.currentTime = transition.effect!.getComputedTiming().duration as number / 2;
+        }
+        return { restingTop, startTop, midpointTop: top() };
+      })();
+      return {
+        filledTop,
+        filledHeight: filledLabel.height,
+        notches,
+        animation,
+      };
+    } finally {
+      filled.destroy();
+      for (const { field } of outlined) field.destroy();
+      animated.destroy();
+      stage.remove();
+    }
+  });
+  const failures = [];
+  if (Math.abs(measured.filledTop - 8) > 0.5) failures.push("filled label top");
+  for (const { direction, width, labelWidth, padding } of measured.notches) {
+    assert.equal(labelWidth, width, "the outlined label width exercises subpixel notch sizing");
+    if (padding.some((px) => Math.abs(px - 4) > 0.01)) failures.push(`${direction} ${width}px outlined notch padding`);
+  }
+  if (measured.animation) {
+    const { restingTop, startTop, midpointTop } = measured.animation;
+    if (Math.abs(startTop - restingTop) > 0.5) failures.push("filled label jumps at float start");
+    if (midpointTop <= measured.filledTop || midpointTop >= restingTop) failures.push("filled label does not move through the float");
+  }
+  assert.deepEqual(failures, [], `Text field label geometry ${JSON.stringify(measured)}`);
+  console.log(`Passed text field label geometry ${JSON.stringify(measured)}`);
 }
 
 type Probe = { element: HTMLElement; input: HTMLInputElement; setError: (e: boolean) => unknown; destroy: () => void };
@@ -109,7 +185,7 @@ export async function checkTextFieldTokens(page: Page): Promise<void> {
     const style = (name: string, selector: string, pseudo?: string) => getComputedStyle(q(name, selector), pseudo);
     return new Function("probes", "role", "q", "style", code)(probes, role, q, style);
   }, script);
-  const hover = async (name: string) => page.locator(`.mtrl-text-field >> nth=${await page.evaluate((n) => [...document.querySelectorAll(".mtrl-text-field")].indexOf((window as unknown as { probes: Record<string, Probe> }).probes[n].element), name)}`).hover().then(() => page.waitForTimeout(400)); // past the colour transitions
+  const hover = async (name: string) => page.locator(`.mtrl-text-field >> nth=${await page.evaluate((n) => [...document.querySelectorAll(".mtrl-text-field")].indexOf((window as unknown as { probes: Record<string, Probe> }).probes[n].element), name)}`).hover().then(() => settle(page)); // the colour transitions have ended
 
   const rest = await read(`return {
     indicator: style("filled", "input").borderBottomColor === role("on-surface-variant"),

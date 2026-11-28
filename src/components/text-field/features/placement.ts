@@ -16,6 +16,18 @@ const FLOATED_LABEL_SCALE = 0.75;
  */
 const NOTCH_PADDING = 4;
 
+// The resolved width keeps subpixels and stays in layout coordinates while
+// the label's transform animates. Include padding and borders for content-box
+// labels, since the notch surrounds the whole label.
+const untransformedWidth = (label: HTMLElement): number => {
+  const style = globalThis.getComputedStyle?.(label);
+  if (!style?.width.endsWith("px")) return label.offsetWidth;
+  const width = parseFloat(style.width);
+  if (style.boxSizing === "border-box") return width;
+  return width + [style.paddingLeft, style.paddingRight, style.borderLeftWidth, style.borderRightWidth]
+    .reduce((total, length) => total + (parseFloat(length) || 0), 0);
+};
+
 /**
  * The fields waiting for a placement pass, each a read that returns its
  * write. Fields scheduled in the same task are measured together, then
@@ -145,10 +157,9 @@ export const withPlacement =
 
       // Reads. The direction as computed, which reaches into a shadow root
       // where the stylesheet's [dir] selectors do not (a server's DOM has no
-      // computed style: left to right there); offsetWidth is the label's
-      // untransformed width, so it holds mid-transition too.
+      // computed style: left to right there).
       const rtl = globalThis.getComputedStyle?.(element).direction === "rtl";
-      const labelWidth = isOutlined && labelEl ? labelEl.offsetWidth : 0;
+      const labelWidth = isOutlined && labelEl ? untransformedWidth(labelEl) : 0;
       const affixes = [prefixEl, suffixEl].map((affix) => affix?.getBoundingClientRect().width);
 
       return () => {
@@ -160,6 +171,12 @@ export const withPlacement =
         element.classList.toggle(`${PREFIX}-${COMPONENT}--rtl`, rtl);
         if (outline && notch) {
           if (labelWidth > 0) notch.style.width = `${labelWidth * FLOATED_LABEL_SCALE + NOTCH_PADDING * 2}px`;
+          // WebKit rounds a right-edge transform origin before scaling. Use
+          // the same fractional width for the label's pivot and its notch.
+          labelEl?.style.setProperty(
+            `--${PREFIX}-${COMPONENT}-label-origin-x`,
+            labelWidth > 0 ? `${labelWidth}px` : "",
+          );
           outline.classList.toggle(`${outlineClass}--notched`, isOutlined && !!labelEl && (isFocused || !isEmpty));
         }
 

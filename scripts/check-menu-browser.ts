@@ -288,18 +288,18 @@ export async function checkMenuHiddenItems(page: Page): Promise<void> {
     // not the first item declared, a tree that treated the hidden item as a
     // stop leaves focus outside the menu, so wait on the event's own budget
     // rather than on that focus.
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(250); // stays: the menu places focus and runs typeahead on its own timers
     const focused = (): Promise<string | null> => page.evaluate(() => document.activeElement?.getAttribute("data-id") ?? document.activeElement?.id ?? null);
     const at = await focused();
     assert.equal(at, opened, `menu, ${name} item hidden: opening puts focus on ${opened}, the first item shown (${at})`);
     for (const [key, expected] of keys) {
       await page.keyboard.press(key);
-      await page.waitForTimeout(120);
+      await page.waitForTimeout(120); // stays: the menu places focus and runs typeahead on its own timers
       const active = await focused();
       assert.equal(active, expected, `menu, ${name} item hidden: after ${key === "t" ? "typing t" : key} focus is on ${expected} (${active})`);
     }
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(150); // stays: the menu places focus and runs typeahead on its own timers
     const selected = await page.evaluate(() => (window as unknown as MenuWindow & { chosen: string | null }).chosen);
     assert.equal(selected, chosen, `menu, ${name} item hidden: Enter chooses ${chosen}, the focused item (${selected})`);
     await page.evaluate(() => (window as unknown as MenuWindow).menu.destroy());
@@ -524,7 +524,9 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       assert.ok(Math.abs(horizontal.trailingEdge - 12) <= 0.5, `${dir} horizontal: the check ends ${horizontal.trailingEdge}px from the item, not 12px`);
       assert.ok(Math.abs(horizontal.width - 18) <= 0.5 && Math.abs(horizontal.height - 18) <= 0.5, `${dir} horizontal: the check is ${horizontal.width} by ${horizontal.height}, not 18 by 18`);
       assert.equal(horizontal.overlap, 0, `${dir} horizontal: the check overlaps the label by ${horizontal.overlap}px`);
-      assert.ok(Math.abs(horizontal.gap - 10) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 10px`);
+      // The 12dp between elements the baseline measurements give (m3.material.io/
+      // components/menus/specs): the label's content ends 12px before the mark.
+      assert.ok(Math.abs(horizontal.gap - 12) <= 0.5, `${dir} horizontal: the label ends ${horizontal.gap}px before the check, not 12px`);
     }
 
     // Forced-colors mode on the default vertical menu: the high-contrast rule
@@ -582,7 +584,7 @@ export async function checkMenuVerticalSelectedCheck(page: Page): Promise<void> 
       document.documentElement.dir = "";
     });
   }
-  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with a 10px gap; the selected item keeps its checked state.");
+  console.log("Passed packed menu selected check: a vertical menu's selected item paints no trailing check and never overlaps its label (LTR and RTL, long label), while the horizontal menu keeps its 18px check 12px from the end with the spec's 12px gap; the selected item keeps its checked state.");
 }
 
 /**

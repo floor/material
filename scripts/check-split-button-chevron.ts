@@ -17,6 +17,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as sass from "sass";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 
 const root = resolve(import.meta.dir, "..");
 mkdirSync(join(root, "tmp"), { recursive: true });
@@ -219,8 +220,7 @@ try {
       root.classList.add("mtrl-split-button--expanded");
     }
   });
-  await page.waitForTimeout(400);
-  const open = await measure();
+  await settle(page);const open = await measure();
   const rows = [...closed, ...open].map((row) => ({
     ...row,
     dx: round(row.dx),

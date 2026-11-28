@@ -15,6 +15,7 @@
  * (m3.material.io/components/dialogs/accessibility, /snackbars/guidelines).
  */
 import assert from "node:assert/strict";
+import { settle } from "./browser-settle";
 import { resolve } from "node:path";
 import { launchChromium } from "./browser-profile";
 import type { Page } from "playwright";
@@ -83,7 +84,7 @@ try {
     await page.keyboard.press("Tab");
     return (await focused()).includes(label);
   };
-  const settle = (): Promise<void> => page.waitForTimeout(700);
+  const settleOpen = (): Promise<void> => settle(page);
 
   const failures: string[] = [];
   const row = async (name: string, body: () => Promise<void>): Promise<void> => {
@@ -129,11 +130,17 @@ try {
         await mount(kind, callerAppends);
         assert.equal(await exposed(label), null, `${label} is exposed before the first ${openName}`);
         await act(openName);
-        await page.waitForTimeout(150);
+        // The open itself is a task the surface runs; wait for its own state,
+        // then for its transition to end.
+        await page.waitForFunction((kind) => {
+          const surface = document.querySelector(kind === "dialog" ? ".mtrl-dialog" : ".mtrl-snackbar");
+          return !!surface && surface.matches(kind === "dialog" ? ".mtrl-dialog--visible" : ".mtrl-snackbar--visible");
+        }, kind);
+        await settle(page);
         assert.ok(await exposed(label), `${label} is not exposed once ${openName}n`);
         await act(closeName as "close" | "hide");
         assert.equal(await exposed(label), null, `${label} is still exposed just after ${closeName}`);
-        await settle();
+        await settleOpen();
         assert.equal(await exposed(label), null, `${label} is still exposed once closed`);
       });
       if (kind === "snackbar") {
@@ -143,7 +150,7 @@ try {
           await act(openName);
           assert.equal(await tabReaches("Undo"), true, "Tab does not reach the open snackbar's Undo");
           await act("hide");
-          await settle();
+          await settleOpen();
           assert.equal(await tabReaches("Undo"), false, "Tab reaches the hidden snackbar's Undo");
         });
       }
@@ -173,20 +180,20 @@ try {
         }
         document.body.append(host);
       }, { tag, label });
-      await page.waitForTimeout(80);
+      await settle(page);
       assert.equal(await exposed(label), null, `${label} is exposed before the first ${openName}`);
       await page.evaluate(({ tag, openName }) => {
         const host = document.querySelector(tag) as unknown as Record<string, () => void>;
         host[openName]!();
       }, { tag, openName });
-      await page.waitForTimeout(120);
+      await settle(page);
       assert.ok(await exposed(label), `${label} is not exposed once ${openName}n`);
       await page.evaluate(({ tag, closeName }) => {
         const host = document.querySelector(tag) as unknown as Record<string, () => void>;
         host[closeName]!();
       }, { tag, closeName });
       assert.equal(await exposed(label), null, `${label} is still exposed just after ${closeName}`);
-      await settle();
+      await settleOpen();
       assert.equal(await exposed(label), null, `${label} is still exposed once closed`);
       if (tag === "m-snackbar") {
         assert.equal(await tabReaches("Undo"), false, "Tab reaches the closed <m-snackbar>'s Undo");
@@ -292,15 +299,24 @@ try {
       assert.deepEqual(before, { hidden: "true", inert: "true" }, `${kind} closed attributes at creation`);
       assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the never-opened snapshot`);
       await act(openName);
-      await page.waitForTimeout(150);
-      assert.equal((await snapshotOf(selector)).includes(label), true, `${label} is not in the open snapshot`);
+      // The accessibility tree is updated after the surface's own task: wait
+      // for the label to appear, then read the tree once it is at rest.
+      const openSnapshot = await settle(page, {
+        until: async () => (await snapshotOf(selector)).includes(label),
+        read: () => snapshotOf(selector),
+      });
+      assert.equal(openSnapshot!.includes(label), true, `${label} is not in the open snapshot`);
       const open = await closedAttributes(selector);
       assert.deepEqual(open, { hidden: null, inert: "false" }, `${kind} attributes while open`);
       await act(closeName as "close" | "hide");
       const closed = await closedAttributes(selector);
       assert.deepEqual(closed, { hidden: "true", inert: "true" }, `${kind} attributes just after close`);
-      assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the snapshot after close`);
-      await settle();
+      const closedSnapshot = await settle(page, {
+        until: async () => !(await snapshotOf(selector)).includes(label),
+        read: () => snapshotOf(selector),
+      });
+      assert.equal(closedSnapshot!.includes(label), false, `${label} is in the snapshot after close`);
+      await settleOpen();
     });
   }
 
@@ -322,19 +338,19 @@ try {
         }
         document.body.append(host);
       }, { tag, label });
-      await page.waitForTimeout(120);
+      await settle(page);
       assert.deepEqual(await closedAttributes(selector), { hidden: "true", inert: "true" }, `${tag} closed attributes at creation`);
       assert.equal((await snapshotOf(selector)).includes(label), false, `${label} is in the never-opened <${tag}> snapshot`);
       await page.evaluate(({ tag, openName }) => {
         (document.querySelector(tag) as unknown as Record<string, () => void>)[openName]!();
       }, { tag, openName });
-      await page.waitForTimeout(150);
+      await settle(page);
       assert.deepEqual(await closedAttributes(selector), { hidden: null, inert: "false" }, `${tag} attributes while open`);
       await page.evaluate(({ tag, closeName }) => {
         (document.querySelector(tag) as unknown as Record<string, () => void>)[closeName]!();
       }, { tag, closeName });
       assert.deepEqual(await closedAttributes(selector), { hidden: "true", inert: "true" }, `${tag} attributes just after close`);
-      await settle();
+      await settleOpen();
     });
   }
 
@@ -344,9 +360,12 @@ try {
       const api = (window as unknown as { api: Record<string, (config: Record<string, unknown>) => Record<string, unknown>> }).api;
       (window as unknown as { surface: unknown }).surface = api.createDialog!({ open: true, title: "Initially open", buttons: [{ text: "Continue", action: "close" }] });
     });
-    await page.waitForTimeout(400);
+    const snapshot = await settle(page, {
+      until: async () => (await snapshotOf(".mtrl-dialog")).includes("Initially open"),
+      read: () => snapshotOf(".mtrl-dialog"),
+    });
     assert.deepEqual(await closedAttributes(".mtrl-dialog"), { hidden: null, inert: "false" }, "attributes of a dialog created open");
-    assert.equal((await snapshotOf(".mtrl-dialog")).includes("Initially open"), true, "a dialog created open is absent from the snapshot");
+    assert.equal(snapshot!.includes("Initially open"), true, "a dialog created open is absent from the snapshot");
   });
 
   assert.deepEqual(errors, []);

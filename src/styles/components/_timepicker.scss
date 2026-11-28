@@ -24,6 +24,38 @@ $component: '#{base.$prefix}-time-picker';
     border: 0;
     min-width: 280px;
     max-width: 328px;
+    // M3's dialog width is the one an hh:mm row needs. The seconds field is
+    // our extension, and its row is wider than that — 388 px at 12h and 356
+    // at 24h against a 280 px content box, so the row overflowed and the hour
+    // or the period was clipped (md3.io, 2026-11-26). A dialog holding
+    // seconds takes the row's width, 388 plus the content's 24 dp padding on
+    // each side, capped by the viewport; hours and minutes alone keep the M3
+    // width exactly.
+    &:has(.#{$component}__seconds) {
+      width: 440px;
+      max-width: calc(100vw - 48px);
+    }
+
+    // Below 488px the viewport cap is narrower than the seconds row — 312px
+    // of dialog at 360 — so the row shrinks to fit rather than clip: the same
+    // 72dp boxes with 12dp separators and a 44dp AM/PM column hold three
+    // fields at 284dp, inside 312. Only a dialog with seconds: the
+    // hours-and-minutes dialog keeps its M3 sizes at every width.
+    @media (max-width: 487.98px) {
+      &:has(.#{$component}__seconds) {
+        :is(.#{$component}__hours, .#{$component}__minutes, .#{$component}__seconds) {
+          width: 72px;
+        }
+
+        .#{$component}__separator {
+          width: 12px;
+        }
+
+        .#{$component}__period {
+          width: 44px;
+        }
+      }
+    }
     max-height: 520px;
     background-color: t.color('surface-container-high');
     color: t.color('on-surface');
@@ -136,9 +168,9 @@ $component: '#{base.$prefix}-time-picker';
     @include m.typography('display-large');
 
     // Input mode: TimeFieldContainerColor surface-container-highest with an
-    // on-surface label; focused, primary-container and on-primary-container
-    // inside a 2dp primary outline. The selected colours never showed before:
-    // this rule overrode them.
+    // on-surface label; focused, primary-container and on-primary-container.
+    // The ring is the shared 3px Secondary stroke, inside the edge. The
+    // selected colours never showed before: this rule overrode them.
     &[type="number"] {
       height: 72px;
       @include m.typography('display-medium');
@@ -147,8 +179,7 @@ $component: '#{base.$prefix}-time-picker';
       cursor: text;
 
       &:focus {
-        outline: 2px solid t.color('primary');
-        outline-offset: -2px;
+        @include m.focus-ring($offset: -3px, $wrap: false);
         background-color: t.color('primary-container');
         color: t.color('on-primary-container');
       }
@@ -232,8 +263,7 @@ $component: '#{base.$prefix}-time-picker';
 
       // Improve focus styles for keyboard navigation
       &:focus-visible {
-        outline: 2px solid t.color('primary');
-        outline-offset: -2px;
+        @include m.focus-ring($offset: -3px, $wrap: false);
       }
 
       &:hover {
@@ -418,8 +448,7 @@ $component: '#{base.$prefix}-time-picker';
     
     // Improve focus styles for keyboard navigation
     &:focus-visible {
-      outline: 2px solid t.color('primary');
-      outline-offset: 2px;
+      @include m.focus-ring($wrap: false);
     }
     
     &:hover {
@@ -462,8 +491,7 @@ $component: '#{base.$prefix}-time-picker';
     
     // Improve focus styles for keyboard navigation
     &:focus-visible {
-      outline: 2px solid t.color('primary');
-      outline-offset: 2px;
+      @include m.focus-ring($wrap: false);
     }
     
     &:hover {

@@ -39,6 +39,12 @@ describe('carousel stylesheet', () => {
     expect(value('.mtrl-carousel--vertical .mtrl-carousel__scroller', 'overflow-y')).toBe('auto');
   });
 
+  test('every layout except full-screen pads the block edges by 8dp, inside the height', () => {
+    // Specs read 2026-11-27: https://m3.material.io/components/carousel/specs
+    expect(value('.mtrl-carousel:not(.mtrl-carousel--full-screen)', 'padding-block')).toBe('8px');
+    expect(value('.mtrl-carousel:not(.mtrl-carousel--full-screen)', 'box-sizing')).toBe('border-box');
+  });
+
   test('items take the 28dp corner and a secondary focus ring', () => {
     expect(value('.mtrl-carousel__item', 'border-radius')).toBe(`var(--mtrl-carousel-corner, ${corner(28)})`);
     expect(value('.mtrl-carousel__item:focus-visible::after', 'border')).toBe('3px solid var(--mtrl-sys-color-secondary)');

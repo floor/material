@@ -32,6 +32,7 @@ import { resolve } from "node:path";
 import * as sass from "sass";
 
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 import { directionArmsPrelude, sassOptions } from "./build-styles";
 
 const HOST = 320;
@@ -349,8 +350,7 @@ try {
           },
           { size, vertical },
         );
-        await page.waitForTimeout(40);
-        // The ticks, with the handle out of the picture; then the scale they make.
+        await settle(page);
         const painted = await measure(vertical, rtl);
         const scale = scaleFrom(painted.centres, `${name}: ${painted.centres.length} painted ticks`);
         // The owner's rule: the value span starts and ends 6 px inside the track.
@@ -377,8 +377,7 @@ try {
           },
           { size, vertical },
         );
-        await page.waitForTimeout(40);
-        for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+        await settle(page);for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
           await page.evaluate((value) => (window as unknown as { slider: { setValue: (v: number, emit?: boolean) => void } }).slider.setValue(value, false), Math.round(fraction * 100));
           const where = await handleAlong(vertical, rtl);
           const expected = scale.at(fraction * STEPS);
@@ -413,8 +412,7 @@ try {
     slider.setAttribute("step", "10");
     slider.setAttribute("value", "120");
   });
-  await elementPage.waitForTimeout(60);
-  await elementPage.evaluate(() => document.querySelector("m-slider")!.setAttribute("ticks", ""));
+  await settle(elementPage);await elementPage.evaluate(() => document.querySelector("m-slider")!.setAttribute("ticks", ""));
   // The page's stylesheet does not reach into the shadow root: the settle
   // transition is switched off there, so the capture is the settled geometry.
   await elementPage.evaluate(() => {
@@ -423,8 +421,7 @@ try {
     still.replaceSync(".mtrl-slider *, .mtrl-slider { transition: none !important; }");
     root.adoptedStyleSheets = [...root.adoptedStyleSheets, still];
   });
-  await elementPage.waitForTimeout(60);
-  const elementGeometry = await elementPage.evaluate(() => {
+  await settle(elementPage);const elementGeometry = await elementPage.evaluate(() => {
     const host = document.querySelector<HTMLElement>("#host")!;
     const element = host.querySelector<HTMLElement>("m-slider")!;
     const root = element.shadowRoot!;
@@ -495,8 +492,7 @@ try {
     const window_ = window as unknown as { mount: (config: Record<string, unknown>, v: boolean) => void };
     window_.mount({ value: 20, step: 10, ticks: true }, false);
   });
-  await page.waitForTimeout(40);
-  const barWidth = () =>
+  await settle(page);const barWidth = () =>
     page.evaluate(() => {
       const handle = document.querySelector<HTMLElement>(".mtrl-slider [role=slider], [role=slider]")!;
       return {

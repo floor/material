@@ -7,6 +7,7 @@ import { readFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { type Page } from "playwright";
 import { launchChromium } from "./browser-profile";
+import { settle } from "./browser-settle";
 
 const entry = process.argv.includes("--base=base") ? "base" : "base-elements";
 const base = await readFile("dist/styles/base.css", "utf8");
@@ -84,10 +85,7 @@ try {
               if (level) el.setAttribute("data-theme-contrast", level);
               else el.removeAttribute("data-theme-contrast");
             }, level);
-            await target.evaluate(async () => {
-              await Promise.all(document.getAnimations().filter(a => a.effect?.getComputedTiming().endTime !== Infinity)
-                .map(a => a.finished.catch(() => {})));
-            });
+            await settle(target);
           }
           const expected = await measure(control), actual = await measure(page);
           assert.deepEqual(actual, expected, `${colorScheme}/${contrast}/${reducedMotion}/${level}: base behavior differs`);
@@ -119,6 +117,9 @@ try {
       await page.mouse.down();
       await wave.waitFor({ state: "attached" });
       const style = await wave.evaluate(async el => {
+        // The wave's own reveal: it lives in the button's shadow root, so it
+        // has no document selector to hand `settle`, and its animation is the
+        // press itself, which the pointer holds.
         await Promise.all(el.getAnimations().map(a => a.finished.catch(() => {})));
         const wave = getComputedStyle(el), container = getComputedStyle(el.parentElement!);
         return { opacity: wave.opacity, position: wave.position, transform: wave.transform,

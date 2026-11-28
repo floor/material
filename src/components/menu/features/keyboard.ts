@@ -1,7 +1,8 @@
 // src/components/menu/features/keyboard.ts
 
 import { createMenuTasks } from "./tasks";
-import { activeElementOf } from "../../../core/dom/focus";
+import { activeElementOf, deepActiveElement } from "../../../core/dom/focus";
+import { effectiveZoom } from "../../../core/dom/zoom";
 import {
   KeyboardActions,
   KeyboardMenuState,
@@ -111,6 +112,50 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     ) as HTMLElement[]).filter((item) => item.checkVisibility?.() !== false);
 
   /**
+   * Focuses an element inside the menu without scrolling the ancestors that
+   * hold the menu: in an explicit container, a native focus scroll moves the
+   * container and drags the menu with it, over its opener (measured: 120 to 40
+   * on open, 0 to 259 with the menu at the container's top). The menu's own
+   * list scrolls instead, only when the element is outside the list's box, so
+   * a keyboard move still reveals an item a capped menu had scrolled away.
+   */
+  const listOf = (menuElement: HTMLElement): HTMLElement =>
+    menuElement.querySelector<HTMLElement>(`.${component.getClass("menu__list")}`) ?? menuElement;
+
+  /**
+   * Whether the menu lives in an explicit container rather than the body. A
+   * container's focus scroll moves the container and the menu with it; the
+   * body and top-layer paths keep the browser's own behaviour, which they had
+   * before this change.
+   */
+  const inContainer = (menuElement: HTMLElement): boolean => {
+    // A top-layer menu keeps the browser's own focus behaviour whatever its
+    // parent: it is inserted next to its opener, so a nested opener's host is
+    // its parentElement and would read as an explicit container. The popover
+    // attribute is the marker — `:popover-open` is not asked of `matches()`,
+    // which throws on it in a DOM without the popover API (JSDOM 26).
+    if (menuElement.hasAttribute("popover")) return false;
+    const parent = menuElement.parentElement;
+    return !!parent && parent !== document.body && parent !== document.documentElement;
+  };
+
+  const focusInMenu = (element: HTMLElement, menuElement: HTMLElement): void => {
+    if (!inContainer(menuElement)) {
+      element.focus();
+      return;
+    }
+    element.focus({ preventScroll: true });
+    const list = listOf(menuElement);
+    const listRect = list.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
+    // The rects are in the viewport's pixels, scrollTop in the list's own:
+    // under a CSS zoom a 0.7-scaled list needs the distance divided back.
+    const zoom = effectiveZoom(list);
+    if (rect.top < listRect.top) list.scrollTop -= (listRect.top - rect.top) / zoom;
+    else if (rect.bottom > listRect.bottom) list.scrollTop += (rect.bottom - listRect.bottom) / zoom;
+  };
+
+  /**
    * Resets the typeahead search buffer
    */
   const resetTypeahead = (): void => {
@@ -132,7 +177,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     menuElement: HTMLElement,
     interactionType: "keyboard" | "mouse",
     openingEvent?: Event,
-  ): void => {
+  ): (() => void) | undefined => {
     // Reset typeahead when menu opens
     resetTypeahead();
 
@@ -165,9 +210,16 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // Opened with a key: focus an item, which is what the spec asks for and
     // what a person navigating by key expects to see marked
     // (m3.material.io menu accessibility, "Initial focus").
-    if (interactionType === "keyboard" && items.length > 0) {
-      target.focus();
-      return;
+    if (interactionType === "keyboard" && target) {
+      const before = deepActiveElement();
+      const beforeInRoot = activeElementOf(target);
+      focusInMenu(target, menuElement);
+      if (activeElementOf(target) === target) return;
+      return () => {
+        if (menuElement.contains(target) && activeElementOf(target) === beforeInRoot && deepActiveElement() === before) {
+          focusInMenu(target, menuElement);
+        }
+      };
     }
 
     // Opened with a pointer: focus the menu itself. Focus is still inside
@@ -175,7 +227,9 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // item is marked, and the first arrow press then lands on the first
     // item rather than stepping past it to the second.
     menuElement.setAttribute("tabindex", "-1");
-    menuElement.focus();
+    if (inContainer(menuElement)) menuElement.focus({ preventScroll: true });
+    else menuElement.focus();
+    return undefined;
   };
 
   /**
@@ -215,7 +269,7 @@ export const createKeyboardNavigation = (component: MenuFeatureHost) => {
     // Simplified focus function
     const focusItem = (index: number) => {
       if (items[index]) {
-        items[index].focus();
+        focusInMenu(items[index], menuElement);
       }
     };
 

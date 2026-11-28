@@ -40,7 +40,13 @@ type Row = {
 
 export async function checkSelectMenu(page: Page, api: "factory" | "factory-top" | "element"): Promise<void> {
   const rows = await page.evaluate(async (api) => {
-    const options = [{ id: "cat", text: "Cat" }, { id: "dog", text: "Dog" }];
+    // The selected option's label is long enough to reach the mark if the
+    // mark's room were not reserved: at zero reserve it truncates under the
+    // mark, which the clipped-text check catches (proven in the review).
+    const options = [
+      { id: "cat", text: "Cat, a selected option whose label is long enough to reach the trailing mark" },
+      { id: "dog", text: "Dog" },
+    ];
     const role = (name: string): string => {
       const probe = document.createElement("i");
       probe.style.color = `var(--mtrl-sys-color-${name})`;
@@ -110,9 +116,17 @@ export async function checkSelectMenu(page: Page, api: "factory" | "factory-top"
       const box = item.getBoundingClientRect();
       const style = getComputedStyle(item);
       const after = getComputedStyle(item, "::after");
+      // The mark's room is reserved on the content row, whose padding ends
+      // under the mark, while the label's own box stops 12px clear of it.
+      // Measure the option label's text and clip it to the label's box, the
+      // way the stylesheet clips it (overflow hidden, ellipsis): the item's
+      // padded content box is not text.
+      const label = item.querySelector(".mtrl-menu__item-label .mtrl-menu__item-text") ?? item.querySelector(".mtrl-menu__item-text") ?? item;
       const range = document.createRange();
-      range.selectNodeContents(item);
-      const text = range.getBoundingClientRect();
+      range.selectNodeContents(label);
+      const rawText = range.getBoundingClientRect();
+      const labelBox = label.getBoundingClientRect();
+      const text = { left: Math.max(rawText.left, labelBox.left), right: Math.min(rawText.right, labelBox.right) };
       // The mark's box, from its own used left, margin and width inside the item
       const left = box.left + parseFloat(after.left) + parseFloat(after.marginLeft);
       const right = left + parseFloat(after.width);
@@ -269,7 +283,7 @@ export async function checkSelectHiddenOptions(page: Page): Promise<void> {
       return !!state.select.element.querySelector(".mtrl-select__menu")?.classList.contains("mtrl-menu--visible");
     });
     // The active option is placed after the opening frame.
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(250); // stays: the active option is placed in the menu's opening task, a timer
     // A consumer hides an option with display: none.
     const hiddenDisplay = await page.evaluate((hidden) => {
       const state = window as unknown as { select: Combobox };
@@ -288,21 +302,21 @@ export async function checkSelectHiddenOptions(page: Page): Promise<void> {
     if (name === "selected") {
       // Close, and open again on the selected option, which is now hidden.
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(400); // stays: the active option is placed in the menu's opening task, a timer
       await page.keyboard.press("ArrowDown");
-      await page.waitForTimeout(250);
+      await page.waitForTimeout(250); // stays: the active option is placed in the menu's opening task, a timer
     }
     const opened = await read();
     assert.equal(opened, name === "selected" ? null : value,
       `select, ${name} option hidden: opening marks ${name === "selected" ? "no option" : `the shown selected option ${value}`} (${opened})`);
     for (const [key, expected] of keys) {
       await page.keyboard.press(key);
-      await page.waitForTimeout(120);
+      await page.waitForTimeout(120); // stays: the active option is placed in the menu's opening task, a timer
       const active = await read();
       assert.equal(active, expected, `select, ${name} option hidden: after ${key === "f" || key === "d" ? `typing ${key}` : key} the active option is ${expected} (${active})`);
     }
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(180);
+    await page.waitForTimeout(180); // stays: the active option is placed in the menu's opening task, a timer
     const after = await page.evaluate(() => {
       const state = window as unknown as { select: Combobox; changes: string[] };
       return { changes: state.changes.splice(0), value: state.select.getValue() };

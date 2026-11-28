@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>radios</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createRadios } from "../../../../dist/components/radios/index.js";
+await initPage({ name: "radios" });
+const main = document.getElementById("tp-main");
+
+const token = (role) => {
+  const probe = document.createElement("span");
+  probe.style.color = `var(--mtrl-sys-color-${role})`;
+  document.body.append(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return color;
+};
+
+const focusReadout = (root) => {
+  const inputs = [...root.querySelectorAll(".mtrl-radios__input")];
+  const press = root.querySelector(".mtrl-ripple");
+  if (!inputs.length) return "no radio";
+  const focused = inputs.find((input) => input.matches(":focus-visible"));
+  if (!focused) {
+    return press
+      ? "state layer present, and a press ripple is mounted — tab to a radio"
+      : "state layer present, no press ripple — tab to a radio";
+  }
+  const layer = focused.closest(".mtrl-radios__item")?.querySelector(".mtrl-radios__ripple");
+  if (!layer) return `${focused.value} focused, no state layer`;
+  const paint = getComputedStyle(layer);
+  const ring = paint.outlineColor === token("secondary") && paint.outlineWidth === "3px";
+  const fill = paint.backgroundColor !== "rgba(0, 0, 0, 0)" && paint.backgroundColor !== "transparent";
+  const parts = [
+    ring ? "focus ring" : "no focus ring",
+    fill ? "focus layer" : "no focus layer",
+    press ? "press ripple mounted" : "no press ripple",
+  ];
+  return `${focused.value}: ${parts.join(", ")}`;
+};
+
+const variants = section(main, "Variants & sizes");
+scenario(variants, {
+  title: "A group with the press ripple off",
+  lookFor: "the two radios, drawn with the state layer still in the control",
+  expected: "ripple: false leaves the state-layer span in place",
+  measure: () => {
+    const root = document.getElementById("radios-plain");
+    if (!root) return "no radios";
+    const layers = root.querySelectorAll(".mtrl-radios__ripple").length;
+    return `${layers} state layer${layers === 1 ? "" : "s"}`;
+  },
+  mount: (body) => {
+    const radios = createRadios({
+      name: "plain",
+      ripple: false,
+      options: [
+        { value: "a", label: "First" },
+        { value: "b", label: "Second" },
+      ],
+    });
+    radios.element.id = "radios-plain";
+    body.append(radios.element);
+  },
+});
+
+const states = section(main, "States");
+scenario(states, {
+  title: "Keyboard focus without a press ripple",
+  lookFor: "the secondary ring and the focus layer on the radio the keyboard is on",
+  expected: "ripple: false still paints the focus ring and the focus layer",
+  measure: () => {
+    const root = document.getElementById("radios-focus");
+    return root ? focusReadout(root) : "no radios";
+  },
+  mount: (body) => {
+    const radios = createRadios({
+      name: "focus",
+      ripple: false,
+      options: [
+        { value: "a", label: "First" },
+        { value: "b", label: "Second" },
+      ],
+    });
+    radios.element.id = "radios-focus";
+    body.append(radios.element);
+  },
+});
+
+const interaction = section(main, "Interaction");
+scenario(interaction, {
+  title: "Choosing one",
+  lookFor: "the selected radio",
+  expected: "one value is checked",
+  measure: () => {
+    const root = document.getElementById("radios-choice");
+    const checked = root?.querySelector(".mtrl-radios__input:checked");
+    return checked ? `checked ${checked.value}` : "nothing checked";
+  },
+  mount: (body) => {
+    const radios = createRadios({
+      name: "choice",
+      ripple: false,
+      options: [
+        { value: "a", label: "First" },
+        { value: "b", label: "Second" },
+      ],
+    });
+    radios.element.id = "radios-choice";
+    body.append(radios.element);
+  },
+});
+
+const edge = section(main, "Edge cases");
+scenario(edge, {
+  title: "The state layer is not the press ripple",
+  lookFor: "the layer span inside each control, and no press-ripple node",
+  expected: "ripple: false attaches no press ripple, and the layer span stays",
+  measure: () => {
+    const root = document.getElementById("radios-layer");
+    if (!root) return "no radios";
+    const layers = root.querySelectorAll(".mtrl-radios__ripple").length;
+    const press = root.querySelectorAll(".mtrl-ripple").length;
+    return `${layers} state layer${layers === 1 ? "" : "s"}, ${press} press ripple${press === 1 ? "" : "s"}`;
+  },
+  mount: (body) => {
+    const radios = createRadios({
+      name: "layer",
+      ripple: false,
+      options: [
+        { value: "a", label: "First" },
+        { value: "b", label: "Second" },
+      ],
+    });
+    radios.element.id = "radios-layer";
+    body.append(radios.element);
+  },
+});
+</script>
+</body>
+</html>
