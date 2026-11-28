@@ -73,6 +73,11 @@ const declaredItems = (host: Element, tag: string, active: string | null, sectio
     };
     if (children.length) {
       item.items = children;
+      if (child.hasAttribute("selectable") || child.hasAttribute("href")) {
+        item.selectable = true;
+        item.active = id === active;
+        item.href = child.getAttribute("href") ?? undefined;
+      }
       if (child.hasAttribute("expanded")) {
         collapsedDeclarations.delete(child);
         item.expanded = true;

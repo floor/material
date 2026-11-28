@@ -80,6 +80,10 @@ export const DRAWER_CLASSES = {
   ITEM_HEADER: "drawer__item--header",
   /** The icon button that opens and closes a section */
   ITEM_TOGGLE: "drawer__item-toggle",
+  /** A section header that is itself a destination */
+  ITEM_SELECTABLE: "drawer__item--selectable",
+  /** Holds a selectable header and its chevron button side by side */
+  ITEM_ROW: "drawer__item-row",
   /** Active indicator shape */
   ACTIVE_INDICATOR: "drawer__active-indicator",
   /** Dense/compact variant */

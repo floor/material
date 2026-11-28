@@ -15,6 +15,8 @@ let drawerCount = 0;
 const DEFAULT_CHEVRON = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>';
 const isDestination = (item: DrawerItemConfig) => item.type !== "divider" && item.type !== "section";
 const isSection = (item: DrawerItemConfig) => item.type !== "divider" && !!item.items?.length;
+/** A section that is also a destination: its header opens a page or runs an action. */
+const isSelectableSection = (item: DrawerItemConfig) => isSection(item) && (item.href !== undefined || item.selectable === true);
 const hasModifiers = (event: MouseEvent | KeyboardEvent) => event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
 const enabled = (element: HTMLElement) => !element.matches('[disabled], [aria-disabled="true"]');
 const visible = (element: HTMLElement) => enabled(element) && !element.closest("[inert], [hidden]");
@@ -38,7 +40,7 @@ interface Destination {
 }
 
 const initialActive = (items: DrawerItemConfig[]) =>
-  items.flatMap(item => isSection(item) ? item.items! : [item])
+  items.flatMap(item => isSection(item) ? (isSelectableSection(item) ? [item, ...item.items!] : item.items!) : [item])
     .find(item => isDestination(item) && item.active && !item.disabled)?.id || null;
 
 /**
@@ -274,12 +276,17 @@ export const withItems =
         }
         const active = !!activeId && item.id === activeId && !item.disabled;
         const element = createItemElement({ ...item, active }, cls);
-        const index = destinations.length;
-        element.dataset.navIndex = String(index);
         if (parent) {
           element.classList.add(cls(DRAWER_CLASSES.ITEM_CHILD));
           element.dataset.parentId = parent.id;
         }
+        wireDestination(item, element, parent);
+        container.append(element);
+      };
+
+      function wireDestination(item: DrawerItemConfig, element: HTMLElement, parent?: Section): void {
+        const index = destinations.length;
+        element.dataset.navIndex = String(index);
         destinations.push({ item, element, parent });
         element.addEventListener("click", (event) => {
           if (item.disabled) {
@@ -293,8 +300,7 @@ export const withItems =
           component.emit(DRAWER_EVENTS.SELECT, detail);
         });
         mountRipple(element, item.disabled);
-        container.append(element);
-      };
+      }
 
       currentItems.forEach((item, index) => {
         if (!isSection(item)) {
@@ -322,9 +328,16 @@ export const withItems =
         // The header is a label; only its chevron is a control, an icon
         // button with its own state layer (Google's own consoles draw
         // sections this way). A section has no page of its own.
-        const header = createItemElement({ ...item, id, label, href: undefined, active: false }, cls, true);
+        // A selectable section's header is a destination of its own (a link
+        // or a button that selects it); the chevron then sits beside it,
+        // not inside it, since a control cannot hold another control.
+        const selectable = isSelectableSection(item);
+        const selfActive = selectable && !!activeId && activeId === id && !item.disabled;
+        const header = selectable
+          ? createItemElement({ ...item, id, label, items: undefined, active: selfActive }, cls)
+          : createItemElement({ ...item, id, label, href: undefined, active: false }, cls, true);
         header.id = `${prefix}-header`;
-        header.classList.add(cls(DRAWER_CLASSES.ITEM_EXPANDABLE), cls(DRAWER_CLASSES.ITEM_HEADER));
+        header.classList.add(cls(DRAWER_CLASSES.ITEM_EXPANDABLE), cls(selectable ? DRAWER_CLASSES.ITEM_SELECTABLE : DRAWER_CLASSES.ITEM_HEADER));
         const button = document.createElement("button");
         button.type = "button";
         button.id = `${prefix}-btn`;
@@ -340,7 +353,12 @@ export const withItems =
         chevron.setAttribute("aria-hidden", "true");
         setHTML(chevron, chevronMarkup);
         button.append(chevron);
-        header.append(button);
+        let row: HTMLElement = header;
+        if (selectable) {
+          row = document.createElement("div");
+          row.className = cls(DRAWER_CLASSES.ITEM_ROW);
+          row.append(header, button);
+        } else header.append(button);
 
         const panel = document.createElement("div");
         panel.className = cls(DRAWER_CLASSES.GROUP_ITEMS);
@@ -351,11 +369,12 @@ export const withItems =
         const inner = document.createElement("div");
         inner.className = cls(DRAWER_CLASSES.GROUP_ITEMS_INNER);
         panel.append(inner);
-        group.append(header, panel);
+        group.append(row, panel);
         itemsContainer.append(group);
 
         const section: Section = { id, index, label, group, header, button, panel, expanded: false };
         sections.set(id, section);
+        if (selectable) wireDestination({ ...item, id, label, items: undefined }, header);
         item.items!.forEach(child => renderItem(child, inner, section));
         const active = !!activeId && item.items!.some(child => isDestination(child) && !child.disabled && child.id === activeId);
         paintParent(section, active);
@@ -424,7 +443,7 @@ export const withItems =
           const opens = key === (itemsContainer.matches(":dir(rtl)") ? "ArrowLeft" : "ArrowRight");
           const section = sections.get(current.dataset.id ?? "");
           const parent = sections.get(current.dataset.parentId ?? "");
-          if (section?.button === current) {
+          if (section && (section.button === current || section.header === current)) {
             event.preventDefault();
             if (opens && section.expanded) visibleItems(section.panel)[0]?.focus();
             else setExpanded(section, opens, event);

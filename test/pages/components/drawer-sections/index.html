@@ -45,7 +45,7 @@ const icon = {
 const consoleItems = (active) => [
   { id: "overview", label: "Overview", icon: icon.home },
   { id: "insights", label: "Insights", icon: icon.bulb },
-  { id: "performance", label: "Performance", icon: icon.trend, items: [
+  { id: "performance", label: "Performance", icon: icon.trend, selectable: true, items: [
     { id: "genai", label: "Generative AI", icon: icon.trend },
   ] },
   { id: "inspection", label: "URL inspection", icon: icon.search },
@@ -79,7 +79,7 @@ const consoleItems = (active) => [
 const consoleMarkup = (active) => `
   <m-drawer-item value="overview">Overview</m-drawer-item>
   <m-drawer-item value="insights">Insights</m-drawer-item>
-  <m-drawer-item value="performance">Performance
+  <m-drawer-item value="performance" selectable>Performance
     <m-drawer-item value="genai">Generative AI</m-drawer-item>
   </m-drawer-item>
   <m-drawer-item value="inspection">URL inspection</m-drawer-item>
@@ -98,11 +98,12 @@ const consoleMarkup = (active) => `
   <m-drawer-item value="links">Links</m-drawer-item>
   <m-drawer-item value="settings">Settings</m-drawer-item>`;
 
-const mount = (box, { active, log }) => {
+const mount = (box, { active, log, dense = false }) => {
   box.replaceChildren();
   if (form === "element") {
     const el = document.createElement("m-drawer");
     el.setAttribute("open", "");
+    if (dense) el.setAttribute("dense", "");
     el.setAttribute("value", active);
     el.innerHTML = consoleMarkup(active);
     for (const type of ["select", "expand", "collapse"]) {
@@ -111,7 +112,7 @@ const mount = (box, { active, log }) => {
     box.append(el);
     return el;
   }
-  const drawer = createDrawer({ variant: "standard", open: true, items: consoleItems(active) });
+  const drawer = createDrawer({ variant: "standard", open: true, dense, items: consoleItems(active) });
   for (const type of ["select", "expand", "collapse"]) {
     drawer.on(type, (detail) => { if (log) log.textContent = `${type} ${detail.id}${type === "select" ? "" : ` expanded=${detail.expanded}`}`; });
   }
@@ -136,12 +137,13 @@ await initPage({
 const interaction = section(host(), "Interaction");
 
 const mainBox = document.createElement("div");
+const denseBox = document.createElement("div");
 const mainLog = document.createElement("p");
 mainLog.className = "ds-log";
 scenario(interaction, {
   title: "A drawer like Search Console's",
-  lookFor: "hover a section header's text (Indexing, Experience…), then its chevron; hover a child row (Pages); click a chevron; Tab to a chevron and press Enter, Space, Left and Right",
-  expected: "the header text gives no feedback and keeps the arrow cursor; only the chevron shows a round 40 px state layer and the hand cursor, and only it opens or closes the section; a child row shows the full-width hover layer; the chevron takes the keyboard focus ring",
+  lookFor: "left: the default drawer; right: the same drawer with dense. Hover a section header's text (Indexing, Experience…), then its chevron; hover a child row (Pages); click a chevron; click Performance itself; Tab to a chevron and press Enter, Space, Left and Right",
+  expected: "the header text gives no feedback and keeps the arrow cursor; only the chevron shows a round 40 px state layer and the hand cursor, and only it opens or closes the section; Performance is a page of its own: hovering its row shows the row layer, clicking it selects it (pill, a select event in the log), and its chevron still opens and closes it; dense rows are 36 px with the same chevron button",
   measure: () => {
     const r = root(mainBox);
     const toggle = r.querySelector('[data-id="indexing"].mtrl-drawer__item-toggle');
@@ -153,9 +155,12 @@ scenario(interaction, {
   mount: (body) => {
     const frame = document.createElement("div");
     frame.className = "ds-frame";
-    frame.append(mainBox);
+    frame.append(mainBox, denseBox);
     body.append(frame, mainLog);
-    const paint = () => mount(mainBox, { active: "breadcrumbs", log: mainLog });
+    const paint = () => {
+      mount(mainBox, { active: "breadcrumbs", log: mainLog });
+      mount(denseBox, { active: "breadcrumbs", log: mainLog, dense: true });
+    };
     painters.add(paint);
     paint();
   },

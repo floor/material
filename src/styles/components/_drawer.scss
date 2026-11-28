@@ -495,7 +495,7 @@ $default-width: 360px;
         // no weight change. Hover and press still give their own feedback on
         // top — their rules are more specific, so the pressed and focused
         // opacities win over this floor.
-        &--has-active:not(&--header) .#{$component}__active-indicator::after {
+        &--has-active:not(&--header, &--selectable) .#{$component}__active-indicator::after {
             opacity: v.state("hover-state-layer-opacity");
         }
 
@@ -508,7 +508,8 @@ $default-width: 360px;
             cursor: default;
         }
 
-        &--header#{&}--has-active:not(#{&}--expanded) {
+        &--header#{&}--has-active:not(#{&}--expanded),
+        &--selectable#{&}--has-active:not(#{&}--expanded) {
             color: t.color("on-secondary-container");
 
             .#{$component}__active-indicator::before {
@@ -601,7 +602,7 @@ $default-width: 360px;
     // A section header without an icon is a title for its group, as in
     // Google's consoles: its rows line up with the top-level rows instead of
     // stepping in. A header with an icon keeps the child indent.
-    &__group:not(:has(> &__item--header > &__item-icon)) > &__group-items &__item--child {
+    &__group:not(:has(> &__item--header > &__item-icon, > &__item-row > &__item > &__item-icon)) > &__group-items &__item--child {
         margin-inline-start: 12px;
         width: calc(100% - 24px);
     }
@@ -634,8 +635,34 @@ $default-width: 360px;
         }
     }
 
-    &__item--expanded &__item-chevron {
+    &__item--expanded &__item-chevron,
+    &__item--expanded + &__item-toggle &__item-chevron {
         transform: rotate(180deg);
+    }
+
+    // A selectable section: its header is a full row destination, and the
+    // chevron button sits over the row's end, beside the header rather than
+    // inside it. The label stops short of the button.
+    &__item-row {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+
+        > .#{$component}__item-toggle {
+            position: absolute;
+            top: 50%;
+            inset-inline-end: 22px;
+            margin: 0;
+            transform: translateY(-50%);
+        }
+    }
+
+    &__item--selectable {
+        padding-inline-end: 56px;
+    }
+
+    &__group--expanded > &__item-row {
+        margin-block-end: 1px;
     }
 
     &__item-badge + &__item-chevron,
@@ -705,7 +732,9 @@ $default-width: 360px;
         }
     }
 
-    &__item--header#{&}__item--has-active:not(#{&}__item--expanded) &__item-toggle {
+    &__item--header#{&}__item--has-active:not(#{&}__item--expanded) &__item-toggle,
+    &__item--selectable#{&}__item--has-active:not(#{&}__item--expanded) + &__item-toggle,
+    &__item--selectable#{&}__item--active + &__item-toggle {
         color: t.color("on-secondary-container");
     }
 
