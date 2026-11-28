@@ -8,7 +8,14 @@ const themeChangeCallbacks = new Set<ThemeChangeCallback>();
 let themeObserver: MutationObserver | null = null;
 
 /**
- * Setup observer for theme changes anywhere in the document
+ * Setup observer for theme changes anywhere in the document.
+ *
+ * It needs no cleanup when the page goes away: the observer is collected with
+ * its document. It used to be disconnected, and every callback dropped, on
+ * `pagehide`; a page restored from the back/forward cache keeps running, and
+ * from then on nothing in it heard a theme change. That listener was also
+ * registered when the module was imported, which the package's `sideEffects`
+ * does not declare.
  */
 const setupThemeObserver = (): void => {
   if (themeObserver) return; // Already set up
@@ -86,7 +93,9 @@ const readVar = (name: string, element?: Element | null): string => {
  * @param {number} [options.alpha] - Alpha value (0-1): a hex colour is returned as rgba()
  * @param {string} [options.fallback] - Fallback color if variable is not found
  * @param {Element} [options.element] - Element whose theme to read; used when it is in a document
- * @param {ThemeChangeCallback} [options.onThemeChange] - Optional callback for theme changes
+ * @param {ThemeChangeCallback} [options.onThemeChange] - Deprecated: a callback for theme
+ *   changes that cannot be removed again, since this function returns the colour. Call
+ *   `onThemeChange(callback)` instead and keep the function it returns.
  * @returns {string} The color value (hex, rgb, or rgba)
  *
  * The themes declare no `--<prefix>-sys-color-*-rgb` twins, and material 3.0.0
@@ -97,12 +106,11 @@ const readVar = (name: string, element?: Element | null): string => {
  * getThemeColor('sys-color-primary') // '#006493' (from active theme)
  * 
  * // With theme change notification
- * getThemeColor('sys-color-primary', {
- *   onThemeChange: () => {
- *     // Re-render or update component
- *     component.update();
- *   }
- * });
+ * const paint = () => { surface.color = getThemeColor('sys-color-primary'); };
+ * const stop = onThemeChange(paint);
+ * paint();
+ * // and when the component is destroyed
+ * stop();
  */
 export function getThemeColor(
   varName: string, 
@@ -110,10 +118,16 @@ export function getThemeColor(
     alpha?: number, 
     fallback?: string,
     element?: Element | null,
+    /**
+     * @deprecated The subscription this makes cannot be removed. Use
+     * `onThemeChange(callback)`, which returns its removal.
+     */
     onThemeChange?: ThemeChangeCallback 
   }
 ): string {
-  // Register theme change callback if provided
+  // Register theme change callback if provided. The same function is held
+  // once however often it is passed; a new function on each call is one more
+  // callback that nothing can remove, which is why the option is deprecated.
   if (options?.onThemeChange) {
     onThemeChange(options.onThemeChange);
   }
@@ -132,16 +146,3 @@ export function getThemeColor(
 
   return value;
 }
-
-// Cleanup observer when the page goes away. pagehide, not unload: an unload
-// listener is deprecated in Chrome, reported as a permissions policy
-// violation, and keeps the page out of the back/forward cache.
-if (typeof window !== 'undefined') {
-  window.addEventListener('pagehide', () => {
-    if (themeObserver) {
-      themeObserver.disconnect();
-      themeObserver = null;
-    }
-    themeChangeCallbacks.clear();
-  });
-} 

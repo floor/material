@@ -1,0 +1,3 @@
+Section: Fixed
+
+**Theme changes after a back/forward restore.** `onThemeChange` keeps working on a page restored from the back/forward cache: a `pagehide` listener disconnected the theme observer and dropped every callback, so a restored page no longer repainted its canvases (progress, loading indicator) on a theme change. That listener was registered when `material/core/utils` was imported; importing the module now does nothing. The `onThemeChange` option of `getThemeColor` is deprecated, because the subscription it makes cannot be removed: call `onThemeChange(callback)` and keep the function it returns. The option still works.
