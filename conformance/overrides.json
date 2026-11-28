@@ -192,6 +192,24 @@
       "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/BottomSheetScaffold.kt#L342"
     }
   },
+  "button-group/button-height/connected/s/density-minus-3": {
+    "reason": "The group follows the 28 dp height of its small buttons at density −3.",
+    "spec": {
+      "value": "28dp",
+      "url": "https://m3.material.io/components/button-groups/specs",
+      "section": "Density",
+      "read": "2026-11-28"
+    }
+  },
+  "button-group/button-height/standard/s/density-minus-3": {
+    "reason": "The group follows the 28 dp height of its small buttons at density −3.",
+    "spec": {
+      "value": "28dp",
+      "url": "https://m3.material.io/components/button-groups/specs",
+      "section": "Density",
+      "read": "2026-11-28"
+    }
+  },
   "button-group/gap/connected": {
     "reason": "The website gives the connected group spacing.",
     "spec": {
@@ -250,7 +268,7 @@
     }
   },
   "button/corner/square-s/selected": {
-    "reason": "This is the selected radius of the small square toggle. The previous radius is retained for the resting small square.",
+    "reason": "The pinned Compose selected-square token takes precedence for the small toggle.",
     "compose": {
       "value": "CornerMedium",
       "file": "ButtonSmallTokens.kt",
@@ -295,9 +313,18 @@
     "reason": "The website applies three 4 dp density steps to the 40 dp button.",
     "spec": {
       "value": "28dp",
-      "url": "https://m3.material.io/m3/pages/grids-spacing/density",
+      "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
       "section": "Density",
-      "read": "2026-11-26"
+      "read": "2026-11-28"
+    }
+  },
+  "button/hit-target-height/filled-s/density-minus-3": {
+    "reason": "The visible button shrinks with density and the hit area remains centred.",
+    "spec": {
+      "value": "48dp minimum",
+      "url": "https://m3.material.io/components/buttons/specs",
+      "section": "Target areas",
+      "read": "2026-11-28"
     }
   },
   "button/icon-label-gap/xs": {

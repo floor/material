@@ -157,6 +157,12 @@
   @return string.unquote('max(#{$floor}, #{$value})');
 }
 
+// Small buttons reach 28dp at density -3. The other sizes keep their floor.
+@function button-density-floor($size) {
+  @if $size == 's' { @return 28px; }
+  @return 32px;
+}
+
 // Density for a container already under the target at 0: the narrow xs icon
 // button is 28dp, and a plain 32dp floor would widen it at density 0. The
 // floor is the base itself when the base is the smaller of the two, so only a

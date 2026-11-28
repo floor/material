@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>button-group</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createButtonGroup } from "../../../../dist/components/button-group/index.js";
+await initPage({ name: "button-group" });
+const main = document.getElementById("tp-main");
+const variants = section(main, "Variants & sizes");
+
+for (const kind of ["standard", "connected"]) {
+  const samples = [];
+  scenario(variants, {
+    title: `Small ${kind} groups at four densities`,
+    lookFor: "both the group and its buttons follow the inherited density",
+    expected: "40, 36, 32 and 28 px tall, with a 48 px hit area on each button",
+    mount: (body) => {
+      for (const density of [0, -1, -2, -3]) {
+        const row = Object.assign(document.createElement("div"), { className: "tp-row" });
+        row.style.setProperty("--mtrl-density", String(density));
+        const label = Object.assign(document.createElement("span"), { textContent: `Density ${density}` });
+        const { element } = createButtonGroup({ kind, size: "s", buttons: [{ text: "Copy" }, { text: "Paste" }] });
+        samples.push({ density, group: element, button: element.querySelector(".mtrl-button") });
+        row.append(label, element);
+        body.append(row);
+      }
+    },
+    measure: () => samples.map(({ density, group, button }) =>
+      `${density} · group ${group.getBoundingClientRect().height} px · button ${button.getBoundingClientRect().height} px · ${getComputedStyle(button, "::after").height} hit area`,
+    ).join(" / "),
+  });
+}
+</script>
+</body>
+</html>

@@ -203,6 +203,7 @@
     ".mtrl-button-group--labels-selected>.mtrl-button .mtrl-button__text",
     ".mtrl-button-group--labels-selected>.mtrl-button-group__button--selected",
     ".mtrl-button-group--labels-selected>.mtrl-button-group__button--selected .mtrl-button__text",
+    ".mtrl-button-group--size-s",
     ".mtrl-button-group--vertical",
     ".mtrl-button-group>.mtrl-button,.mtrl-button-group>.mtrl-icon-button",
     ".mtrl-button-group>.mtrl-button:active,.mtrl-button-group>.mtrl-icon-button:active",
