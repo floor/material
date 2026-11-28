@@ -35,37 +35,50 @@ export const throttle = <T extends (...args: never[]) => unknown>(
 ): Cancellable<(...args: Parameters<T>) => void> => {
   let timeout: number | null = null;
   let previous = 0;
+  // The call the trailing edge makes: the last one of the window, not the
+  // one that started the timer.
+  let lastArgs: Parameters<T> | null = null;
+  let lastThis: unknown = null;
   const { leading = true, trailing = true } = options;
-  
+
   const throttled = function(this: unknown, ...args: Parameters<T>): void {
     const now = Date.now();
-    
+
     if (!previous && !leading) {
       previous = now;
     }
-    
+
     const remaining = wait - (now - previous);
-    
+
     if (remaining <= 0 || remaining > wait) {
       if (timeout) {
         clearTimeout(timeout);
         timeout = null;
       }
-      
+
       previous = now;
+      lastArgs = lastThis = null;
       fn.apply(this, args);
-    } else if (!timeout && trailing) {
-      timeout = window.setTimeout(() => {
-        previous = leading ? Date.now() : 0;
-        timeout = null;
-        fn.apply(this, args);
-      }, remaining);
+    } else if (trailing) {
+      lastArgs = args;
+      lastThis = this;
+      if (!timeout) {
+        timeout = window.setTimeout(() => {
+          const pendingArgs = lastArgs as Parameters<T>;
+          const pendingThis = lastThis;
+          previous = leading ? Date.now() : 0;
+          timeout = null;
+          lastArgs = lastThis = null;
+          fn.apply(pendingThis, pendingArgs);
+        }, remaining);
+      }
     }
   };
   return Object.assign(throttled, { cancel() {
     if (timeout !== null) clearTimeout(timeout);
     timeout = null;
     previous = 0;
+    lastArgs = lastThis = null;
   } });
 };
 
@@ -81,7 +94,7 @@ export const throttle = <T extends (...args: never[]) => unknown>(
  * @param {number} wait - The number of milliseconds to delay
  * @param {Object} options - Configuration options
  * @param {boolean} options.leading - Specify invoking on the leading edge of the timeout (default: false)
- * @param {boolean} options.maxWait - Maximum time function can be delayed before execution in milliseconds
+ * @param {number} options.maxWait - Maximum time function can be delayed before execution in milliseconds
  * @returns {Function} The debounced function
  *
  * @example
@@ -102,96 +115,84 @@ export const debounce = <T extends (...args: never[]) => unknown>(
   let timeout: number | null = null;
   let lastArgs: Parameters<T> | null = null;
   let lastThis: unknown = null;
-  let result: ReturnType<T>;
   let lastCallTime: number | null = null;
   let lastInvokeTime = 0;
-  
+
   const { leading = false, maxWait } = options;
-  
-  // Calculate if max wait specified
+
+  // Whether the wait is over at `time`: no call is pending a quiet interval,
+  // the interval since the last call has passed (or the clock went back), or
+  // the calls have held the function back for maxWait.
   const shouldInvoke = (time: number): boolean => {
-    const timeSinceLastCall = time - (lastCallTime || 0);
-    const timeSinceLastInvoke = time - lastInvokeTime;
-    
+    if (lastCallTime === null) return true;
+    const timeSinceLastCall = time - lastCallTime;
+
     return (
-      !lastCallTime ||
       timeSinceLastCall >= wait ||
       timeSinceLastCall < 0 ||
-      (maxWait !== undefined && timeSinceLastInvoke >= maxWait)
+      (maxWait !== undefined && time - lastInvokeTime >= maxWait)
     );
   };
-  
-  // Function to invoke the original function
-  const invokeFunc = (time: number): ReturnType<T> => {
+
+  // How long the timer still has to run at `time`: what is left of the quiet
+  // interval after the last call, bounded by what is left of maxWait.
+  const remainingWait = (time: number): number => {
+    const quiet = wait - (time - (lastCallTime as number));
+    return maxWait === undefined ? quiet : Math.min(quiet, maxWait - (time - lastInvokeTime));
+  };
+
+  const invokeFunc = (time: number): void => {
     const args = lastArgs as Parameters<T>;
     const thisArg = lastThis;
-    
+
     lastArgs = lastThis = null;
     lastInvokeTime = time;
-    
-    // `fn` is `T`, so this genuinely returns `ReturnType<T>`; TypeScript
-    // cannot prove it through the generic once strictBindCallApply types
-    // `apply` precisely, and widens to unknown.
-    result = fn.apply(thisArg, args) as ReturnType<T>;
-    return result;
+    fn.apply(thisArg, args);
   };
-  
-  // Function to handle a new call
-  const trailingEdge = (time: number): ReturnType<T> => {
-    timeout = null;
-    
-    if (lastArgs) {
-      return invokeFunc(time);
+
+  // The timer measures from the call that started it. A call that came since
+  // moved the end of the quiet interval, so the timer runs on for what is
+  // left of it; before, it fired here, a wait after the first call of a burst.
+  const timerExpired = (): void => {
+    const time = Date.now();
+    if (!shouldInvoke(time)) {
+      timeout = window.setTimeout(timerExpired, remainingWait(time));
+      return;
     }
-    
-    return result;
+    timeout = null;
+    // Only if a call came since the last invocation: a leading call alone
+    // is not made twice.
+    if (lastArgs) invokeFunc(time);
   };
-  
-  // Check if we should invoke immediately (leading edge)
-  const leadingEdge = (time: number): ReturnType<T> => {
-    lastInvokeTime = time;
-    
-    // Start the timeout for the trailing edge
-    timeout = window.setTimeout(() => {
-      trailingEdge(Date.now());
-    }, wait);
-    
-    return leading ? invokeFunc(time) : result;
-  };
-  
-  // Main debounced function to return
-  const debounced = function(this: unknown, ...args: Parameters<T>): ReturnType<T> {
+
+  const debounced = function(this: unknown, ...args: Parameters<T>): void {
     const time = Date.now();
     const isInvoking = shouldInvoke(time);
-    
+
     lastArgs = args;
     lastThis = this;
     lastCallTime = time;
-    
+
     if (isInvoking) {
       if (timeout === null) {
-        return leadingEdge(time);
+        // The first call of a burst: the wait starts here.
+        lastInvokeTime = time;
+        timeout = window.setTimeout(timerExpired, wait);
+        if (leading) invokeFunc(time);
+        return;
       }
-      
       if (maxWait !== undefined) {
-        // Handle maxWait timing
+        // maxWait ran out while the timer was still pending.
         window.clearTimeout(timeout);
-        timeout = window.setTimeout(() => {
-          const timeNow = Date.now();
-          if (shouldInvoke(timeNow)) {
-            return trailingEdge(timeNow);
-          }
-        }, Math.min(wait, maxWait - (time - lastInvokeTime)));
+        timeout = window.setTimeout(timerExpired, wait);
+        invokeFunc(time);
+        return;
       }
     }
-    
+
     if (timeout === null) {
-      timeout = window.setTimeout(() => {
-        trailingEdge(Date.now());
-      }, wait);
+      timeout = window.setTimeout(timerExpired, wait);
     }
-    
-    return result;
   };
   return Object.assign(debounced, { cancel() {
     if (timeout !== null) window.clearTimeout(timeout);
