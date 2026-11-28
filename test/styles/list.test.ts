@@ -88,7 +88,7 @@ describe('list stylesheet: segmented', () => {
   });
   test('a row paints its own container colour: --mtrl-list-item-container-color', () => {
     expect(declared(`${SEG} > ${ITEM}:not(.mtrl-list__item--selected)`, 'background'))
-      .toBe('var(--mtrl-list-item-container-color, var(--mtrl-sys-color-surface))');
+      .toBe('var(--mtrl-list-item-container-color, var(--mtrl-sys-color-surface-container))');
     expect(declared('.mtrl-list__item--selected', 'background')).toBe('var(--mtrl-sys-color-secondary-container)');
   });
   test('every row has 10dp of its own top and bottom space whatever its lines', () => {

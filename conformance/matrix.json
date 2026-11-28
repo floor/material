@@ -7054,17 +7054,17 @@
             }
           },
           "material": {
-            "value": "Surface",
+            "value": "SurfaceContainer",
             "engines": null,
             "resolved": {
-              "light": "#FEF7FF",
-              "dark": "#141218",
-              "seed": "#F5FBF5"
+              "light": "#F3EDF7",
+              "dark": "#211F26",
+              "seed": "#EAEFEA"
             }
           },
           "status": {
-            "spec": "match",
-            "compose": "match"
+            "spec": "drift",
+            "compose": "drift"
           },
           "note": "The released segmented list uses its dedicated container colour.",
           "issue": null

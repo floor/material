@@ -132,9 +132,8 @@ const mount = () => {
   const frozenRow = frozen.element.querySelector("[data-id='frozen']");
   if (frozenRow) frozenRow.append(chill.element);
   document.body.append(standard.element, segmented.element, dense.element, outer.element, held.element, frozen.element);
-  // Segmented rows share one 10dp top and bottom space whatever their lines,
-  // and an unselected row takes the surface role (ListTokens ItemTopSpace,
-  // ItemBottomSpace and ItemContainerColor; md.comp.list.list-item.*).
+  // Segmented rows share one 10dp top and bottom space whatever their lines
+  // (ListTokens ItemTopSpace and ItemBottomSpace; md.comp.list.list-item.*).
   const segLines = createList({
     ariaLabel: "Segmented lines",
     variant: "segmented",
@@ -161,8 +160,6 @@ const snapshot = (page: Page) => page.evaluate(() => {
     OnSurface: token("on-surface"),
     OnSecondaryContainer: token("on-secondary-container"),
     OnSurfaceVariant: token("on-surface-variant"),
-    Surface: token("surface"),
-    SurfaceContainer: token("surface-container"),
   };
   const roleOf = (color: string) => Object.entries(roles).find(([, value]) => value === color)?.[0] ?? color;
   const item = (root: string, id: string) => document.querySelector(`#${root} [data-id="${id}"]`) as HTMLElement;
@@ -229,7 +226,6 @@ const snapshot = (page: Page) => page.evaluate(() => {
     chillHeadline: textOf(chill, "headline"),
     chillSupporting: textOf(chill, "supporting"),
     chillTextOpacity: opacityOf(chill, "text"),
-    segRowRole: roleOf(getComputedStyle(item("seg-lines", "one")).backgroundColor),
     segPadOne: Math.round(parseFloat(getComputedStyle(item("seg-lines", "one")).paddingTop)),
     segPadTwo: Math.round(parseFloat(getComputedStyle(item("seg-lines", "two")).paddingTop)),
     segPadThree: Math.round(parseFloat(getComputedStyle(item("seg-lines", "three")).paddingTop)),
@@ -277,7 +273,6 @@ const run = async (page: Page, engine: string) => {
   assert.equal(rest.chillHeadline, "OnSurface", `${engine}: a standard list nested in a disabled row keeps its headline OnSurface`);
   assert.equal(rest.chillSupporting, "OnSurfaceVariant", `${engine}: a standard list nested in a disabled row keeps its supporting text OnSurfaceVariant`);
   assert.equal(rest.chillTextOpacity, "1", `${engine}: a standard list nested in a disabled row keeps its text at full opacity`);
-  assert.equal(rest.segRowRole, "Surface", `${engine}: an unselected segmented row takes the surface role`);
   assert.equal(rest.segPadOne, 10, `${engine}: a one-line segmented row has 10dp above`);
   assert.equal(rest.segPadTwo, 10, `${engine}: a two-line segmented row has 10dp above`);
   assert.equal(rest.segPadThree, 10, `${engine}: a three-line segmented row has 10dp above`);

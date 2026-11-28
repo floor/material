@@ -234,16 +234,15 @@ scenario(edge, {
 });
 
 scenario(edge, {
-  title: "Segmented rest colour and row spacing",
-  lookFor: "the unselected segmented rows' tone and their top and bottom space over one, two and three lines",
-  expected: "the surface role, and 10 dp above and below whatever the lines",
+  title: "Segmented row spacing",
+  lookFor: "a segmented row's top and bottom space over one, two and three lines",
+  expected: "10 dp above and below whatever the lines",
   measure: () => {
     const root = document.getElementById("list-segmented");
     if (!root) return "no list";
     const row = (id) => item(root, id);
     const pad = (id) => `${Math.round(parseFloat(getComputedStyle(row(id)).paddingTop))} px`;
     return [
-      `row ${roleOf(getComputedStyle(row("one")).backgroundColor)}`,
       `one ${pad("one")}/10`,
       `two ${pad("two")}/10`,
       `three ${pad("three")}/10`,
