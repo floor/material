@@ -26,6 +26,10 @@ $component: "#{base.$prefix}-list";
   --#{base.$prefix}-list-item-offset: 0px;
   position: relative;
   overflow: auto;
+  // The list fills the width it is given. In a block parent it already does;
+  // inside a flex row a block child lays out at its content width, which left
+  // the list at 146 of a 360px host.
+  width: 100%;
   color: t.color("on-surface");
   padding-block: 8px;
   &__content { display: flex; flex-direction: column; }
