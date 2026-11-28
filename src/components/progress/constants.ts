@@ -55,8 +55,17 @@ export const PROGRESS_COLORS = {
   INDICATOR: "sys-color-primary",
   TRACK: "sys-color-secondary-container",
   STOP: "sys-color-primary",
-  /** Not an M3 role: the buffer is this library's own extension */
-  BUFFER: "sys-color-primary-container",
+  /**
+   * The buffer is this library's own extension, not an M3 role. It reads as
+   * the on-surface role at a tint over the track (the tint lives in
+   * features/colors.ts, not in the public constants): primary-container sat at
+   * the track's own lightness (1.00:1 both schemes), so the buffer could not be
+   * seen; on-surface at 17% is 1.38-1.53:1 from the track and 3.04-10.24:1
+   * from the active indicator across the baseline, sunset, monochrome and a
+   * generated theme, light and dark, the sunset light pair the closest at
+   * 3.04:1 (the owner's 3:1 floor, 2026-11-25).
+   */
+  BUFFER: "sys-color-on-surface",
 } as const;
 
 export const PROGRESS_MEASUREMENTS = {

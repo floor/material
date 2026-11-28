@@ -21,19 +21,50 @@ export interface ProgressColors {
   buffer: string;
 }
 
+/**
+ * How much of the on-surface role the buffer carries over the track. The owner
+ * lightened it (2026-11-25): at 22% the sunset theme's light scheme put the
+ * buffer at 2.74:1 from the active indicator, under 3:1; 17% is the highest
+ * tint that clears 3:1 there (3.04:1, painted) while keeping the buffer at its
+ * most visible against the track (1.40:1 baseline light, 1.52:1 dark).
+ */
+const BUFFER_TINT = 0.17;
+
+/** A colour as `#rrggbb`, or null when it is a form this mix does not read */
+const parseHex = (color: string): [number, number, number] | null => {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim());
+  if (!hex) return null;
+  const digits = hex[1]!.length === 3 ? hex[1]!.split("").map((c) => c + c).join("") : hex[1]!;
+  return [0, 2, 4].map((i) => parseInt(digits.slice(i, i + 2), 16)) as [number, number, number];
+};
+
+/** `tint` of over mixed into under, opaque: the buffer's read on the track */
+const mix = (over: string, under: string, tint: number): string => {
+  const a = parseHex(over);
+  const b = parseHex(under);
+  if (!a || !b) return over;
+  const channel = (i: number): string => Math.round(a[i]! * tint + b[i]! * (1 - tint)).toString(16).padStart(2, "0");
+  return `#${channel(0)}${channel(1)}${channel(2)}`;
+};
+
 const FALLBACKS: ProgressColors = {
   indicator: "#6750A4",
   track: "#E8DEF8",
   stop: "#6750A4",
-  buffer: "#EADDFF",
+  buffer: mix("#1D1B20", "#E8DEF8", BUFFER_TINT),
 };
 
-const read = (element: Element): ProgressColors => ({
-  indicator: getThemeColor(PROGRESS_COLORS.INDICATOR, { element, fallback: FALLBACKS.indicator }),
-  track: getThemeColor(PROGRESS_COLORS.TRACK, { element, fallback: FALLBACKS.track }),
-  stop: getThemeColor(PROGRESS_COLORS.STOP, { element, fallback: FALLBACKS.stop }),
-  buffer: getThemeColor(PROGRESS_COLORS.BUFFER, { element, fallback: FALLBACKS.buffer }),
-});
+const read = (element: Element): ProgressColors => {
+  const track = getThemeColor(PROGRESS_COLORS.TRACK, { element, fallback: FALLBACKS.track });
+  return {
+    indicator: getThemeColor(PROGRESS_COLORS.INDICATOR, { element, fallback: FALLBACKS.indicator }),
+    track,
+    stop: getThemeColor(PROGRESS_COLORS.STOP, { element, fallback: FALLBACKS.stop }),
+    // The buffer's tint is painted over the track: the opaque equivalent keeps
+    // the canvas free of alpha compositing when the bar is drawn.
+    buffer: mix(getThemeColor(PROGRESS_COLORS.BUFFER, { element, fallback: "#1D1B20" }), track, BUFFER_TINT),
+  };
+};
 
 /**
  * Keeps the palette for one indicator, refreshed when the theme changes.
