@@ -314,8 +314,7 @@ $snap: 0s linear $midpoint;
     padding-inline: 0;
     block-size: 100dvh;
     background: t.color('surface-container');
-    // The modal rail's container, corner-large at the end, as the drawer's
-    @include d.corners($start-end: v.shape('large'), $end-end: v.shape('large'), $arm: false);
+    border-radius: v.shape('large');
     transition: inline-size $fast-spatial;
     @include m.elevation(2);
     &:not([open]) { display: none; }
@@ -334,15 +333,10 @@ $snap: 0s linear $midpoint;
       inline-size: calc(100% - #{140px + 2 * $content-gutter});
     }
 
-    // The modal docks at the start edge and its large corners follow it. One
-    // arm carries the whole mirrored form; the logical form needs none of it.
+    // The modal docks at the start edge.
     @include d.arms($self: true) {
       left: auto;
       right: 0;
-      border-top-left-radius: v.shape('large');
-      border-bottom-left-radius: v.shape('large');
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
     }
   }
 
