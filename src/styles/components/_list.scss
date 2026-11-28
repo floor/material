@@ -28,7 +28,7 @@ $component: "#{base.$prefix}-list";
   overflow: auto;
   // The list fills the width it is given. In a block parent it already does;
   // inside a flex row a block child lays out at its content width, which left
-  // the list at 146 of a 360px host.
+  // the list at 135 of a 360px host.
   width: 100%;
   color: t.color("on-surface");
   padding-block: 8px;
