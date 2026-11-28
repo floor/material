@@ -30,6 +30,14 @@ g.getComputedStyle = (element: Element) => {
 import { createBase, withElement } from "../../../src/core/compose/component";
 import { onDirectionChange, trackDirection, trackFactoryDirection } from "../../../src/core/dom/direction";
 
+// The roots that wait for a connection are one list for the module, and every
+// test file in the process shares the module: what other files left waiting
+// decides how soon a root here is reached. The tests that count callbacks use
+// a copy of the module and a document of their own. A variable, because the
+// type checker does not resolve a specifier that carries a query.
+const ownCopy = "../../../src/core/dom/direction?waiting";
+const own = await import(ownCopy) as typeof import("../../../src/core/dom/direction");
+
 // Every direction read of a factory root starts with one closest("[dir]").
 let reads = 0;
 const closest = dom.window.Element.prototype.closest;
@@ -320,17 +328,29 @@ describe("a factory root inside a shadow tree", () => {
     expect(marks(component.element)).toBe("mtrl-rtl");
   });
 
-  test("mounted in a later task, is read on the observer's next callback", async () => {
-    const { inner } = shadowed();
-    const component = create();
-    await settled();
-    inner.append(component.element);
-    await settled();
-    expect(marks(component.element)).toBe("");
+  /** A document of its own, with a closed shadow tree that holds a right-to-left section. */
+  const ownPage = (): { other: Document; inner: HTMLElement; root(): HTMLElement } => {
+    const other = document.implementation.createHTMLDocument("own");
+    const host = other.createElement("div");
+    const shadow = host.attachShadow({ mode: "closed" });
+    shadow.innerHTML = `<div dir="rtl"></div>`;
+    other.body.append(host);
+    return { other, inner: shadow.firstElementChild as HTMLElement, root: () => other.createElement("div") };
+  };
 
-    document.body.append(document.createElement("i"));
+  test("mounted in a later task, is read on the observer's next callback", async () => {
+    const { other, inner, root } = ownPage();
+    const element = root();
+    const release = own.trackFactoryDirection(element);
     await settled();
-    expect(marks(component.element)).toBe("mtrl-rtl");
+    inner.append(element);
+    await settled();
+    expect(marks(element)).toBe("");
+
+    other.body.append(other.createElement("i"));
+    await settled();
+    expect(marks(element)).toBe("mtrl-rtl");
+    release();
   });
 
   test("where scheduling is inert, the next callback sorts the task's roots out", async () => {
@@ -386,15 +406,16 @@ describe("a factory root inside a shadow tree", () => {
   });
 
   test("beside a pool kept detached, is read within a few callbacks, each checking a bounded share", async () => {
-    const { inner } = shadowed();
-    const pool = Array.from({ length: 40 }, () => create());
-    const late = create();
+    const { other, inner, root } = ownPage();
+    const pool = Array.from({ length: 40 }, root);
+    const late = root();
+    const releases = [...pool, late].map((element) => own.trackFactoryDirection(element));
     await settled();
 
     // Each callback checks sixteen waiting roots: count them by their
     // isConnected reads, which nothing else makes on a detached root.
     let checked = 0;
-    const watched = [...pool, late].map((component) => component.element);
+    const watched = [...pool, late];
     const isConnected = Object.getOwnPropertyDescriptor(dom.window.Node.prototype, "isConnected")!;
     Object.defineProperty(dom.window.Node.prototype, "isConnected", {
       configurable: true,
@@ -404,22 +425,23 @@ describe("a factory root inside a shadow tree", () => {
       },
     });
     try {
-      inner.append(late.element);
+      inner.append(late);
       const perCallback: number[] = [];
-      for (let callback = 0; callback < 4 && marks(late.element) === ""; callback++) {
+      for (let callback = 0; callback < 4 && marks(late) === ""; callback++) {
         checked = 0;
-        document.body.append(document.createElement("i"));
+        other.body.append(other.createElement("i"));
         await settled();
         perCallback.push(checked);
       }
-      expect(marks(late.element)).toBe("mtrl-rtl");
-      expect(perCallback.length).toBeGreaterThan(1);
+      // Forty-one wait and sixteen are checked per callback: the last one is
+      // reached by the third.
+      expect(marks(late)).toBe("mtrl-rtl");
+      expect(perCallback.length).toBe(3);
       expect(Math.max(...perCallback)).toBeLessThanOrEqual(17);
     } finally {
       Object.defineProperty(dom.window.Node.prototype, "isConnected", isConnected);
     }
-    pool.forEach((component) => component.destroy());
-    late.destroy();
+    releases.forEach((release) => release());
   });
 
   test("destroyed while it waits, is not read when its element is mounted", async () => {
