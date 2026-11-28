@@ -29,6 +29,14 @@
   .ds-events { margin: 16px 0 0; padding: 0; list-style: none; font: 12px/18px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--mtrl-sys-color-on-surface-variant); }
   .ds-steps { margin: 4px 0 16px; padding-inline-start: 20px; list-style: decimal; }
   .ds-steps li { margin: 2px 0; }
+  /* The comparison window puts the m3 site's child indent back on every
+     section, for the owner to compare with the aligned rows. */
+  .ds-indented .mtrl-drawer__group .mtrl-drawer__group-items .mtrl-drawer__item--child {
+    /* !important: the aligned rule's :has() selector outweighs any page
+       selector, and this window is only a comparison. */
+    margin-inline-start: calc(12px + var(--mtrl-drawer-child-indent, 12px)) !important;
+    width: calc(100% - 24px - var(--mtrl-drawer-child-indent, 12px)) !important;
+  }
 </style>
 </head>
 <body>
@@ -125,9 +133,9 @@ const toElement = (items) => items.map((item) => {
 }).join("");
 
 /** One app window: the drawer and the page it shows. */
-const appWindow = (caption, { active, dense = false, securityOpen = true }) => {
+const appWindow = (caption, { active, dense = false, securityOpen = true, indented = false }) => {
   const figure = document.createElement("figure");
-  figure.className = "ds-app";
+  figure.className = indented ? "ds-app ds-indented" : "ds-app";
   figure.innerHTML = `<figcaption>${caption}</figcaption>
     <div class="ds-window"><nav class="ds-nav" aria-label="${caption}"></nav>
     <main class="ds-page"><p class="ds-eyebrow">Current page</p><h4 class="ds-title"></h4><ul class="ds-events" aria-live="polite"></ul></main></div>`;
@@ -219,6 +227,28 @@ scenario(interaction, {
     defaultApp = appWindow("Default", { active: "breadcrumbs" });
     denseApp = appWindow("Dense", { active: "breadcrumbs", dense: true });
     apps.append(defaultApp.figure, denseApp.figure);
+    body.append(apps);
+  },
+});
+
+// ----------------------------------------------------------------------------
+const variants = section(host(), "Variants");
+
+scenario(variants, {
+  title: "Rows under a section title: aligned or indented",
+  lookFor: steps(
+    "Left: rows under a title without an icon (Pages under Indexing) line up with the top-level rows, as in Search Console.",
+    "Right: the same rows step in 12 px, as the drawer on m3.material.io does.",
+    "In both, Generative AI under Performance (a title with an icon) keeps the indent.",
+  ),
+  expected: "Pick the one that reads better: the left is the experiment's default.",
+  mount: (body) => {
+    const apps = document.createElement("div");
+    apps.className = "ds-apps";
+    apps.append(
+      appWindow("Aligned (Search Console)", { active: "sitemaps" }).figure,
+      appWindow("Indented (m3.material.io)", { active: "sitemaps", indented: true }).figure,
+    );
     body.append(apps);
   },
 });
