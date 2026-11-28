@@ -23,7 +23,10 @@ dom.window.addEventListener = function (this: Window, type: string, ...rest: unk
   return (addEventListener as (...args: unknown[]) => void).call(this, type, ...rest);
 } as typeof addEventListener;
 
-const { onThemeChange } = await import("../../src/core/utils/theme?page-life") as typeof import("../../src/core/utils/theme");
+// The query makes it a separate module instance; a variable, because the
+// type checker does not resolve a specifier that carries one.
+const ownCopy = "../../src/core/utils/theme?page-life";
+const { onThemeChange } = await import(ownCopy) as typeof import("../../src/core/utils/theme");
 const addedByImport = [...added];
 
 const tick = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
