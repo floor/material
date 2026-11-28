@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>button</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createButton } from "../../../../dist/components/button/index.js";
+await initPage({ name: "button" });
+const main = document.getElementById("tp-main");
+
+const samples = [];
+scenario(section(main, "Variants & sizes"), {
+  title: "Small buttons at four densities",
+  lookFor: "the visible button gets shorter with each step",
+  expected: "40, 36, 32 and 28 px tall, with a 48 px hit area",
+  mount: (body) => {
+    const row = Object.assign(document.createElement("div"), { className: "tp-row" });
+    for (const density of [0, -1, -2, -3]) {
+      const { element } = createButton({ size: "s", text: `Density ${density}` });
+      element.style.setProperty("--mtrl-density", String(density));
+      samples.push(element);
+      row.append(element);
+    }
+    body.append(row);
+  },
+  measure: () => samples.map(button =>
+    `${button.textContent.trim()} · ${button.getBoundingClientRect().height} px tall · ${getComputedStyle(button, "::after").height} hit area`,
+  ).join(" / "),
+});
+
+let toggle;
+scenario(section(main, "States"), {
+  title: "Selected small square toggle",
+  lookFor: "select the button, then move the pointer away",
+  expected: "the resting selected corner is 12 px",
+  mount: (body) => {
+    toggle = createButton({ size: "s", shape: "square", toggle: true, selected: true, text: "Save" });
+    body.append(toggle.element);
+  },
+  measure: () => `${toggle.element.getAttribute("aria-pressed") === "true" ? "Selected" : "Unselected"} · ${getComputedStyle(toggle.element).borderTopLeftRadius} corner`,
+});
+</script>
+</body>
+</html>

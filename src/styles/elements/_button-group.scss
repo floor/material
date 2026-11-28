@@ -1,5 +1,6 @@
 @use 'sass:list';
 @use 'sass:map';
+@use 'sass:math';
 @use '../abstract/functions' as f;
 @use '../abstract/variables' as v;
 @use '../abstract/mixins' as m;
@@ -15,16 +16,15 @@ $sizes: (
   'xl': (136px, 8px, 67px, 'headline-large', 40px),
 );
 $densities: ('comfortable': 4px, 'compact': 8px);
+$small-density-floor: f.button-density-floor('s');
 $icon-first: ':has(> [icon]:empty:first-child)';
 
 @mixin item($size, $font: true, $letter: true, $weight: true) {
   $t: map.get($sizes, $size);
   $type: map.get(v.$typescale, list.nth($t, 4));
   $role: list.nth($t, 4);
-  // As components/_button-group.scss: 4dp a step, floored at 32dp. Reading
-  // the property keeps a denser container's items the right height before
-  // and after upgrade; the density attributes below are the option's own.
-  height: f.density(list.nth($t, 1), 32px);
+  // Match the visible height before and after upgrade when density is inherited.
+  height: f.density(list.nth($t, 1), f.button-density-floor($size));
   padding: 0 list.nth($t, 3);
   @if $font {
     @if emit.$typescale-tokens {
@@ -50,7 +50,7 @@ $icon-first: ':has(> [icon]:empty:first-child)';
     align-self: flex-start;
     // Half the step the items take, from whatever container sets the
     // property; the density attributes below write their step out.
-    margin-block-start: max(-4px, 2px * var(--mtrl-density, 0));
+    margin-block-start: max(#{math.div($small-density-floor - 40px, 2)}, 2px * var(--mtrl-density, 0));
   }
 
   &#{$icon-first} {
@@ -62,12 +62,10 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   &[size='xs'] { gap: 18px; }
   &:is([size='m'], [size='l'], [size='xl']) { gap: 8px; }
 
-  // As components/_button-group.scss: a step is 4dp off the container
-  // height, floored at the 32dp visible target. The alias attributes keep
-  // the pre-upgrade layer from declaring the property the rollback would
-  // leave behind, so each step is written out; the floor is the sheet's.
+  // The alias attributes write out their steps so the pre-upgrade sheet
+  // does not leave a density property behind after upgrade.
   @each $density, $step in $densities {
-    &[density='#{$density}'] > * { height: max(32px, 40px - $step); }
+    &[density='#{$density}'] > * { height: max($small-density-floor, 40px - $step); }
   }
 
   @each $size in ('xs', 'm', 'l', 'xl') {
@@ -108,9 +106,9 @@ $icon-first: ':has(> [icon]:empty:first-child)';
   }
 
   // The shim tracks the centre the items actually moved: half the height
-  // reduction, which stops where the height's 32dp floor does.
+  // reduction, which stops at the size's visible height floor.
   @each $density, $step in $densities {
-    &[density='#{$density}']::before { margin-block-start: min($step, 40px - 32px) * -0.5; }
+    &[density='#{$density}']::before { margin-block-start: min($step, 40px - $small-density-floor) * -0.5; }
   }
 
   @each $size in ('xs', 'm', 'l', 'xl') {

@@ -90,7 +90,11 @@ for (const shape of ["round", "square"] as const) {
 // Density: four levels on a small group, whose buttons start at 40 dp.
 for (const kind of ["standard", "connected"] as const) {
   for (const density of [0, -1, -2, -3]) {
-    cases.push({ id: `${kind}/s/density ${density}`, density, mount, config: { kind, size: "s" }, parts, properties });
+    cases.push({
+      id: `${kind}/s/density ${density}`, density, mount, config: { kind, size: "s" },
+      parts: parts.map(part => part.name === "middle" ? { ...part, centredHitHeight: true } : part),
+      properties,
+    });
   }
 }
 

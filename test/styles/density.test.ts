@@ -146,11 +146,11 @@ describe("the option aliases set the property and nothing else", () => {
 });
 
 describe("the floors", () => {
-  test("a button stops at the 32px visible target", () => {
+  test("a small button stops at 28px while medium stops at 32px", () => {
     const css = compile("components/button");
-    expect(css).toContain(`height: max(32px, 40px + 4px * var(${PROPERTY}, 0));`);
+    expect(css).toContain(`height: max(28px, 40px + 4px * var(${PROPERTY}, 0));`);
     expect(css).toContain(`height: max(32px, 56px + 4px * var(${PROPERTY}, 0));`);
-    expect(css).toContain(`border-radius: var(--mtrl-button-shape, max(16px, 20px + 2px * var(${PROPERTY}, 0)));`);
+    expect(css).toContain(`border-radius: var(--mtrl-button-shape, max(14px, 20px + 2px * var(${PROPERTY}, 0)));`);
   });
 
   test("a list row stops at 36px", () => {
@@ -167,6 +167,7 @@ describe("the floors", () => {
   test("a button group scales its height and derives the radius from it", () => {
     const css = compile("components/button-group");
     expect(css).toContain(`--mtrl-button-group-height-scale: max(32px, var(--mtrl-button-group-height) + 4px * var(${PROPERTY}, 0));`);
+    expect(css).toContain(`--mtrl-button-group-height-scale: max(28px, var(--mtrl-button-group-height) + 4px * var(${PROPERTY}, 0));`);
     expect(css).toContain("--mtrl-button-group-radius: calc(var(--mtrl-button-group-height-scale) / 2);");
   });
 });

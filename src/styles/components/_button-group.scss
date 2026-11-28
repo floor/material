@@ -65,12 +65,15 @@ $shape: '--#{base.$prefix}-button-shape';
   // beside the small inner corners a 9999px corner would scale them down.
   --#{base.$prefix}-button-group-inner-corner: #{v.shape('small')};
   --#{base.$prefix}-button-group-pressed-corner: #{v.shape('extra-small')};
-  // Density scales the height from the base the component sets: 4dp a step,
-  // floored at the 32dp visible target (f.density). The outer radius follows
-  // at exactly half the scaled height. Both are derived here, so a group whose
-  // own density option is default still follows a denser container.
+  // Density scales the height from the base the component sets. A small
+  // group follows the small standalone button down to 28dp. The outer
+  // radius is half the scaled height.
   --#{base.$prefix}-button-group-height-scale: #{f.density(var(--#{base.$prefix}-button-group-height), 32px)};
   --#{base.$prefix}-button-group-radius: calc(var(--#{base.$prefix}-button-group-height-scale) / 2);
+
+  &--size-s {
+    --#{base.$prefix}-button-group-height-scale: #{f.density(var(--#{base.$prefix}-button-group-height), f.button-density-floor('s'))};
+  }
 
   &--vertical {
     flex-direction: column;

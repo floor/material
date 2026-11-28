@@ -109,7 +109,10 @@ for (const size of ["xs", "s", "m"] as const) {
 // Density: M3's scale is 0, −1, −2, −3, four dp a step. Small starts at 40.
 for (const size of ["xs", "s", "m"] as const) {
   for (const density of [0, -1, -2, -3]) {
-    cases.push({ id: `filled/${size}/density ${density}`, density, mount, config: { variant: "filled", size }, parts });
+    cases.push({
+      id: `filled/${size}/density ${density}`, density, mount, config: { variant: "filled", size },
+      parts: parts.map(part => part.name === "root" && size === "s" ? { ...part, centredHitHeight: true } : part),
+    });
   }
 }
 

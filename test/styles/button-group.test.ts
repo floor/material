@@ -32,6 +32,8 @@ describe('button group stylesheet', () => {
     // lowers it 4dp a step, and the height-scale is what the buttons read
     expect(value('.mtrl-button-group', '--mtrl-button-group-height-scale'))
       .toBe('max(32px, var(--mtrl-button-group-height) + 4px * var(--mtrl-density, 0))');
+    expect(value('.mtrl-button-group--size-s', '--mtrl-button-group-height-scale'))
+      .toBe('max(28px, var(--mtrl-button-group-height) + 4px * var(--mtrl-density, 0))');
     expect(value('.mtrl-button-group > .mtrl-button, .mtrl-button-group > .mtrl-icon-button', 'height')).toBe('var(--mtrl-button-group-height-scale)');
   });
 

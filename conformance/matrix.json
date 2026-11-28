@@ -1909,17 +1909,17 @@
             }
           },
           "material": {
-            "value": "CornerFull",
+            "value": "CornerMedium",
             "engines": null,
             "resolved": {
-              "radius": "20px"
+              "radius": "12px"
             }
           },
           "status": {
-            "spec": "match",
-            "compose": "drift"
+            "spec": "drift",
+            "compose": "match"
           },
-          "note": "This is the selected radius of the small square toggle. The previous radius is retained for the resting small square.",
+          "note": "The pinned Compose selected-square token takes precedence for the small toggle.",
           "issue": null
         },
         {
@@ -2008,9 +2008,9 @@
           "density": -3,
           "spec": {
             "value": "28dp",
-            "url": "https://m3.material.io/m3/pages/grids-spacing/density",
+            "url": "https://m3.material.io/foundations/layout/grids-spacing/density",
             "section": "Density",
-            "read": "2026-11-26"
+            "read": "2026-11-28"
           },
           "compose": {
             "value": null,
@@ -2020,14 +2020,45 @@
             "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
           },
           "material": {
-            "value": "32px",
+            "value": "28px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "no-value"
           },
           "note": "The website applies three 4 dp density steps to the 40 dp button.",
+          "issue": null
+        },
+        {
+          "id": "button/hit-target-height/filled-s/density-minus-3",
+          "property": "Centred pointer target height",
+          "aspect": "size",
+          "variant": "filled, size s",
+          "state": "density-minus-3",
+          "density": -3,
+          "spec": {
+            "value": "48dp minimum",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Target areas",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "The visible button shrinks with density and the hit area remains centred.",
           "issue": null
         },
         {
@@ -2888,6 +2919,37 @@
           "issue": null
         },
         {
+          "id": "button-group/button-height/connected/s/density-minus-3",
+          "property": "Button height at density −3",
+          "aspect": "density",
+          "variant": "connected, size s",
+          "state": "rest",
+          "density": -3,
+          "spec": {
+            "value": "28dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Density",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "28px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "The group follows the 28 dp height of its small buttons at density −3.",
+          "issue": null
+        },
+        {
           "id": "button-group/button-height/connected/square/l",
           "property": "Button height",
           "aspect": "size",
@@ -3133,6 +3195,37 @@
             "compose": "match"
           },
           "note": "",
+          "issue": null
+        },
+        {
+          "id": "button-group/button-height/standard/s/density-minus-3",
+          "property": "Button height at density −3",
+          "aspect": "density",
+          "variant": "standard, size s",
+          "state": "rest",
+          "density": -3,
+          "spec": {
+            "value": "28dp",
+            "url": "https://m3.material.io/components/button-groups/specs",
+            "section": "Density",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": null,
+            "file": null,
+            "symbol": null,
+            "line": null,
+            "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
+          },
+          "material": {
+            "value": "28px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "no-value"
+          },
+          "note": "The group follows the 28 dp height of its small buttons at density −3.",
           "issue": null
         },
         {

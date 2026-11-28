@@ -353,7 +353,9 @@ try {
     // Touch targets, at a step that takes each control under 48px.
     const touch = async () => {
       clear();
-      const buttonHost = host(-2);
+      const buttonHost = host(-3);
+      // Put the full touch target inside the viewport for elementFromPoint.
+      buttonHost.style.paddingBlockStart = "16px";
       const button = w.createButton({ text: "Save", size: "s" });
       buttonHost.append(button.element);
       const buttonRect = button.element.getBoundingClientRect();
@@ -456,22 +458,22 @@ try {
   const order = ["0", "-1", "-2", "-3", "-4", "-5"];
   expect(Object.keys(steps).sort(), [...order].sort(), "the steps measured");
 
-  // Geometry: 4px a step from the size's own base, floored at the 32px visual
-  // target; a round radius moves 2px a step to its 16px floor.
+  // Geometry: 4px a step from the size's own base to its visual floor.
+  // The round radius follows half the height, including the 28px small button.
   const geometry: [string, (sample: Sample) => number, number[]][] = [
     ["button m height", sample => sample.buttonM.height, [56, 52, 48, 44, 40, 36]],
     ["button m radius", sample => sample.buttonM.radius, [28, 26, 24, 22, 20, 18]],
-    ["button s height", sample => sample.buttonS.height, [40, 36, 32, 32, 32, 32]],
-    ["button s radius", sample => sample.buttonS.radius, [20, 18, 16, 16, 16, 16]],
+    ["button s height", sample => sample.buttonS.height, [40, 36, 32, 28, 28, 28]],
+    ["button s radius", sample => sample.buttonS.radius, [20, 18, 16, 14, 14, 14]],
     ["button xs height", sample => sample.buttonXs.height, [32, 32, 32, 32, 32, 32]],
     ["icon button s width", sample => sample.iconS.width, [40, 36, 32, 32, 32, 32]],
     ["icon button s height", sample => sample.iconS.height, [40, 36, 32, 32, 32, 32]],
     ["icon button s radius", sample => sample.iconS.radius, [20, 18, 16, 16, 16, 16]],
     ["icon button s icon size", sample => sample.iconS.icon, [24, 24, 24, 24, 24, 24]],
     ["icon button xs narrow width", sample => sample.iconXsNarrow.width, [28, 28, 28, 28, 28, 28]],
-    ["button group height", sample => sample.group.height, [40, 36, 32, 32, 32, 32]],
-    ["button group child height", sample => sample.group.childHeight, [40, 36, 32, 32, 32, 32]],
-    ["button group child radius", sample => sample.group.childRadius, [20, 18, 16, 16, 16, 16]],
+    ["button group height", sample => sample.group.height, [40, 36, 32, 28, 28, 28]],
+    ["button group child height", sample => sample.group.childHeight, [40, 36, 32, 28, 28, 28]],
+    ["button group child radius", sample => sample.group.childRadius, [20, 18, 16, 14, 14, 14]],
     ["list row height", sample => sample.listRow.height, [56, 52, 48, 44, 40, 36]],
     ["list row padding-top", sample => sample.listRow.paddingTop, [8, 6, 4, 2, 0, 0]],
     ["drawer item height", sample => sample.drawerItem.height, [56, 52, 48, 44, 40, 36]],
@@ -523,9 +525,9 @@ try {
 
   // Every control taken under 48px keeps a 48px tall target (an icon button
   // both ways), and a connected group never borrows its neighbour's.
-  expect(result.touch.button.height, 32, "the button measured at 32px");
-  expect(result.touch.button.top, true, "a 48px target above a 32px button");
-  expect(result.touch.button.bottom, true, "a 48px target below a 32px button");
+  expect(result.touch.button.height, 28, "the button measured at 28px");
+  expect(result.touch.button.top, true, "a 48px target above a 28px button");
+  expect(result.touch.button.bottom, true, "a 48px target below a 28px button");
   expect(result.touch.icon.width, 32, "the icon button measured at 32px");
   expect(result.touch.icon.corners, true, "the 48px box's corners on a 32px icon button");
   expect(result.touch.list.height, 36, "the list row measured at 36px");
@@ -540,7 +542,7 @@ try {
 
   assert.deepEqual(failures, [], `the density scale is not what the page measures:\n${failures.join("\n")}`);
   console.log(
-    "density: buttons and icon buttons 4px a step (radius 2px) to 32px, button group derived at half the height, " +
+    "density: small buttons and their groups to 28px, icon buttons to 32px, round radii follow height, " +
     "list and drawer rows to 36px, fields to 40px; type and icons fixed; 48px targets kept; " +
     "menus, dialogs, snackbars and pickers unchanged under a page-wide -3",
   );
