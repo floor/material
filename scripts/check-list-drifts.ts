@@ -161,6 +161,8 @@ const snapshot = (page: Page) => page.evaluate(() => {
     OnSurface: token("on-surface"),
     OnSecondaryContainer: token("on-secondary-container"),
     OnSurfaceVariant: token("on-surface-variant"),
+    Surface: token("surface"),
+    SurfaceContainer: token("surface-container"),
   };
   const roleOf = (color: string) => Object.entries(roles).find(([, value]) => value === color)?.[0] ?? color;
   const item = (root: string, id: string) => document.querySelector(`#${root} [data-id="${id}"]`) as HTMLElement;
