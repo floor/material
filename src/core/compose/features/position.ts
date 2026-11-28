@@ -62,22 +62,22 @@ export const withPosition = <T extends PositionConfig & object>(config: T) =>
       return component as C & PositionComponent;
     }
 
-    // Get the position value, normalizing from enum if provided as uppercase
-    const position = 
-      POSITIONS[config.position.toUpperCase() as keyof typeof POSITIONS] || 
-      config.position;
-      
-    const className = `${config.prefix}-${config.componentName}--${position}`;
-    component.element.classList.add(className);
+    // A position given as an enum key in any case is the enum's value.
+    const normalize = (value: string): string =>
+      POSITIONS[value.toUpperCase() as keyof typeof POSITIONS] || value;
+    const classFor = (value: string): string =>
+      `${config.prefix}-${config.componentName}--${value}`;
+
+    // The position the element carries now: setPosition replaces it, so the
+    // class it removes is the last one set, not the first.
+    let position = normalize(config.position);
+    component.element.classList.add(classFor(position));
 
     const positionManager: PositionManager = {
       setPosition(newPosition: string) {
-        const oldPosition = position;
-        const oldClassName = `${config.prefix}-${config.componentName}--${oldPosition}`;
-        const newClassName = `${config.prefix}-${config.componentName}--${newPosition}`;
-
-        component.element.classList.remove(oldClassName);
-        component.element.classList.add(newClassName);
+        component.element.classList.remove(classFor(position));
+        position = normalize(newPosition);
+        component.element.classList.add(classFor(position));
 
         return this;
       },

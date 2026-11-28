@@ -85,8 +85,9 @@ describe('withPosition', () => {
     expect(enhanced.position.getPosition()).toBe('bottom');
     
     enhanced.position.setPosition('top');
-    // Note: getPosition method returns initial position
-    expect(enhanced.position.getPosition()).toBe('bottom');
+    // The position that was set last. This expected 'bottom' while
+    // setPosition did not record what it set.
+    expect(enhanced.position.getPosition()).toBe('top');
   });
   
   test('should support all position enum values', () => {
@@ -110,6 +111,35 @@ describe('withPosition', () => {
     });
   });
   
+  test('setting positions in turn leaves one modifier class, and getPosition returns the last', () => {
+    const enhanced = withPosition({ prefix: PREFIX, componentName: 'tooltip', position: 'top' })(component);
+    const modifiers = () =>
+      [...enhanced.element.classList].filter((name) => name.startsWith(`${PREFIX}-tooltip--`));
+
+    enhanced.position.setPosition('left');
+    expect(modifiers()).toEqual([`${PREFIX}-tooltip--left`]);
+    expect(enhanced.position.getPosition()).toBe('left');
+
+    enhanced.position.setPosition('right');
+    expect(modifiers()).toEqual([`${PREFIX}-tooltip--right`]);
+    expect(enhanced.position.getPosition()).toBe('right');
+
+    // Back to the first: its class was removed once and is added again.
+    enhanced.position.setPosition('top').setPosition('bottom');
+    expect(modifiers()).toEqual([`${PREFIX}-tooltip--bottom`]);
+    expect(enhanced.position.getPosition()).toBe('bottom');
+  });
+
+  test('setPosition reads an enum key as the initial position does', () => {
+    const enhanced = withPosition({ prefix: PREFIX, componentName: 'tooltip', position: 'TOP' })(component);
+    expect(enhanced.position.getPosition()).toBe(POSITIONS.TOP);
+
+    enhanced.position.setPosition('END');
+    expect(enhanced.element.classList.contains(`${PREFIX}-tooltip--end`)).toBe(true);
+    expect(enhanced.element.classList.contains(`${PREFIX}-tooltip--END`)).toBe(false);
+    expect(enhanced.position.getPosition()).toBe(POSITIONS.END);
+  });
+
   test('should allow chaining of position methods', () => {
     const config = {
       prefix: PREFIX,
