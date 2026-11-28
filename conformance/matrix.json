@@ -27815,9 +27815,9 @@
           "density": 0,
           "spec": {
             "value": "1",
-            "url": "https://m3.material.io/components/tooltips/specs",
-            "section": "Measurements",
-            "read": "2026-11-26"
+            "url": "https://m3.material.io/components/tooltips/guidelines",
+            "section": "Behavior · Only display one tooltip at a time",
+            "read": "2026-11-28"
           },
           "compose": {
             "value": "1",
@@ -27827,12 +27827,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/internal/BasicTooltip.kt#L23"
           },
           "material": {
-            "value": "2",
+            "value": "1",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The fixture focuses a plain tooltip and hovers a second trigger.",
           "issue": null

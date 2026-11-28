@@ -55,6 +55,10 @@ $arrow-size: 8px;
     // (WCAG 1.4.13); hidden, it still lets clicks through
     pointer-events: auto;
   }
+
+  &--superseded {
+    transition: none;
+  }
   
   // Variants
   

@@ -582,7 +582,7 @@
     "ssr-comments:check": "bun run scripts/check-ssr-comments.ts",
     "tabs:check": "bun run scripts/check-tabs.ts && bun run scripts/check-a11y-name-role-b.ts",
     "slider:check": "bun run scripts/check-slider.ts && bun run scripts/check-slider-ticks.ts && bun run scripts/check-slider-click-sync.ts && bun run scripts/check-slider-pressed-gap.ts && bun run scripts/check-slider-value-indicator.ts",
-    "tooltip:check": "bun run scripts/check-tooltip.ts && bun run scripts/check-tooltip-badge-conformance.ts",
+    "tooltip:check": "bun run scripts/check-tooltip.ts && bun run scripts/check-tooltip-badge-conformance.ts && bun run scripts/check-tooltip-conformance.ts",
     "tooltip-menu:check": "bun run scripts/check-tooltip-menu.ts",
     "tooltip-hide-delay:check": "bun run scripts/check-tooltip-hide-delay.ts",
     "drawer:check": "bun run scripts/check-drawer.ts",

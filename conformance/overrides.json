@@ -2462,9 +2462,9 @@
     "reason": "The fixture focuses a plain tooltip and hovers a second trigger.",
     "spec": {
       "value": "1",
-      "url": "https://m3.material.io/components/tooltips/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "url": "https://m3.material.io/components/tooltips/guidelines",
+      "section": "Behavior · Only display one tooltip at a time",
+      "read": "2026-11-28"
     },
     "compose": {
       "value": "1",

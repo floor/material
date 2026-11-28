@@ -2170,6 +2170,7 @@
     ".mtrl-tooltip--default,.mtrl-tooltip--plain",
     ".mtrl-tooltip--plain",
     ".mtrl-tooltip--rich",
+    ".mtrl-tooltip--superseded",
     ".mtrl-tooltip--visible",
     ".mtrl-tooltip:where([popover])",
     ".mtrl-tooltip__arrow",
