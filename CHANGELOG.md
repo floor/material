@@ -17,6 +17,25 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.11] - 2026-11-28
+
+Carousel layout and snap fixes, reliable menu keyboard focus, and corrected list and navigation geometry.
+
+### Fixed
+
+- **Carousels.** The container has 8dp of padding at the top and bottom on every layout except full-screen, and the small item beside an opening hero stays at least 40dp (m3.material.io/components/carousel/specs, read 2026-11-27).
+- **Carousels.** Advancing through a wide multi-browse carousel keeps the final group in view and reports each selected slide in order.
+- **List inset dividers** leave 16 px at both ends, matching the Compose list tokens.
+- **Lists.** A selected or disabled row paints only its own content: a standard list, a listbox or a segmented list nested in the row keeps its own unselected icon, text, radio and action-layer colours, and a disabled parent does not fade it (m3.material.io/components/lists/specs, read 2026-11-27).
+- **Menu keyboard focus** reaches the first item even when a delayed render interrupts opening.
+- **Navigation drawer.** The section divider has 16 dp above it and 28 dp side insets in both the standard and the modal drawer; the standard sheet's edge border no longer counts into the inset (m3.material.io/components/navigation-drawer/specs, read 2026-11-27).
+- **Expanded modal navigation rail.** Destinations respond to clicks across the full width of the rail and keep their inset indicators.
+
+### Size
+
+The normalized release measurement was **925,924 B** packed (**+1,303 B** since v3.16.10),
+**5,280,537 B** unpacked and **1,304 files**. The root JavaScript bundle was **136,972 B** gzip.
+
 ## [3.16.10] - 2026-11-27
 
 Faster slider bubble exit, tooltip hide delay, and menu and list values matched to the spec
@@ -7535,7 +7554,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.10...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.11...HEAD
+[3.16.11]: https://github.com/floor/material/compare/v3.16.10...v3.16.11
 [3.16.10]: https://github.com/floor/material/compare/v3.16.9...v3.16.10
 [3.16.9]: https://github.com/floor/material/compare/v3.16.8...v3.16.9
 [3.16.8]: https://github.com/floor/material/compare/v3.16.7...v3.16.8
