@@ -932,7 +932,11 @@ A section header is a label. Its chevron is a round button as tall as the row: i
 
 To make a section a destination of its own, set `selectable: true` or an `href` on its factory item. On an element, put the `selectable` attribute on the parent item, or its `href`. Its header then selects like any destination, and the chevron sits beside it.
 
-A section opens initially when marked `expanded` or when it contains the active destination. Factory `expanded: false` allows an initially collapsed section. Selecting one of its children later opens it automatically. Sections open and close with the menu's reveal. Two CSS properties retune its timing: `--mtrl-drawer-section-motion-duration` and `--mtrl-drawer-section-motion-easing`. Setting `--mtrl-drawer-section-reveal-scale: 1` keeps the rows at full size, so only the height and the fade move. The inline-start arrow returns focus to the section's chevron, or to a selectable header, and the inline-end arrow opens a section or enters its first enabled child.
+A section opens initially when marked `expanded` or when it contains the active destination. Factory `expanded: false` allows an initially collapsed section. Selecting one of its children later opens it automatically.
+
+Sections open and close with the menu's reveal. Two CSS properties retune its timing: `--mtrl-drawer-section-motion-duration` and `--mtrl-drawer-section-motion-easing`. Setting `--mtrl-drawer-section-reveal-scale: 1` keeps the rows at full size, so only the height and the fade move.
+
+The inline-start arrow returns focus to the section's chevron, or to a selectable header, and the inline-end arrow opens a section or enters its first enabled child.
 
 Use `expandSection(id)` and `collapseSection(id)` to change visibility. Call `toggleSection(id)` to switch between the two states. Read it with `isSectionExpanded(id)` or `getExpandedSections()`. The `expand` and `collapse` events report section state separately from destination selection. Set `--mtrl-drawer-child-indent` to change the child padding from its 28 px default.
 
