@@ -156,9 +156,11 @@ try {
   assert.throws(() => compileSource(`@use "material/src/styles/components/button"; ${config}`), /already loaded/);
   assert.throws(() => compileSource(`${config} @use "material/src/styles/main" with ($typescale-tokens: true);`), /already loaded/);
 
-  // Payload hashes come from CI artifacts, never local builds. Keep the
-  // historical freeze provenance in baseline; record each update's artifact
-  // and run in its commit and PR. Each packed default JS or CSS file has its
+  // This check, on the packed package in CI, is the gate. An author moves the
+  // pins a change moves with `bun run pins:update` after a local build, which
+  // gives the same hashes and prints each pin it moved; a pin that does not
+  // match what CI builds fails here as a stale one does. Keep the historical
+  // freeze provenance in baseline. Each packed default JS or CSS file has its
   // own hash of the banner-stripped text. Keys are dist-relative paths, sorted by UTF-16 code
   // unit, one manifest line each. A shared chunk that many components import
   // is still one line. The opt-in sheet pair is validated independently below

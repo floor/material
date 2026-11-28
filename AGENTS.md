@@ -2,6 +2,10 @@
 
 Follow the [contributor guide](.github/CONTRIBUTING.md) for the local checks and release workflow. Run `bun run ts:check`, `bun run lint` and the tests for the change before pushing a branch.
 
+## Payload pins
+
+A change under `src/` moves the pinned hash of each file it builds to. After `bun run build`, run `bun run pins:update` and commit `scripts/fixtures/sass-config-baseline.json` with the change: it prints the pins it moved. The package job checks them; a first run that fails only to print a hash is a run wasted.
+
 ## Size reports
 
 CI compares each pull request and push to `main` with the latest `v*` release tag reachable from its base. The package job reports the base-release size, the measured size and the delta for every row. Its growth thresholds are 2,048 B for the compressed tarball and 1,024 B for a component's gzip measurement. Only the owner changes the thresholds in `scripts/budgets.ts`.
