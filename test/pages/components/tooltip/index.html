@@ -103,6 +103,25 @@ scenario(states, {
 });
 
 const interaction = section(main, "Interaction");
+const pair = [];
+scenario(interaction, {
+  title: "One tooltip at a time",
+  lookFor: "tab to the first button, then move the pointer over the second",
+  expected: "the second tooltip replaces the first and keyboard focus stays on the first button",
+  measure: () => {
+    const painted = pair.filter(({ tooltip }) => Number(getComputedStyle(tooltip.element).opacity) > 0);
+    const focus = pair.find(({ button }) => button === document.activeElement)?.button.textContent;
+    return `${painted.length} painted · focus ${focus ?? "outside"}`;
+  },
+  mount: (body) => {
+    for (const [label, variant] of [["First action", "plain"], ["Second action", "rich"]]) {
+      const button = trigger(label);
+      body.append(button);
+      const tooltip = createTooltip({ target: button, text: label, variant });
+      pair.push({ button, tooltip });
+    }
+  },
+});
 scenario(interaction, {
   title: "Hide after the pointer leaves",
   lookFor: "the tooltip still up at 1,400 ms, then gone once 1,500 ms and the exit have passed; Escape closes it at once",

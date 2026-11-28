@@ -12,6 +12,8 @@ import { hideFromTopLayer, showInTopLayer } from "../../core/dom/layer";
 /** The tooltip's exit transition in the stylesheet, in milliseconds */
 const EXIT_DURATION = 150;
 
+const activeTooltip = new WeakMap<Document, () => void>();
+
 interface ApiOptions {
   lifecycle: {
     destroy: () => void;
@@ -50,7 +52,17 @@ export const withAPI =
     // A top-layer tooltip renders after its target as a popover="manual"
     // element, placed in viewport coordinates
     const topLayer = config.layer === "top";
-    let layerTimer: number | null = null;
+    const ownerDocument = component.element.ownerDocument;
+    const supersededClass = `${component.getClass("tooltip")}--superseded`;
+    let exitTimer: number | null = null;
+    const releaseActive = () => {
+      if (activeTooltip.get(ownerDocument) === supersede) activeTooltip.delete(ownerDocument);
+    };
+    const supersede = () => {
+      // A replacement enters without overlapping the outgoing surface's fade.
+      component.element.classList.add(supersededClass);
+      api.hide(true);
+    };
 
     // aria-describedby is a list. Add and remove only this tooltip's id, so an
     // existing description survives and a previous target stops pointing here.
@@ -440,15 +452,21 @@ export const withAPI =
         const showTooltip = () => {
           if (!target || menuOpen()) return this;
 
+          if (exitTimer !== null) window.clearTimeout(exitTimer);
+          exitTimer = null;
+
+          const wasSuperseded = component.element.classList.contains(supersededClass);
+          component.element.classList.remove(supersededClass);
           if (topLayer) {
-            if (layerTimer !== null) window.clearTimeout(layerTimer);
-            layerTimer = null;
             if (!component.element.isConnected) document.body.appendChild(component.element);
             showInTopLayer(component.element, { kind: "popover-manual" });
-            // Styled hidden first, so the enter transition runs and the
-            // tooltip is measured as the one on the body is
-            void component.element.offsetWidth;
           }
+          // Start the enter transition from the hidden style.
+          if (topLayer || wasSuperseded) void component.element.offsetWidth;
+
+          const previous = activeTooltip.get(ownerDocument);
+          if (previous && previous !== supersede) previous();
+          activeTooltip.set(ownerDocument, supersede);
 
           // Show the tooltip
           component.element.setAttribute("aria-hidden", "false");
@@ -504,12 +522,15 @@ export const withAPI =
           window.removeEventListener("scroll", handleWindowScroll, true);
           document.removeEventListener("keydown", handleDocumentKeydown);
 
-          // Out of the top layer once the exit transition has run
-          if (topLayer) {
-            if (layerTimer !== null) window.clearTimeout(layerTimer);
-            layerTimer = window.setTimeout(() => {
-              layerTimer = null;
-              if (!isVisible) hideFromTopLayer(component.element);
+          // Keep the exiting surface available to a replacement until its
+          // fade finishes. A native popover closes at the same point.
+          if (topLayer || activeTooltip.get(ownerDocument) === supersede) {
+            if (exitTimer !== null) window.clearTimeout(exitTimer);
+            exitTimer = window.setTimeout(() => {
+              exitTimer = null;
+              if (isVisible) return;
+              releaseActive();
+              if (topLayer) hideFromTopLayer(component.element);
             }, EXIT_DURATION);
           }
         };
@@ -564,9 +585,10 @@ export const withAPI =
           window.clearTimeout(hideTimer);
         }
 
-        if (layerTimer !== null) {
-          window.clearTimeout(layerTimer);
+        if (exitTimer !== null) {
+          window.clearTimeout(exitTimer);
         }
+        releaseActive();
 
         // Remove target events
         if (target) {
