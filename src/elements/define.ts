@@ -427,6 +427,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
     /** The model was changed by the user or by script: its attributes no longer move it. */
     #dirty = false;
     #cleanup: Array<() => void> = [];
+    #unfollow: () => void = () => {};
     #observer: MutationObserver | null = null;
     #parts: MutationObserver | null = null;
     #slot: HTMLSlotElement | null = null;
@@ -468,6 +469,9 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       removeDeclarativeTemplates(this);
       this.#upgradeProperties();
       if (!this.component) this.#build();
+      // A host that kept its component was moved, or was built before it was
+      // connected: its direction is the new place's.
+      else this.#followDirection();
     }
 
     disconnectedCallback(): void {
@@ -617,10 +621,16 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       if (this.component) syncSlottedIcon(this.component.element);
     }
 
+    /** Reads the host's direction where it stands, and follows it until teardown. */
+    #followDirection(): void {
+      this.#unfollow();
+      this.#unfollow = trackDirection(this);
+    }
+
     #build(): void {
       // On build, which is also the rebuild a live host does: direction is
       // read again after the component it is restyled for exists.
-      trackDirection(this);
+      this.#followDirection();
       const root = this.shadowRoot as ShadowRoot;
       applyStyles(root, [`host:${spec.name}`, ...SHADOW_BASE_STYLES, ...spec.styles]);
       const component = spec.create(this.#config());
@@ -759,6 +769,7 @@ export const createElementClass = <C extends ElementComponent>(spec: ElementSpec
       };
       attempt(() => observer?.disconnect());
       attempt(() => parts?.disconnect());
+      attempt(this.#unfollow);
       for (const cleanup of this.#cleanup.splice(0)) attempt(cleanup);
       if (component) {
         attempt(() => component.destroy());

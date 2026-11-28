@@ -93,12 +93,13 @@ try {
   // The prototype's own invariants. Whole-payload byte identity between the
   // base and the candidate belongs to the pin gates; here the prototype must
   // not ride along in either root graph and must exist in its opt-in graph.
-  // The legacy entry grows when the bar itself changes. CI 45828204290,
-  // browser job 139938769898, measured 11,472 raw bytes; the base was 11,396.
+  // The legacy entry grows when the bar itself changes, or the core every
+  // component carries. 12,794 raw bytes after the direction tracking change,
+  // from a local build bundled as below; the base was 11,472.
   check(!Buffer.from(rootBefore).includes("createBottomAppBarToolbar"), "the base revision leaks the opt-in marker into its root graph");
   check(!Buffer.from(rootAfter).includes("createBottomAppBarToolbar"), "opt-in marker leaked into root");
   check(Buffer.from(optIn).includes("createBottomAppBarToolbar"), "positive opt-in graph control is missing");
-  check(legacyAfter.length === 11_472, "legacy entry raw bytes");
+  check(legacyAfter.length === 12_794, "legacy entry raw bytes");
   console.log(JSON.stringify({ graphs: report.graphs, changedDefaults: changed }));
 
   const pageBuild = async (name: string, installed: string, source: string) => {

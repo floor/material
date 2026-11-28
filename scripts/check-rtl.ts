@@ -567,10 +567,40 @@ try {
   });
   assert.deepEqual(switched, { left: 16, right: 0, rtl: true }, "a runtime dir change did not reach the connected elements");
 
+  // Under dir="auto" the content resolves the direction, and no attribute
+  // changes when it does: replacing the text that decides it must still reach
+  // a host there. The page is put back left to right first.
+  const auto = await ltrPage.evaluate(async () => {
+    const frames = (): Promise<void> => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done())));
+    document.documentElement.dir = "ltr";
+    const section = document.createElement("section");
+    section.dir = "auto";
+    const host = document.createElement("m-top-app-bar");
+    section.append("English", host);
+    document.body.append(section);
+    const read = async (): Promise<{ direction: string; rtl: boolean }> => {
+      await frames();
+      return { direction: getComputedStyle(host).direction, rtl: host.classList.contains("mtrl-rtl") };
+    };
+    const english = await read();
+    section.firstChild!.replaceWith(document.createTextNode("\u05e2\u05d1\u05e8\u05d9\u05ea"));
+    const hebrew = await read();
+    section.firstChild!.replaceWith(document.createTextNode("English"));
+    const back = await read();
+    section.remove();
+    return { english, hebrew, back };
+  });
+  assert.deepEqual(auto, {
+    english: { direction: "ltr", rtl: false },
+    hebrew: { direction: "rtl", rtl: true },
+    back: { direction: "ltr", rtl: false },
+  }, "a host under dir=auto did not follow the content that resolves its direction");
+
   console.log(
     `Passed RTL: ${Object.keys(ltr).length} fixtures measured in LTR and RTL, every box mirrored ` +
       `(drawer start sheet 0→240, drawer item padding 16/24→24/16, icon x 28→548, bottom padding 4/16→16/4, ` +
       `dialog close x ${ltr.dialog!.close.x}→${rtl.dialog!.close.x}), a runtime dir change followed, ` +
+      `the content under dir=auto followed, ` +
       `a subtree's nearer dir won both ways (factory drawer closed at x ${ltrCase.sheet} in an ltr subtree of an RTL page, ` +
       `${rtlCase.sheet} in an rtl subtree of an LTR page), and the bundled sheet mirrored its class-based markup ` +
       `(toolbar offsets -116→116, range band 100%→0%, chevrons flipped, the same with the direction on the component's ` +
