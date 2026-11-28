@@ -185,7 +185,7 @@ export const bindings: FixtureBinding[] = [
     ["year-width", "Selected year indicator width", "size", "modal/single/year/light", css("selectedYearInk", "width"), "DatePickerModalTokens.SelectionYearContainerWidth"],
   ], "datepicker"),
   fixture("dialog", "Dialog", [
-    ["container-width/full-screen/rest", "Full-screen container width", "size", "900/fullscreen/light/rest", width("dialog")],
+    ["container-width/full-screen/rest", "Full-screen container width at 360px", "size", "360/fullscreen/light/rest", width("dialog")],
     ["close-icon-colour/full-screen/rest", "Full-screen close icon tone", "colour", "900/fullscreen/light/rest", css("closeIcon", "color")],
     ["corner/basic", "Container corner radius", "shape", "900/medium/light/rest", corner("dialog"), "DialogTokens.ContainerShape", "basic"],
     ["colour/basic", "Container tone", "colour", "900/medium/light/rest", colour("dialog"), "DialogTokens.ContainerColor", "basic"],

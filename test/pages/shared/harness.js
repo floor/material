@@ -25,6 +25,7 @@ const state = { slow: false, measures: [] };
 
 /** The human names the header and the drawer rows carry. */
 const HUMAN = {
+  dialog: "Dialog",
   drawer: "Navigation drawer",
   "navigation-rail": "Navigation rail",
   "split-button": "Split button",
@@ -43,7 +44,7 @@ const HUMAN = {
 /** The component pages, grouped the way the rail groups them. */
 const GROUPS = [
   { label: "Controls", icon: "tune", pages: ["slider", "split-button", "fab-menu", "radios", "select", "extended-fab", "list", "tooltip"] },
-  { label: "Surfaces", icon: "layers", pages: ["bottom-sheet", "drawer", "navigation-rail"] },
+  { label: "Surfaces", icon: "layers", pages: ["bottom-sheet", "dialog", "drawer", "navigation-rail"] },
   { label: "Media", icon: "image", pages: ["carousel"] },
   { label: "Status", icon: "stacked_line_chart", pages: ["progress"] },
 ];
