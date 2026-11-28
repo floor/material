@@ -41,7 +41,7 @@ interface Destination {
 
 const initialActive = (items: DrawerItemConfig[]) =>
   items.flatMap(item => isSection(item) ? (isSelectableSection(item) ? [item, ...item.items!] : item.items!) : [item])
-    .find(item => isDestination(item) && item.active && !item.disabled)?.id || null;
+    .find(item => (isDestination(item) || isSelectableSection(item)) && item.active && !item.disabled)?.id || null;
 
 /**
  * An empty or zero count is no badge: the same rule the standalone badge
@@ -257,6 +257,12 @@ export const withItems =
     };
 
     const renderItems = (): void => {
+      // A re-render (new items, an element's label edit) rebuilds every row:
+      // the focus goes back to the same row, or the same section chevron.
+      const focused = activeElementOf(itemsContainer) as HTMLElement | null;
+      const refocus = focused && itemsContainer.contains(focused) && focused.dataset.id !== undefined
+        ? { id: focused.dataset.id, toggle: focused.classList.contains(cls(DRAWER_CLASSES.ITEM_TOGGLE)) }
+        : null;
       unmountRipples();
       itemsContainer.replaceChildren();
       destinations = [];
@@ -364,7 +370,11 @@ export const withItems =
         panel.className = cls(DRAWER_CLASSES.GROUP_ITEMS);
         panel.id = `${prefix}-panel`;
         panel.setAttribute("role", "group");
-        panel.setAttribute("aria-labelledby", header.id);
+        // The panel is named by the header's label alone; the header also
+        // holds the chevron, whose aria-label would repeat the name.
+        const labelElement = header.querySelector<HTMLElement>(`.${cls(DRAWER_CLASSES.ITEM_LABEL)}`);
+        if (labelElement) labelElement.id = `${prefix}-label`;
+        panel.setAttribute("aria-labelledby", labelElement ? labelElement.id : header.id);
         button.setAttribute("aria-controls", panel.id);
         const inner = document.createElement("div");
         inner.className = cls(DRAWER_CLASSES.GROUP_ITEMS_INNER);
@@ -384,6 +394,14 @@ export const withItems =
         });
         mountRipple(button, item.disabled);
       });
+
+      if (refocus) {
+        const target = [...itemsContainer.querySelectorAll<HTMLElement>("[data-id]")].find(element =>
+          element.dataset.id === refocus.id
+          && element.classList.contains(cls(DRAWER_CLASSES.ITEM_TOGGLE)) === refocus.toggle
+          && !element.matches(`.${cls(DRAWER_CLASSES.ITEM_HEADER)}`));
+        target?.focus();
+      }
     };
 
     const setItems = (items: DrawerItemConfig[]): void => {

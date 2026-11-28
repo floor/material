@@ -29,6 +29,8 @@
   .ds-events { margin: 16px 0 0; padding: 0; list-style: none; font: 12px/18px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--mtrl-sys-color-on-surface-variant); }
   .ds-steps { margin: 4px 0 16px; padding-inline-start: 20px; list-style: decimal; }
   .ds-steps li { margin: 2px 0; }
+  .ds-controls { display: flex; flex-wrap: wrap; gap: 24px; margin: 0 0 16px; font: 14px/20px Roboto, system-ui, sans-serif; }
+  .ds-controls label { display: inline-flex; align-items: center; gap: 8px; }
   /* The comparison window puts the m3 site's child indent back on every
      section, for the owner to compare with the aligned rows. */
   .ds-indented .mtrl-drawer__group .mtrl-drawer__group-items .mtrl-drawer__item--child {
@@ -250,6 +252,45 @@ scenario(variants, {
       appWindow("Indented (m3.material.io)", { active: "sitemaps", indented: true }).figure,
     );
     body.append(apps);
+  },
+});
+
+// ----------------------------------------------------------------------------
+const motion = section(host(), "Motion tokens");
+
+scenario(motion, {
+  title: "Retune the section reveal with three tokens",
+  lookFor: steps(
+    "Move the sliders, then open and close a section (Slow motion makes it easier to see).",
+    "Reveal scale 0 grows the rows from the title like a menu; 1 keeps the rows full size and only the height and the fade move.",
+  ),
+  expected: "--mtrl-drawer-section-motion-duration, --mtrl-drawer-section-motion-easing and --mtrl-drawer-section-reveal-scale change the panel, the rows and the chevron together. Their defaults are the menu's reveal (250 ms, emphasized, scale 0).",
+  mount: (body) => {
+    const controls = document.createElement("div");
+    controls.className = "ds-controls";
+    controls.innerHTML = `
+      <label>Duration <input type="range" min="0" max="1000" step="50" value="250" data-token="duration"> <output>250 ms</output></label>
+      <label>Easing <select data-token="easing">
+        <option value="">emphasized (default)</option>
+        <option value="cubic-bezier(0.2, 0, 0, 1)">standard</option>
+        <option value="linear">linear</option>
+      </select></label>
+      <label>Reveal scale <input type="range" min="0" max="1" step="0.1" value="0" data-token="scale"> <output>0</output></label>`;
+    const app = appWindow("Tuned", { active: "pages" });
+    const apply = () => {
+      const duration = controls.querySelector('[data-token="duration"]');
+      const easing = controls.querySelector('[data-token="easing"]');
+      const scale = controls.querySelector('[data-token="scale"]');
+      duration.nextElementSibling.textContent = `${duration.value} ms`;
+      scale.nextElementSibling.textContent = scale.value;
+      app.nav.style.setProperty("--mtrl-drawer-section-motion-duration", `${duration.value}ms`);
+      if (easing.value) app.nav.style.setProperty("--mtrl-drawer-section-motion-easing", easing.value);
+      else app.nav.style.removeProperty("--mtrl-drawer-section-motion-easing");
+      app.nav.style.setProperty("--mtrl-drawer-section-reveal-scale", scale.value);
+    };
+    controls.addEventListener("input", apply);
+    apply();
+    body.append(controls, app.figure);
   },
 });
 

@@ -287,7 +287,7 @@ test("drawer links and initial disclosure state render in the declarative shadow
   expect(button.getAttribute("aria-label")).toBe("Navigation");
   expect(button.parentElement).toBe(header);
   expect(header.querySelector(".mtrl-drawer__item-label")?.textContent).toBe("Navigation");
-  expect(panel.getAttribute("aria-labelledby")).toBe(header.id);
+  expect(panel.getAttribute("aria-labelledby")).toBe(header.querySelector(".mtrl-drawer__item-label")!.id);
   expect(panel.hasAttribute("inert")).toBe(false);
   expect(panel.querySelector("a")?.getAttribute("href")).toBe("/drawer");
   expect(panel.querySelector("a")?.getAttribute("aria-current")).toBe("page");

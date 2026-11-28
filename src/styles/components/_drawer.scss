@@ -11,6 +11,17 @@ $component: "#{base.$prefix}-drawer";
 // Only used as a CSS fallback if --#{base.$prefix}-drawer-width is not set by JS
 $default-width: 360px;
 
+// Section motion: three component tokens an app can set on the drawer (or any
+// ancestor). Their defaults are the menu's reveal, so the two move together
+// unless an app separates them on purpose. Reduced motion still wins.
+//   --mtrl-drawer-section-motion-duration  (default duration-medium1, 250ms)
+//   --mtrl-drawer-section-motion-easing    (default easing-emphasized)
+//   --mtrl-drawer-section-reveal-scale     (default 0: the rows scale from the
+//     header like a menu; 1: a plain height reveal with the fade)
+$section-duration: var(--#{base.$prefix}-drawer-section-motion-duration, #{v.motion("duration-medium1")});
+$section-easing: var(--#{base.$prefix}-drawer-section-motion-easing, #{v.motion("easing-emphasized")});
+$section-reveal-scale: var(--#{base.$prefix}-drawer-section-reveal-scale, 0);
+
 // ==========================================================================
 // ROOT CONTAINER
 // ==========================================================================
@@ -552,15 +563,15 @@ $default-width: 360px;
         // the flip by the same duration, so the shrink is seen before the
         // rows leave the tree.
         transition:
-            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
-            visibility 0s linear v.motion("duration-medium1");
+            grid-template-rows $section-duration $section-easing,
+            visibility 0s linear $section-duration;
     }
 
     &__group--expanded > &__group-items {
         grid-template-rows: 1fr;
         visibility: visible;
         transition:
-            grid-template-rows v.motion("duration-medium1") v.motion("easing-emphasized"),
+            grid-template-rows $section-duration $section-easing,
             visibility 0s;
     }
 
@@ -587,6 +598,11 @@ $default-width: 360px;
         // same duration and curve, so the rows below the section move in
         // step with the scale instead of jumping.
         @include m.reveal-motion;
+        // The drawer's tokens over the shared reveal's literal timing.
+        transform: scaleY($section-reveal-scale);
+        transition:
+            transform $section-duration $section-easing,
+            opacity $section-duration $section-easing;
     }
 
     &__group--expanded &__group-items-inner {
@@ -632,7 +648,7 @@ $default-width: 360px;
         transform: rotate(0deg);
         // The chevron turns on the same duration and curve the section
         // opens with, so the rotation and the reveal read as one motion.
-        transition: transform v.motion("duration-medium1") v.motion("easing-emphasized");
+        transition: transform $section-duration $section-easing;
 
         svg {
             width: 24px;

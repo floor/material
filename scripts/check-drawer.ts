@@ -573,6 +573,36 @@ try {
   await motionPage.close();
 
   // ========================================================================
+  // SECTION MOTION TOKENS: an app retunes the reveal with three properties
+  // ========================================================================
+  const tokens = await page.evaluate(() => {
+    window.mountDrawer({
+      variant: 'standard', open: true,
+      items: [{ id: 'labels', label: 'Labels', expanded: false, items: [{ id: 'family', label: 'Family' }] }],
+    });
+    const root = window.drawer.element;
+    const read = () => {
+      const inner = root.querySelector('.mtrl-drawer__group-items-inner') as HTMLElement;
+      const panel = root.querySelector('.mtrl-drawer__group-items') as HTMLElement;
+      const chevron = root.querySelector('.mtrl-drawer__item-chevron') as HTMLElement;
+      return {
+        innerDuration: getComputedStyle(inner).transitionDuration.split(', ')[0],
+        innerEasing: getComputedStyle(inner).transitionTimingFunction.split(', ')[0],
+        panelDuration: getComputedStyle(panel).transitionDuration.split(', ')[0],
+        chevronDuration: getComputedStyle(chevron).transitionDuration,
+        closedTransform: getComputedStyle(inner).transform,
+      };
+    };
+    const defaults = read();
+    root.style.setProperty('--mtrl-drawer-section-motion-duration', '400ms');
+    root.style.setProperty('--mtrl-drawer-section-motion-easing', 'linear');
+    root.style.setProperty('--mtrl-drawer-section-reveal-scale', '1');
+    return { defaults, tuned: read() };
+  });
+  assert.deepEqual(tokens.defaults, { innerDuration: '0.25s', innerEasing: 'cubic-bezier(0.3, 0, 0, 1)', panelDuration: '0.25s', chevronDuration: '0.25s', closedTransform: 'matrix(1, 0, 0, 0, 0, 0)' }, 'the section tokens default to the menu reveal');
+  assert.deepEqual(tokens.tuned, { innerDuration: '0.4s', innerEasing: 'linear', panelDuration: '0.4s', chevronDuration: '0.4s', closedTransform: 'matrix(1, 0, 0, 1, 0, 0)' }, 'the section tokens retune the duration, the curve and the reveal scale together');
+
+  // ========================================================================
   // SECTION HEADER: a label; the chevron button is the control
   // ========================================================================
   // Owner, 2026-11-28, after Google's own consoles: a section header is a
