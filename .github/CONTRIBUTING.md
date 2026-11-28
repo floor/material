@@ -215,9 +215,9 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 6. Use conventional commits, one idea per commit (`fix(menu): …`), and put the measurement in
    the pull request body: the check that failed before and the same check passing after, both
    quoted.
-7. A fix that needs more bytes than a size budget allows raises that budget to the measured value
-   plus at least 10 B, rounded up to the next 10, and says so in the pull request. Never raise a
-   budget silently or by more.
+7. A growth over a size threshold needs a `Size:` line in the pull request explaining the
+   increase. The ceilings in `scripts/budgets.ts` and `scripts/size.ts` are the owner's; a pull
+   request does not raise them.
 
 Reviewers check that the change follows the sources it names, that the measurement in the body
 reproduces, that the new check fails without the fix, and that the DOM, the CSS and the public API

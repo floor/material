@@ -270,11 +270,16 @@ The four combined stylesheet pins are checked nightly and before publishing.
 The last two and the `sources` digests are unit tests: `bun test test/styles` runs them before a
 push, and a stylesheet change refreshes each value from the failing test's output.
 
-**One rule:** raise a ceiling only when a measurement is over it, to the measured value plus at
-least 10 B, rounded up to the next 10 — and state the figure in the pull request. Nothing else
-raises a ceiling. The ceiling tracks the measurement in both directions: when a later change
-measures lower than the figure its ceiling was set from, the ceiling comes down to the new
-measured value plus at least 10 B in the same commit.
+**Thresholds belong to the owner.** The ceilings in `scripts/budgets.ts` and the `kb(n)` steps
+in `scripts/size.ts` are changed only by the owner. A pull request whose measurement grows past a
+threshold carries a `Size:` line in its body explaining the increase; it does not raise the
+ceiling.
+
+**The size tables move at release.** `SIZES.md` and the size tables in `README.md` and
+`npm-readme.md` are written by the release pull request: `release:prepare` pre-fills them from a
+local measurement, and release CI measures the same tree and fails when a committed figure
+differs. An ordinary pull request leaves them alone. Stylesheet pins move with the source change
+that moves them, as the unit tests below require.
 
 **Take the figure from CI, not from here.** The packer's output depends on its Node and npm; the
 package job prints the authoritative figure. To reproduce it locally:
@@ -285,12 +290,7 @@ npm package: <bytes> bytes compressed, <bytes> unpacked, <files> files (packed w
 ```
 
 The local packer can differ from CI's by a few bytes — 923,295 here against 923,297 there, for
-the same tree. CI sets the ceiling, and a follow-up commit adjusts it if the figure it prints
-differs from the one the first commit took.
-
-A raised ceiling carries a comment saying the measured figure, the CI run it came from, and
-`the next 10 B`, with the line it replaces as `Preceding:`. An older figure stays in the chain as
-history; delete nothing.
+the same tree.
 
 A CSS change can move the packed output in three places:
 
@@ -341,7 +341,7 @@ one of the `browser` groups in `ci.yml` and to the list in `test/build/ci-comman
 
 - A pull request body carries, in this order: what was wrong and how it was measured; the failing
   run on the code before the change and the passing run after, both quoted; a link to the source
-  it follows; when it changed size, the measured figure and the ceiling it raised.
+  it follows; when it changed size, the measured figure and the `Size:` line explaining it.
 - A branch that has been reviewed is not force-pushed; a review fix is a new commit.
 
 ## Issues

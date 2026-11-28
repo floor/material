@@ -7,9 +7,10 @@ labels: bug
 
 ## Problem
 
-<!-- What happens and what should happen instead, in two to four lines. A difference from the
-Material 3 specification (m3.material.io) or from Compose Material 3 is a bug too: name the value
-or behaviour that differs and the page it comes from. -->
+<!-- What happens and what should happen instead, in two to four lines. Say which version you
+run: the npm package version, or the commit. A difference from the Material 3 specification
+(m3.material.io) or from Compose Material 3 is a bug too: name the value or behaviour that
+differs and the page it comes from. -->
 
 ## Done when
 
