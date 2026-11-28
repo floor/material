@@ -253,6 +253,13 @@ Releases are published by GitHub Actions with npm trusted publishing
 
 Install the stable release with `npm install material`.
 
+A change to a source file moves the pinned hash of what it builds to
+(`payloads` in `scripts/fixtures/sass-config-baseline.json`), and the package
+job fails until the pin holds the new hash. Build, then run `bun run pins:update`
+before pushing: it writes the pins that moved and prints each one, so the change
+and its pins go up together and get green in one CI run. `bun run pins:check`
+prints them without writing. The package job stays the gate.
+
 The nightly main build and the tagged release verifier check the hashes for
 `styles.css`, `elements/styles.js`, expanded Sass main and compressed Sass main.
 Use the values printed by the failing CI job when updating the combined pins.

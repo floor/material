@@ -545,6 +545,8 @@
     "notice:check": "bun run scripts/check-third-party-notice.ts",
     "readme:check": "bun run scripts/check-readme.ts",
     "styles-package:check": "bun run scripts/check-styles-package.ts",
+    "pins:update": "bun run scripts/pins-update.ts",
+    "pins:check": "bun run scripts/pins-update.ts --check",
     "combined-stylesheet-pins:check": "bun run scripts/check-combined-stylesheet-pins.ts",
     "readme-browser:check": "bun run scripts/check-readme-browser.ts",
     "docs-imports:check": "bun run scripts/check-docs-imports.ts",
