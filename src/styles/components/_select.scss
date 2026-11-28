@@ -6,6 +6,7 @@
 @use "../../styles/abstract/theme" as t;
 
 $component: "#{base.$prefix}-select";
+$field: "#{base.$prefix}-text-field";
 
 .#{$component} {
     // Base styles - building on text field base. No width of its own: unsized,
@@ -67,13 +68,12 @@ $component: "#{base.$prefix}-select";
         // 2px strip and never blocked anything; a click outside closes the
         // menu (the indicator moved to the field, which revived it).
 
-        // Apply rotation to SVG instead of the container for better positioning
-        .#{base.$prefix}-text-field__trailing-icon {
+        &:not(:focus-within) .#{$field}__trailing-icon {
             color: t.color("primary");
+        }
 
-            svg {
-                transform: rotate(180deg); // Rotate the SVG, not the container
-            }
+        .#{$field}__trailing-icon svg {
+            transform: rotate(180deg);
         }
     }
 
@@ -83,43 +83,21 @@ $component: "#{base.$prefix}-select";
         max-height: 20rem;
         overflow-y: auto;
         max-width: initial;
-
-        .#{base.$prefix}-menu__item {
-            min-height: 3rem;
-            // The selected option is the menu's own, in every layer:
-            // secondary-container and on-secondary-container
-            // (md.comp.menu.list-item.selected.container.color and
-            // .label-text.color, m3.material.io), with the menu's mark. The
-            // rule that was here gave the top layer the primary colour at
-            // 12% and a second mark.
-        }
     }
 
-    // Variant adjustments
-    &--filled {
-        // Specific adjustments for filled variant
-        .#{base.$prefix}-text-field__label {
-            // Adjust label position for filled select
+    // The outlined autocomplete label keeps its enabled tone on hover.
+    &.#{$field}--outlined:hover:not(.#{$field}--focused):not(.#{$field}--disabled):not(.#{$field}--error):not(:has(.#{$field}__input:disabled)) {
+        .#{$field}__label {
+            color: t.color("on-surface-variant");
         }
     }
-
-    &--outlined {
-        // Specific adjustments for outlined variant
-        .#{base.$prefix}-text-field__label {
-            // Adjust label position for outlined select
-        }
-    }
-
-    // Focus styles
-    &:focus-within {
-        .#{base.$prefix}-text-field__trailing-icon {
-            color: t.color("primary");
-        }
-    }
-
 }
 
-// `.mtrl-select__menu` marks the select's menu (the class was unprefixed,
-// so nothing here ever applied). Its never-applied rules are gone: a 460px max
-// width fought the menu's field width, a 4px margin its top-layer placement, and
-// the fade classes were never set; the menu's own motion and size apply.
+// The top layer mounts beside the field. The option minimum follows the
+// select popup in either layer, including grouped options.
+.#{$component}__menu > .#{base.$prefix}-menu__list {
+    > .#{base.$prefix}-menu__item,
+    > .#{base.$prefix}-menu__group > ul > .#{base.$prefix}-menu__item {
+        min-height: 3rem;
+    }
+}

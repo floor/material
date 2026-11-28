@@ -17918,17 +17918,17 @@
             }
           },
           "material": {
-            "value": "OnSurface",
+            "value": "OnSurfaceVariant",
             "engines": null,
             "resolved": {
-              "light": "#1D1B20",
-              "dark": "#E6E0E9",
-              "seed": "#171D1A"
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The outlined hover label uses the OnSurfaceVariant role in the autocomplete reference.",
           "issue": null
@@ -18106,17 +18106,17 @@
           "issue": null
         },
         {
-          "id": "select/option-height/filled/popup-top-layer",
-          "property": "Top-layer popup option height",
+          "id": "select/option-height/filled/popup-inline",
+          "property": "Inline popup option height",
           "aspect": "size",
           "variant": "filled",
-          "state": "popup-top-layer",
+          "state": "popup-inline",
           "density": 0,
           "spec": {
-            "value": "44dp",
+            "value": "48dp",
             "url": "https://m3.material.io/components/menus/specs",
-            "section": "Measurements",
-            "read": "2026-11-26"
+            "section": "Menu (baseline) · Measurements · List item height",
+            "read": "2026-11-28"
           },
           "compose": {
             "value": "48dp",
@@ -18130,10 +18130,72 @@
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "match"
           },
-          "note": "The website uses 44 dp for an expressive vertical menu. Compose uses a 48 dp minimum for the baseline dropdown item.",
+          "note": "The inline select shares the baseline dropdown item's 48 dp minimum with the top layer.",
+          "issue": null
+        },
+        {
+          "id": "select/option-height/filled/popup-top-layer",
+          "property": "Top-layer popup option height",
+          "aspect": "size",
+          "variant": "filled",
+          "state": "popup-top-layer",
+          "density": 0,
+          "spec": {
+            "value": "48dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Menu (baseline) · Measurements · List item height",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": "48dp",
+            "file": "Menu.kt",
+            "symbol": "DropdownMenuItem",
+            "line": 2166,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Menu.kt#L2166"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "The M3 baseline menu and Compose DropdownMenuItem both use a 48 dp minimum.",
+          "issue": null
+        },
+        {
+          "id": "select/option-height/outlined/popup-inline",
+          "property": "Inline popup option height",
+          "aspect": "size",
+          "variant": "outlined",
+          "state": "popup-inline",
+          "density": 0,
+          "spec": {
+            "value": "48dp",
+            "url": "https://m3.material.io/components/menus/specs",
+            "section": "Menu (baseline) · Measurements · List item height",
+            "read": "2026-11-28"
+          },
+          "compose": {
+            "value": "48dp",
+            "file": "Menu.kt",
+            "symbol": "DropdownMenuItem",
+            "line": 2166,
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/Menu.kt#L2166"
+          },
+          "material": {
+            "value": "48px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "match"
+          },
+          "note": "The inline select shares the baseline dropdown item's 48 dp minimum with the top layer.",
           "issue": null
         },
         {
@@ -18144,10 +18206,10 @@
           "state": "popup-top-layer",
           "density": 0,
           "spec": {
-            "value": "44dp",
+            "value": "48dp",
             "url": "https://m3.material.io/components/menus/specs",
-            "section": "Measurements",
-            "read": "2026-11-26"
+            "section": "Menu (baseline) · Measurements · List item height",
+            "read": "2026-11-28"
           },
           "compose": {
             "value": "48dp",
@@ -18161,10 +18223,10 @@
             "engines": null
           },
           "status": {
-            "spec": "drift",
+            "spec": "match",
             "compose": "match"
           },
-          "note": "The website uses 44 dp for an expressive vertical menu. Compose uses a 48 dp minimum for the baseline dropdown item.",
+          "note": "The M3 baseline menu and Compose DropdownMenuItem both use a 48 dp minimum.",
           "issue": null
         },
         {
@@ -18198,17 +18260,17 @@
             }
           },
           "material": {
-            "value": "Primary",
+            "value": "Error",
             "engines": null,
             "resolved": {
-              "light": "#6750A4",
-              "dark": "#D0BCFF",
-              "seed": "#1F6A4E"
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
@@ -18244,17 +18306,17 @@
             }
           },
           "material": {
-            "value": "Primary",
+            "value": "OnSurfaceVariant",
             "engines": null,
             "resolved": {
-              "light": "#6750A4",
-              "dark": "#D0BCFF",
-              "seed": "#1F6A4E"
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
@@ -18290,17 +18352,17 @@
             }
           },
           "material": {
-            "value": "Primary",
+            "value": "Error",
             "engines": null,
             "resolved": {
-              "light": "#6750A4",
-              "dark": "#D0BCFF",
-              "seed": "#1F6A4E"
+              "light": "#B3261E",
+              "dark": "#F2B8B5",
+              "seed": "#BA1A1A"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
@@ -18336,17 +18398,17 @@
             }
           },
           "material": {
-            "value": "Primary",
+            "value": "OnSurfaceVariant",
             "engines": null,
             "resolved": {
-              "light": "#6750A4",
-              "dark": "#D0BCFF",
-              "seed": "#1F6A4E"
+              "light": "#49454F",
+              "dark": "#CAC4D0",
+              "seed": "#404943"
             }
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "The reference uses the matching released autocomplete colour role.",
           "issue": null
