@@ -348,6 +348,9 @@ export const withItems =
         button.type = "button";
         button.id = `${prefix}-btn`;
         button.className = cls(DRAWER_CLASSES.ITEM_TOGGLE);
+        // An explicit tab stop: WebKit's default Tab skips native buttons,
+        // and the rows already carry tabindex="0" for the same reason.
+        button.setAttribute("tabindex", item.disabled ? "-1" : "0");
         button.dataset.id = id;
         button.setAttribute("aria-label", label);
         if (item.disabled) {

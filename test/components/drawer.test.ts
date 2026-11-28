@@ -77,6 +77,8 @@ test("drawer section state, focus, events, section ids and nested badges", () =>
   expect(toggle("auto").localName).toBe("button");
   expect(toggle("auto").getAttribute("aria-label")).toBe("Automatic");
   expect(toggle("auto").getAttribute("aria-expanded")).toBe("true");
+  // An explicit tab stop: WebKit's default Tab skips native buttons.
+  expect(toggle("auto").getAttribute("tabindex")).toBe("0");
   expect(row("auto").classList.contains("mtrl-drawer__item--has-active")).toBe(true);
   expect(drawer.element.querySelector(".mtrl-drawer__section-label")?.textContent).toBe("Static");
   const button = toggle("closed");

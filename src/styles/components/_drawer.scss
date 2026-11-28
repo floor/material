@@ -342,7 +342,11 @@ $section-reveal-scale: var(--#{base.$prefix}-drawer-section-reveal-scale, 0);
         // 2026-11-24: 16dp from the start inside the indicator, 24dp before
         // the trailing content at the end; the indicator itself sits 12dp
         // from the drawer's edge.
-        padding: 0 24px 0 16px;
+        // Logical, so RTL mirrors it with no override, and the end-padding
+        // rules below (the selectable header's reserve for its chevron)
+        // hold in both directions.
+        padding-block: 0;
+        padding-inline: 16px 24px;
         gap: 12px;
         border: none;
         border-radius: v.shape('full'); // NavigationDrawerTokens active-indicator-shape
@@ -698,7 +702,7 @@ $section-reveal-scale: var(--#{base.$prefix}-drawer-section-reveal-scale, 0);
     // Google's own consoles): a round button as tall as the row at every
     // density — 56dp at rest, 36dp dense — that ends on the indicator's end.
     // Its state layer is the only hover feedback a section header gives.
-    // Below 48dp the button keeps a 48dp touch target, centred on it.
+    // Below 48dp the touch target widens to 48dp, keeping the row height.
     &__item-toggle {
         position: relative;
         z-index: 2;
@@ -733,14 +737,18 @@ $section-reveal-scale: var(--#{base.$prefix}-drawer-section-reveal-scale, 0);
                 v.motion("spring-default-effects-easing");
         }
 
+        // The touch target reaches 48dp sideways only. A taller one would
+        // overlap the next section's chevron in a dense drawer, and the
+        // later chevron would take a tap inside this one's own box. The row
+        // height (36dp at the densest) stays the vertical target.
         &::after {
             content: "";
             position: absolute;
-            top: 50%;
+            top: 0;
             left: 50%;
             width: max(100%, 48px);
-            height: max(100%, 48px);
-            transform: translate(-50%, -50%);
+            height: 100%;
+            transform: translateX(-50%);
         }
 
         &:hover::before {
@@ -879,12 +887,8 @@ $section-reveal-scale: var(--#{base.$prefix}-drawer-section-reveal-scale, 0);
     // RTL — item padding direction
     // ========================================================================
 
-    // The asymmetric paddings mirror in RTL: the 24dp end padding goes to
-    // the reading direction's end side. The child indent is a logical
-    // margin and mirrors itself.
-    @include m.rtl-selector('.#{$component}__item') {
-        padding: 0 16px 0 24px;
-    }
+    // The item paddings and the child indent are logical properties, so
+    // they mirror in RTL with no override here.
 
     // ========================================================================
     // REDUCED MOTION

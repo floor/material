@@ -227,7 +227,7 @@ try {
     near(row.size[0], expectedHeight, `density ${density}: chevron button as wide as the row is tall`);
     near(row.size[1], expectedHeight, `density ${density}: chevron button as tall as the row`);
     near(row.target[0], Math.max(48, expectedHeight), `density ${density}: chevron touch target width`);
-    near(row.target[1], Math.max(48, expectedHeight), `density ${density}: chevron touch target height`);
+    near(row.target[1], expectedHeight, `density ${density}: chevron touch target keeps the row height (no overlap with the next chevron)`);
     near(row.endInset, 0, `density ${density}: chevron button ends on the indicator's end`);
     near(row.cyDelta, 0, `density ${density}: chevron vertical centre`);
     // The painted ink, not the box: the shipped chevron's ink is 12 units
@@ -285,7 +285,8 @@ try {
   });
   near(denseRow.height, 36, 'dense option: item height at the density floor');
   near(denseRow.size[1], 36, 'dense option: chevron button as tall as the row');
-  near(denseRow.target[1], 48, 'dense option: chevron touch target');
+  near(denseRow.target[0], 48, 'dense option: chevron touch target width');
+  near(denseRow.target[1], 36, 'dense option: chevron touch target keeps the row height');
   near(denseRow.endInset, 0, "dense option: chevron button ends on the indicator's end");
   near(denseRow.cyDelta, 0, 'dense option: chevron vertical centre');
   // RTL mirrors through the logical properties: same numbers, mirrored side.
@@ -692,6 +693,34 @@ try {
   assert.equal(`${focused.style} ${focused.width}`, 'solid 3px', 'the chevron button shows the 3dp focus ring');
 
   // ========================================================================
+  // DENSE NEIGHBOURS: a tap inside a chevron never opens the next section
+  // ========================================================================
+  // Review finding (2026-11-28): with two collapsed sections back to back at
+  // density -5, a tap on the bottom edge of the first chevron opened the
+  // second, whose taller touch target overlapped it.
+  await page.evaluate(() => {
+    document.documentElement.dir = 'ltr';
+    window.mountDrawer({
+      variant: 'standard', open: true, dense: true,
+      items: [
+        { id: 'inbox', label: 'Inbox' },
+        { id: 'a', label: 'Alpha', expanded: false, items: [{ id: 'a1', label: 'A one' }] },
+        { id: 'b', label: 'Beta', selectable: true, expanded: false, items: [{ id: 'b1', label: 'B one' }] },
+      ],
+    });
+  });
+  await settle(page);
+  for (const edge of ['top', 'bottom'] as const) {
+    const box = (await page.locator('.mtrl-drawer__item-toggle[data-id="a"]').boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, edge === 'top' ? box.y + 1 : box.y + box.height - 1);
+    const state = await page.evaluate(() => ({
+      a: document.querySelector('.mtrl-drawer__item-toggle[data-id="a"]')!.getAttribute('aria-expanded'),
+      b: document.querySelector('.mtrl-drawer__item-toggle[data-id="b"]')!.getAttribute('aria-expanded'),
+    }));
+    assert.deepEqual(state, { a: edge === 'top' ? 'true' : 'false', b: 'false' }, `a tap on the ${edge} edge of a dense chevron toggles that chevron only`);
+  }
+
+  // ========================================================================
   // SELECTABLE SECTION: a header that is a destination of its own
   // ========================================================================
   await page.evaluate(() => {
@@ -719,6 +748,20 @@ try {
   near(selectable.endInset, 0, "the chevron button ends on the selectable header's indicator end");
   near(selectable.size, selectable.rowH, 'the chevron button is as tall as the selectable row');
   assert.ok(selectable.labelEnd <= selectable.toggleStart, 'the label stops before the chevron button');
+  // The reserve holds in RTL too (review finding: an RTL padding shorthand
+  // overwrote it, and a badge ran under the chevron).
+  const rtlReserve = await page.evaluate(() => {
+    document.documentElement.dir = 'rtl';
+    window.drawer.setBadge('perf', '1,234');
+    const header = document.querySelector('.mtrl-drawer__item--selectable[data-id="perf"]') as HTMLElement;
+    const toggle = document.querySelector('.mtrl-drawer__item-toggle[data-id="perf"]') as HTMLElement;
+    const badge = header.querySelector('.mtrl-drawer__item-badge') as HTMLElement;
+    const out = { reserve: parseFloat(getComputedStyle(header).paddingLeft), gap: badge.getBoundingClientRect().left - toggle.getBoundingClientRect().right };
+    document.documentElement.dir = 'ltr';
+    return out;
+  });
+  near(rtlReserve.reserve, 64, 'RTL: the selectable header keeps its 64 px reserve for the chevron');
+  assert.ok(rtlReserve.gap >= 8 - 0.5, `RTL: the badge stays 8 px clear of the chevron (${rtlReserve.gap.toFixed(1)})`);
   await page.click('.mtrl-drawer__item--selectable[data-id="perf"]');
   assert.equal(await page.getAttribute('.mtrl-drawer__item--selectable[data-id="perf"]', 'aria-current'), 'page', 'clicking a selectable header selects it');
   assert.equal(await page.evaluate(() => window.drawer.getActive()), 'perf');

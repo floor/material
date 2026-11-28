@@ -271,6 +271,8 @@ export const navigationDrawerItemDeclaration = {
     badge: { type: "string" },
     href: { type: "string" },
     expanded: { type: "boolean" },
+    /** On a parent item: its header is a destination of its own (see `selectable` on the item config). */
+    selectable: { type: "boolean" },
     disabled: { type: "boolean" },
   },
 } as const;
