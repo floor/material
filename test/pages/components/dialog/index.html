@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" data-theme="baseline">
+<head>
+<meta charset="utf-8">
+<title>Dialog</title>
+<link rel="stylesheet" href="../../../../dist/styles.css">
+<link rel="stylesheet" href="../../shared/harness.css">
+</head>
+<body>
+<script type="module">
+import { initPage, section, scenario } from "../../shared/harness.js";
+import { createDialog } from "../../../../dist/components/dialog/index.js";
+
+const main = await initPage({ name: "dialog" });
+let dialog;
+let output;
+let reading = "Open the dialog to measure its layout.";
+
+scenario(section(main, "Variants & sizes"), {
+  title: "Full-screen dialog",
+  lookFor: "Open the dialog in a compact browser window.",
+  expected: "The dialog meets all four viewport edges. Its close icon uses OnSurface.",
+  measure: () => {
+    if (dialog.isOpen()) {
+      const surface = dialog.element;
+      const bounds = surface.getBoundingClientRect();
+      const close = surface.querySelector(".mtrl-dialog__header-close svg");
+      reading = `Dialog ${Math.round(bounds.width)} × ${Math.round(bounds.height)} px · Window ${innerWidth} × ${innerHeight} px · Close icon ${getComputedStyle(close).color}`;
+      if (output.textContent !== reading) output.textContent = reading;
+    }
+    return reading;
+  },
+  mount: (body) => {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.textContent = "Open full-screen dialog";
+    dialog = createDialog({
+      title: "Full-screen dialog",
+      size: "fullscreen",
+      content: "<output data-dialog-bounds></output>",
+    });
+    output = dialog.element.querySelector("[data-dialog-bounds]");
+    open.addEventListener("click", () => dialog.open());
+    body.append(open);
+  },
+});
+</script>
+</body>
+</html>

@@ -977,17 +977,17 @@
     "spec": {
       "value": "OnSurface",
       "url": "https://m3.material.io/components/dialogs/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "section": "Full-screen dialog color",
+      "read": "2026-11-28"
     }
   },
   "dialog/container-width/full-screen/rest": {
-    "reason": "The website caps the full-screen surface at 560 dp. The fixture measures a 900 px viewport.",
+    "reason": "The guidelines say full-screen dialogs fill compact windows. The fixture measures a 360 px viewport.",
     "spec": {
-      "value": "560dp maximum",
-      "url": "https://m3.material.io/components/dialogs/specs",
-      "section": "Measurements",
-      "read": "2026-11-26"
+      "value": "360dp",
+      "url": "https://m3.material.io/components/dialogs/guidelines",
+      "section": "Full-screen dialog",
+      "read": "2026-11-28"
     }
   },
   "dialog/corner/basic": {

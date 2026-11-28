@@ -25,6 +25,8 @@
  * 4. short content does not scroll and the dialog sits on the window's bottom
  *    edge (the sheet placement), not in the middle.
  *
+ * A full-screen dialog fills compact windows and uses OnSurface for its close icon.
+ *
  *   bun run scripts/check-dialog-small-viewport.ts
  */
 import assert from "node:assert/strict";
@@ -61,19 +63,27 @@ const LONG = Array.from({ length: 12 }, (_, index) => `<p>Paragraph ${index + 1}
 
 type Measured = {
   viewport: { width: number; height: number };
-  dialog: { top: number; bottom: number; height: number };
+  dialog: { left: number; top: number; right: number; bottom: number; height: number };
+  closeColor: string | undefined;
+  surfaceColor: string;
   titleTop: number;
   content: { scrollHeight: number; clientHeight: number; scrollTop: number; scrolledTop: number };
   padding: number;
   margin: number;
 };
 
-const openDialog = (page: Page, config: { dir: "ltr" | "rtl"; long: boolean }) =>
-  page.evaluate(async ({ dir, long, content }) => {
+const openDialog = (page: Page, config: { dir: "ltr" | "rtl"; long: boolean; fullscreen?: boolean; topLayer?: boolean }) =>
+  page.evaluate(async ({ dir, long, content, fullscreen, topLayer }) => {
     document.documentElement.dir = dir;
     document.querySelectorAll(".mtrl-dialog__overlay").forEach((overlay) => overlay.remove());
     const create = (window as unknown as { createDialog: (settings: Record<string, unknown>) => { element: HTMLElement; open: () => unknown } }).createDialog;
-    const dialog = create({ title: "Headline", content: long ? content : "<p>Short body.</p>", actions: [{ text: "Cancel" }, { text: "OK" }] });
+    const dialog = create({
+      title: "Headline",
+      content: long ? content : "<p>Short body.</p>",
+      actions: [{ text: "Cancel" }, { text: "OK" }],
+      ...(fullscreen ? { size: "fullscreen" } : {}),
+      ...(topLayer ? { layer: "top" } : {}),
+    });
     document.body.append(dialog.element);
     dialog.open();
     // The open transition runs before the box is read.
@@ -85,13 +95,16 @@ const openDialog = (page: Page, config: { dir: "ltr" | "rtl"; long: boolean }) =
     const contentElement = surface.querySelector<HTMLElement>(".mtrl-dialog__content")!;
     const overlay = surface.closest<HTMLElement>(".mtrl-dialog__overlay") ?? document.querySelector<HTMLElement>(".mtrl-dialog__overlay")!;
     const rect = surface.getBoundingClientRect();
+    const close = surface.querySelector(".mtrl-dialog__header-close svg");
     const before = contentElement.scrollTop;
     contentElement.scrollTop = 9_999;
     const scrolledTop = contentElement.scrollTop;
     contentElement.scrollTop = before;
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
-      dialog: { top: rect.top, bottom: rect.bottom, height: rect.height },
+      dialog: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, height: rect.height },
+      closeColor: close ? getComputedStyle(close).color : undefined,
+      surfaceColor: getComputedStyle(surface).color,
       titleTop: title.getBoundingClientRect().top,
       content: {
         scrollHeight: contentElement.scrollHeight,
@@ -99,10 +112,10 @@ const openDialog = (page: Page, config: { dir: "ltr" | "rtl"; long: boolean }) =
         scrollTop: before,
         scrolledTop,
       },
-      padding: parseFloat(getComputedStyle(overlay).paddingTop),
+      padding: overlay ? parseFloat(getComputedStyle(overlay).paddingTop) : 0,
       margin: parseFloat(getComputedStyle(surface).marginBottom),
     } as Measured;
-  }, { dir: config.dir, long: config.long, content: LONG });
+  }, { ...config, content: LONG });
 
 const run = async (browser: Browser, engine: string) => {
   const rows: string[] = [];
@@ -149,8 +162,36 @@ const run = async (browser: Browser, engine: string) => {
     }
     await page.close();
   }
-  assert.deepEqual(failures, [], `${engine}: a small-window dialog keeps its headline and scrolls its content`);
-  return { engine, rows };
+  const fullscreenCases = [
+    { width: 240, topLayer: false, inset: 0 },
+    { width: 360, topLayer: false, inset: 0 },
+    { width: 599, topLayer: false, inset: 0 },
+    { width: 600, topLayer: false, inset: 16 },
+    { width: 900, topLayer: false, inset: 24 },
+    { width: 900, topLayer: true, inset: 0 },
+  ];
+  for (const { width, topLayer, inset } of fullscreenCases) {
+    const page = await browser.newPage({ viewport: { width, height: 600 } });
+    try {
+      await page.goto(`http://127.0.0.1:${server.port}`);
+      await page.waitForFunction(() => (window as unknown as { ready?: boolean }).ready);
+      const { viewport, dialog, closeColor, surfaceColor } = await openDialog(page, { dir: "ltr", long: false, fullscreen: true, topLayer });
+      const label = `${engine} ${width}px ${topLayer ? "top layer" : "overlay"} full-screen dialog`;
+      const bounds = `${dialog.left},${dialog.top}–${dialog.right},${dialog.bottom}`;
+      const expected = [inset, inset, viewport.width - inset, viewport.height - inset];
+      const actual = [dialog.left, dialog.top, dialog.right, dialog.bottom];
+      if (actual.some((edge, i) => Math.abs(edge - expected[i]!) > 0.5)) {
+        failures.push(`${label}: expected bounds ${expected.join(", ")}, measured ${bounds}`);
+      }
+      if (closeColor !== surfaceColor) {
+        failures.push(`${label}: close icon colour is ${surfaceColor}, measured ${closeColor}`);
+      }
+      rows.push(`${label}: bounds ${bounds}, close icon ${closeColor}`);
+    } finally {
+      await page.close();
+    }
+  }
+  return { rows, failures };
 };
 
 const results = [];
@@ -163,4 +204,5 @@ if (webkitBrowser) {
 }
 server.stop(true);
 for (const result of results) for (const row of result.rows) console.log(row);
-console.log("Dialog small viewport check passed.");
+assert.deepEqual(results.flatMap(result => result.failures), [], "Dialog viewport geometry and close icon colour");
+console.log("Dialog small viewport and full-screen checks passed.");

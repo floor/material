@@ -2330,6 +2330,7 @@
     "@media(prefers-contrast: more)and (not (prefers-color-scheme: dark))",
     "@media(prefers-contrast: more)and (prefers-color-scheme: dark)",
     "@media(prefers-reduced-motion: reduce)",
+    "@media(width < 600px)",
     "@property --mtrl-density",
     "@property --mtrl-time-picker-angle",
     "@property --mtrl-time-picker-radius",
