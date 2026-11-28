@@ -17,6 +17,19 @@ below are kept as they were published, and the release they announce as 1.0.0 is
 
 ## [Unreleased]
 
+## [3.16.12] - 2026-11-28
+
+Direction tracking now limits DOM reads to affected component trees and releases destroyed component roots.
+
+### Fixed
+
+- **Direction tracking.** A DOM change anywhere in the page no longer makes every mounted component read its direction again: the library reads the components in what was inserted or moved, and those under a `dir` attribute that changed. A component that was created and destroyed without being mounted, or mounted and destroyed within one task, stayed tracked for the life of the page, which was a leak; destroying a component now stops following its element, and that element no longer receives `mtrl-rtl` afterwards. The `mtrl-rtl` and `mtrl-ltr` classes are set as before.
+
+### Size
+
+The normalized release measurement was **926,924 B** packed (**+1,000 B** since v3.16.11),
+**5,284,448 B** unpacked and **1,304 files**. The root JavaScript bundle was **137,567 B** gzip.
+
 ## [3.16.11] - 2026-11-28
 
 Carousel layout and snap fixes, reliable menu keyboard focus, and corrected list and navigation geometry.
@@ -7554,7 +7567,8 @@ Changed and fixed, by component
   push and pull request; releases publish to npm with trusted publishing
   from a version tag.
 
-[Unreleased]: https://github.com/floor/material/compare/v3.16.11...HEAD
+[Unreleased]: https://github.com/floor/material/compare/v3.16.12...HEAD
+[3.16.12]: https://github.com/floor/material/compare/v3.16.11...v3.16.12
 [3.16.11]: https://github.com/floor/material/compare/v3.16.10...v3.16.11
 [3.16.10]: https://github.com/floor/material/compare/v3.16.9...v3.16.10
 [3.16.9]: https://github.com/floor/material/compare/v3.16.8...v3.16.9
