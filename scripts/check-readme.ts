@@ -19,7 +19,7 @@
  * - every `<m-…>` tag is an element or a declaration child the package defines,
  *   and each attribute written on it is one its spec declares;
  * - the install line follows the version: `material@next` while package.json is a
- *   3.0.0 pre-release, `material` once it is not (the release pull request that
+ *   pre-release, `material` once it is not (the release pull request that
  *   sets 3.0.0 fails here until both files are changed);
  * - the numbers between the `sizes` markers are what size:check measured,
  *   rounded to the 0.1 kB the table prints (the release pull request refreshes
@@ -47,7 +47,7 @@ import { join, resolve } from "node:path";
 import * as sass from "sass";
 
 import { createPackageFixture, run } from "./package-fixture";
-import { FILES, headingSlugs, parse, type Block } from "./readme-blocks";
+import { FILES, headingSlugs, installSectionProblems, parse, type Block } from "./readme-blocks";
 import { classifyLink } from "./readme-links";
 import { README_SIZE_ROWS, formatReadmeSize, readmeSizeTable } from "./readme-sizes";
 
@@ -75,18 +75,8 @@ const SUBPATH = new RegExp(`^${NAME}/[\\w./-]+$`);
 const IMPORTED = new RegExp(`(?:from|import)\\s*\\(?\\s*['"](${NAME}(?:/[\\w./-]+)?)['"]`, "g");
 /** The JSX entries have declarations and no module. */
 const TYPES_ONLY = new RegExp(`^${NAME}/(?:react|solid)/jsx$`);
-const install = manifest.version.startsWith("3.0.0-") ? "npm install material@next" : "npm install material";
 for (const doc of docs) {
-  const section = doc.text.split("<!-- install -->")[1]?.split("<!-- /install -->")[0];
-  if (!section) { fail(`${doc.file}: no <!-- install --> section`); continue; }
-  const lines = section.split("\n").filter(line => line.startsWith("npm install"));
-  if (lines.length !== 1 || lines[0] !== install) {
-    fail(`${doc.file}: the install line is ${JSON.stringify(lines)}; package.json is ${manifest.version}, so it is "${install}"`);
-  }
-  // The sentence about the `next` tag belongs to the pre-release only.
-  if (install === "npm install material" && /`next` tag|material@next/.test(section)) {
-    fail(`${doc.file}: the install section still speaks of the next tag; ${manifest.version} is not a pre-release`);
-  }
+  failures.push(...installSectionProblems(doc.file, doc.text, manifest.version));
 }
 
 // ── The sizes ─────────────────────────────────────────────────────
