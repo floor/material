@@ -1,5 +1,6 @@
 // src/components/button/features/toggle.ts
 import { ButtonConfig } from "../types";
+import { getCleanup, type CleanupScope } from "../../../core/compose/cleanup";
 
 /**
  * Toggle state manager
@@ -20,6 +21,9 @@ interface ToggleableComponent {
   element: HTMLElement;
   getClass: (name: string) => string;
   emit?: (event: string, data?: unknown) => unknown;
+  /** The component's cleanup scope, which the click listener's removal joins. */
+  resources?: CleanupScope;
+  lifecycle?: { destroy(): void };
 }
 
 /**
@@ -65,11 +69,15 @@ export const withToggle =
     apply(config.selected === true);
 
     if (config.toggleOnClick !== false) {
-      element.addEventListener("click", () => {
+      const onClick = (): void => {
         if ((element as HTMLButtonElement).disabled) return;
         apply(!selected);
         component.emit?.("change", { selected, value: (element as HTMLButtonElement).value });
-      });
+      };
+      element.addEventListener("click", onClick);
+      // A destroyed button's element may be kept, and clicked: it must not
+      // go on toggling.
+      getCleanup(component).add(() => element.removeEventListener("click", onClick));
     }
 
     return {
