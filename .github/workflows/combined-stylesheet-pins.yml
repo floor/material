@@ -3,6 +3,7 @@ name: Combined stylesheet pins
 on:
   schedule:
     - cron: "19 3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
