@@ -34,7 +34,7 @@ const reads = (text: string) => text.match(READS) ?? [];
 // own root, while tooltips, cards and FABs never read it. The exhaustive scan
 // below keeps a new sheet from joining this list by accident.
 const DENSIFYING: Record<string, string[]> = {
-  components: ["button", "button-group", "drawer", "icon-button", "list", "text-field", "toolbar"],
+  components: ["button", "button-group", "drawer", "icon-button", "list", "split-button", "text-field", "toolbar"],
   // The drawer and navigation-drawer tags share one rule set (shared-drawer).
   elements: ["button", "button-group", "field", "icon-button", "list", "shared-drawer", "text-field"],
 };
