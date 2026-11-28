@@ -283,7 +283,7 @@ test("drawer links and initial disclosure state render in the declarative shadow
   expect(button.getAttribute("aria-expanded")).toBe("true");
   expect(button.getAttribute("aria-controls")).toBe(panel.id);
   // The chevron button is named by its section; the header row is the label.
-  const header = root.querySelector("#mtrl-drawer-sec-navigation-header")!;
+  const header = root.querySelector<HTMLElement>("#mtrl-drawer-sec-navigation-header")!;
   expect(button.getAttribute("aria-label")).toBe("Navigation");
   expect(button.parentElement).toBe(header);
   expect(header.querySelector(".mtrl-drawer__item-label")?.textContent).toBe("Navigation");
