@@ -257,6 +257,9 @@ The nightly main build and the tagged release verifier check the hashes for
 `styles.css`, `elements/styles.js`, expanded Sass main and compressed Sass main.
 Use the values printed by the failing CI job when updating the combined pins.
 To run the same check locally, build first and run `bun run combined-stylesheet-pins:check`.
+The workflow also supports manual runs on `main`. Release preparation warns
+when GitHub Actions has no successful scheduled run on `main` in the previous
+36 hours or when its history is unavailable. The warning allows preparation to continue.
 
 1. Open a release pull request that bumps `package.json` (`x.y.z`, or
    `x.y.z-next.N` for a pre-release), assembles the changelog and updates
