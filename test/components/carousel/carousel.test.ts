@@ -182,6 +182,90 @@ describe('carousel', () => {
     expect(scroller.contains(document.activeElement)).toBe(true);
   });
 
+  // One snap node per slide, kept from one layout to the next.
+  describe('snap nodes', () => {
+    const snaps = (carousel: ReturnType<typeof createCarousel>): HTMLElement[] =>
+      [...carousel.element.querySelectorAll<HTMLElement>('.mtrl-carousel__snap')];
+    const place = (node: HTMLElement): string => `${node.style.left}|${node.style.right}|${node.style.top}`;
+    const labels = (carousel: ReturnType<typeof createCarousel>): (string | null)[] =>
+      [...carousel.element.querySelectorAll('.mtrl-carousel__item')].map((item) => item.getAttribute('aria-label'));
+    const many = Array.from({ length: 100 }, (_, i) => ({ image: `${i}.jpg`, title: `Slide ${i}` }));
+
+    test('adding slides one at a time keeps the nodes it has and adds one each', () => {
+      const carousel = createCarousel({ slides: [many[0]!] });
+      document.body.appendChild(carousel.element);
+      sized(carousel, 600);
+      carousel.addSlide(many[1]!);
+      const kept = snaps(carousel);
+      expect(kept.length).toBe(2);
+
+      // Every node ever put in the track, by the insertions the track sees.
+      const track = carousel.element.querySelector('.mtrl-carousel__track') as HTMLElement;
+      const created = new Set<Node>(kept);
+      const append = track.appendChild.bind(track);
+      track.appendChild = (<T extends Node>(node: T): T => {
+        for (const child of node.nodeType === 11 ? [...node.childNodes] : [node]) {
+          if ((child as HTMLElement).classList?.contains('mtrl-carousel__snap')) created.add(child);
+        }
+        return append(node);
+      }) as typeof track.appendChild;
+
+      for (const slide of many.slice(2)) carousel.addSlide(slide);
+      const all = snaps(carousel);
+      expect(all.length).toBe(100);
+      expect(created.size).toBe(100);
+      expect(all.slice(0, 2)).toEqual(kept);
+      carousel.destroy();
+    });
+
+    test('removing slides removes their nodes, and the last one leaves none and no track size', () => {
+      const carousel = createCarousel({ slides: many.slice(0, 3) });
+      document.body.appendChild(carousel.element);
+      sized(carousel, 600);
+      carousel.addSlide(many[3]!);
+      const track = carousel.element.querySelector('.mtrl-carousel__track') as HTMLElement;
+      expect(snaps(carousel).length).toBe(4);
+      expect(track.style.width).not.toBe('');
+
+      carousel.removeSlide(0);
+      expect(snaps(carousel).length).toBe(3);
+      for (let left = 3; left > 0; left--) carousel.removeSlide(0);
+      expect(snaps(carousel).length).toBe(0);
+      expect(track.style.width).toBe('');
+      expect(track.style.height).toBe('');
+
+      // And it fills again from empty.
+      carousel.addSlide(many[0]!);
+      expect(snaps(carousel).length).toBe(1);
+      expect(track.style.width).not.toBe('');
+      carousel.destroy();
+    });
+
+    test('addSlides gives the labels, the selection and the snap positions that one at a time gives', () => {
+      const build = (fill: (carousel: ReturnType<typeof createCarousel>) => void) => {
+        const carousel = createCarousel({ slides: many.slice(0, 2) });
+        document.body.appendChild(carousel.element);
+        sized(carousel, 600);
+        fill(carousel);
+        return carousel;
+      };
+      const added = [{ image: 'x.jpg' }, ...many.slice(2, 12), { image: 'y.jpg', alt: 'Why' }];
+      const oneByOne = build((carousel) => { for (const slide of added) carousel.addSlide(slide); });
+      const bulk = build((carousel) => { expect(carousel.addSlides(added)).toBe(carousel); });
+
+      expect(labels(bulk)).toEqual(labels(oneByOne));
+      expect(labels(bulk).length).toBe(14);
+      expect(bulk.getCurrentSlide()).toBe(oneByOne.getCurrentSlide());
+      expect(snaps(bulk).map(place)).toEqual(snaps(oneByOne).map(place));
+
+      // In the middle, and nothing at all.
+      const middle = build((carousel) => { carousel.addSlides([{ image: 'm.jpg', title: 'Middle' }], 1).addSlides([]); });
+      expect(labels(middle)).toEqual(['Slide 0', 'Middle', 'Slide 1']);
+      expect(snaps(middle).length).toBe(3);
+      for (const carousel of [oneByOne, bulk, middle]) carousel.destroy();
+    });
+  });
+
   test('removing and updating slides relabels them', () => {
     const carousel = createCarousel({ slides });
     carousel.removeSlide(0);

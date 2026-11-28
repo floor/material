@@ -139,6 +139,20 @@ export const withSlides = (config: CarouselConfig) => <C extends { element: HTML
       changed();
       return slides;
     },
+    addSlides(added, index) {
+      if (!added.length) return slides;
+      const at = index !== undefined && index >= 0 && index <= slideData.length ? index : slideData.length;
+      const elements = added.map((slide, offset) => createSlideElement(slide, at + offset));
+      const fragment = document.createDocumentFragment();
+      fragment.append(...elements);
+      layer.insertBefore(fragment, slideElements[at] ?? null);
+      slideData.splice(at, 0, ...added);
+      slideElements.splice(at, 0, ...elements);
+      // Once for all of them: one at a time, each insertion relabels and
+      // lays out the whole collection again.
+      changed();
+      return slides;
+    },
     removeSlide(index) {
       if (index < 0 || index >= slideElements.length) return slides;
       layer.removeChild(slideElements[index]!);

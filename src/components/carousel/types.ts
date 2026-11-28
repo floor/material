@@ -109,6 +109,11 @@ export interface CarouselComponent {
   setWheel: (on: boolean) => CarouselComponent;
 
   addSlide: (slide: CarouselSlide, index?: number) => CarouselComponent;
+  /**
+   * Adds several slides at once, at `index` or at the end: the collection is
+   * relabelled and laid out once, where `addSlide` does both for each slide.
+   */
+  addSlides: (slides: CarouselSlide[], index?: number) => CarouselComponent;
   removeSlide: (index: number) => CarouselComponent;
 
   destroy: () => void;
@@ -119,6 +124,7 @@ export interface CarouselComponent {
 
 export interface SlidesAPI {
   addSlide: (slide: CarouselSlide, index?: number) => SlidesAPI;
+  addSlides: (slides: CarouselSlide[], index?: number) => SlidesAPI;
   removeSlide: (index: number) => SlidesAPI;
   updateSlide: (index: number, slide: CarouselSlide) => SlidesAPI;
   getSlide: (index: number) => CarouselSlide | null;
