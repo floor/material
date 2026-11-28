@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to material! This document provides guidelines and instructions for contributing to this lightweight, TypeScript-focused UI component library.
 
+Claude Code 2.1.277 or later reads [AGENTS.md](../AGENTS.md) automatically in most setups (see [the linked docs](https://code.claude.com/docs/en/memory#agents-md) for exceptions), and so do Codex and Cursor. Contributor agents should start there for the checks and the rules, and use this guide for the whole workflow.
+
 ## Why Contribute?
 
 material aims to be a modern, flexible UI component library with:
@@ -24,9 +26,14 @@ By contributing to material, you'll help create a lean alternative to heavier fr
    cd material
    ```
 
-2. **Install dependencies**:
+2. **Install dependencies** with Bun 1.4.2, the version CI runs:
    ```bash
-   bun install
+   bun install --frozen-lockfile
+   ```
+
+3. **Install the Playwright browsers** the browser checks drive:
+   ```bash
+   bunx playwright install chromium webkit
    ```
 
 ### Testing Your Components with md3.io
@@ -59,6 +66,42 @@ bun run dev
 4. **Test your changes** - Tests go in the same commit as the code (see [Testing](#testing)), and md3.io shows the component live (see above).
 
 5. **Submit a pull request** - Include a detailed description of your changes and reference any related issues.
+
+### Which issue form
+
+Each issue uses one template in `.github/ISSUE_TEMPLATE/`, and blank issues are off:
+
+- **Bug report** (`bug.md`) — broken behaviour: a crash, wrong behaviour against the
+  documentation, a regression, a layout shift, RTL, an accessibility break. A measured difference
+  from m3.material.io or Compose Material 3 is filed as a bug too; the section below is about it.
+- **Feature request** (`feature.md`) — a missing component, variant or option; link the reference
+  when Material 3 specifies it, and it is tracked as a gap against the references.
+
+Both carry the same sections: Problem, Done when, Check, Scope and Gates. The Check names the
+command that proves the work, and it is required.
+
+### Conformance drift
+
+The library follows Material 3. Where a component looks or measures unlike the specification, the
+difference is a conformance drift.
+
+- **Measure it.** `bun run conformance <component>` returns one JSON row per case — the measured
+  parts, their state, density, zoom and colour scheme — in Chromium, and with `--webkit` in
+  WebKit. `bun run conformance --list` names the fixtures; `scripts/conformance/README.md` covers
+  the cases and the Compose token extractor.
+- **Compare it with the sources.** The Compose token files at the pinned AndroidX commit
+  (`08ec699d`, see the token extractor in that README) and the page on
+  [m3.material.io](https://m3.material.io) with the date you read it. The property tables are not
+  public, so the measurement and the sources are the reference.
+- **Read what is already known.** Where a component page on
+  [md3.io](https://md3.io/components/) lists its *Known issues*, that section is the public list
+  of what differs today.
+- **Fix what the two agree on**, then add a browser check that fails without the fix and passes
+  with it, and quote both runs in the pull request.
+- **Open it as a drift, not a bug.** A bug report is broken behaviour; a drift is a measured
+  difference. A maintainer labels a drift on triage with the `conformance/*` family
+  (`drift-spec`, `drift-compose`, `drift-both`, `reference-conflict`, `deviation`, `api-gap`) and
+  the `component/*` and `aspect/*` labels that fit.
 
 ## Development Guidelines
 
@@ -169,6 +212,16 @@ Builds fail on TypeScript or Sass errors. The published ESM is readable and incl
 3. A change that breaks the public API or the rendered DOM goes in the fragment's **Changed** section with a `Migration:` line.
 4. CI must pass types, lint, tests, build, the release-delta size check, adapter checks and browser checks (components, elements, adapters). `main` accepts merge commits only, from up-to-date branches.
 5. Reference the issue the change closes.
+6. Use conventional commits, one idea per commit (`fix(menu): …`), and put the measurement in
+   the pull request body: the check that failed before and the same check passing after, both
+   quoted.
+7. A growth over a size threshold needs a `Size:` line in the pull request explaining the
+   increase. The ceilings in `scripts/budgets.ts` and `scripts/size.ts` are the owner's; a pull
+   request does not raise them.
+
+Reviewers check that the change follows the sources it names, that the measurement in the body
+reproduces, that the new check fails without the fix, and that the DOM, the CSS and the public API
+are what the fragment says.
 
 Every pull request is reviewed against [REVIEW.md](../REVIEW.md): what failure looks like in this
 repository, how a finding is written, and how the review loop ends.

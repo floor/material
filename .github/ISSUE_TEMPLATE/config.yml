@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation and live demos
+    url: https://md3.io
+    about: Usage, options and examples for every component.
+  - name: Material 3 specification
+    url: https://m3.material.io
+    about: The reference this library follows.
