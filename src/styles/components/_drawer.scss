@@ -580,11 +580,17 @@ $default-width: 360px;
         // panel was already at the menu's fraction. The fade rides the same
         // tokens as the panel's height.
         min-height: 0;
-        opacity: 0;
-        transition: opacity v.motion("duration-medium1") v.motion("easing-emphasized");
+        // The rows grow from the header the way a menu grows from its
+        // opener: the menu's own reveal (scaleY from the top edge with a
+        // fade, duration-medium1, easing-emphasized), shared through the
+        // mixin so the two cannot drift. The panel's height above rides the
+        // same duration and curve, so the rows below the section move in
+        // step with the scale instead of jumping.
+        @include m.reveal-motion;
     }
 
     &__group--expanded &__group-items-inner {
+        transform: scaleY(1);
         opacity: 1;
     }
 
