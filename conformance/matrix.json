@@ -7013,12 +7013,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L45"
           },
           "material": {
-            "value": "8px",
+            "value": "10px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
           "issue": null
@@ -10376,12 +10376,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L326"
           },
           "material": {
-            "value": "8px",
+            "value": "10px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
           "issue": null
@@ -11268,12 +11268,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L326"
           },
           "material": {
-            "value": "12px",
+            "value": "10px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
           "issue": null
@@ -11299,12 +11299,12 @@
             "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt#L326"
           },
           "material": {
-            "value": "8px",
+            "value": "10px",
             "engines": null
           },
           "status": {
-            "spec": "drift",
-            "compose": "drift"
+            "spec": "match",
+            "compose": "match"
           },
           "note": "Compose interactive row tokens apply to segmented items in the corresponding variant.",
           "issue": null

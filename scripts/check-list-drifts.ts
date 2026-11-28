@@ -132,6 +132,19 @@ const mount = () => {
   const frozenRow = frozen.element.querySelector("[data-id='frozen']");
   if (frozenRow) frozenRow.append(chill.element);
   document.body.append(standard.element, segmented.element, dense.element, outer.element, held.element, frozen.element);
+  // Segmented rows share one 10dp top and bottom space whatever their lines
+  // (ListTokens ItemTopSpace and ItemBottomSpace; md.comp.list.list-item.*).
+  const segLines = createList({
+    ariaLabel: "Segmented lines",
+    variant: "segmented",
+    items: [
+      { id: "one", headline: "One" },
+      { id: "two", headline: "Two", supportingText: "Support" },
+      { id: "three", headline: "Three", overline: "Over", supportingText: "Support" },
+    ],
+  });
+  segLines.element.id = "seg-lines";
+  document.body.append(segLines.element);
 };
 
 const snapshot = (page: Page) => page.evaluate(() => {
@@ -213,6 +226,9 @@ const snapshot = (page: Page) => page.evaluate(() => {
     chillHeadline: textOf(chill, "headline"),
     chillSupporting: textOf(chill, "supporting"),
     chillTextOpacity: opacityOf(chill, "text"),
+    segPadOne: Math.round(parseFloat(getComputedStyle(item("seg-lines", "one")).paddingTop)),
+    segPadTwo: Math.round(parseFloat(getComputedStyle(item("seg-lines", "two")).paddingTop)),
+    segPadThree: Math.round(parseFloat(getComputedStyle(item("seg-lines", "three")).paddingTop)),
     pickRadioBorder: roleOf(getComputedStyle(item("chooser", "pick").querySelector(".mtrl-list__radio") as HTMLElement).borderTopColor),
     pickRadioDot: getComputedStyle(item("chooser", "pick").querySelector(".mtrl-list__radio") as HTMLElement, "::after").transform,
     insideActionLayer: roleOf(getComputedStyle(item("inside", "inside").querySelector(".mtrl-list__action") as HTMLElement, "::before").backgroundColor),
@@ -257,6 +273,9 @@ const run = async (page: Page, engine: string) => {
   assert.equal(rest.chillHeadline, "OnSurface", `${engine}: a standard list nested in a disabled row keeps its headline OnSurface`);
   assert.equal(rest.chillSupporting, "OnSurfaceVariant", `${engine}: a standard list nested in a disabled row keeps its supporting text OnSurfaceVariant`);
   assert.equal(rest.chillTextOpacity, "1", `${engine}: a standard list nested in a disabled row keeps its text at full opacity`);
+  assert.equal(rest.segPadOne, 10, `${engine}: a one-line segmented row has 10dp above`);
+  assert.equal(rest.segPadTwo, 10, `${engine}: a two-line segmented row has 10dp above`);
+  assert.equal(rest.segPadThree, 10, `${engine}: a three-line segmented row has 10dp above`);
   assert.equal(rest.pickRadioBorder, "OnSurfaceVariant", `${engine}: an unselected listbox radio nested in a selected row keeps the OnSurfaceVariant ring`);
   assert.equal(rest.pickRadioDot.startsWith("matrix(0,"), true, `${engine}: an unselected listbox radio nested in a selected row keeps its dot at scale 0 (${rest.pickRadioDot})`);
   // The inner action's layer is what its hover paints; the selected row's own
